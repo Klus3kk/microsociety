@@ -5,8 +5,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # Znalezienie TensorFlow C API
-include_directories(/usr/local/include)
-link_directories(/usr/local/lib)
+include_directories(${TENSORFLOW_INCLUDE_DIR})
+link_directories(${TENSORFLOW_LIB_DIR})
 
 # Automatyczne pobieranie SFML i nlohmann_json przez FetchContent
 include(FetchContent)
