@@ -9,11 +9,11 @@ An object-oriented project, that represents the simulator of the society, with d
 1. You need to build Docker image to run the simulator:
 
 ```bash
-docker build -t microsociety .
+docker build -t micro-society .
 ```
 
 2. After building run the container:
 
 ```bash
-docker run -it microsociety
+docker run -it micro-society
 ```
