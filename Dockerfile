@@ -14,6 +14,9 @@ RUN apt-get update && apt-get install -y \
     libsfml-dev \
     libcurl4-openssl-dev \
     libudev-dev \ 
+    libopenal-dev \
+    libvorbis-dev \ 
+    libogg-dev \
     && rm -rf /var/lib/apt/lists/*
 
 
