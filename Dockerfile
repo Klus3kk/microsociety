@@ -1,42 +1,37 @@
-cmake_minimum_required(VERSION 3.14)
-project(MicroSociety)
+# Using Ubuntu image as base
+FROM ubuntu:20.04
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+# Zaktualizuj system i zainstaluj podstawowe narzędzia, bez interaktywnych pytań
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Znalezienie TensorFlow C API
-include_directories(/usr/local/include)
-link_directories(/usr/local/lib)
 
-# Automatyczne pobieranie SFML i nlohmann_json przez FetchContent
-include(FetchContent)
+# Update the system and install basic tools
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    wget \
+    git \ 
+    libsfml-dev \
+    libcurl4-openssl-dev \
+    libudev-dev \ 
+    && rm -rf /var/lib/apt/lists/*
 
-FetchContent_Declare(
-  sfml
-  GIT_REPOSITORY https://github.com/SFML/SFML.git
-  GIT_TAG 2.6.1
-)
-FetchContent_MakeAvailable(sfml)
 
-FetchContent_Declare(
-  json
-  GIT_REPOSITORY https://github.com/nlohmann/json.git
-  GIT_TAG v3.10.5
-)
-FetchContent_MakeAvailable(json)
+# Download TensorFlow C API
+WORKDIR /tensorflow 
+RUN wget https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-linux-x86_64-2.6.0.tar.gz
+RUN tar -C /usr/local -xzf libtensorflow-cpu-linux-x86_64-2.6.0.tar.gz
+# Update dynamic linking
+RUN ldconfig 
 
-# Pliki źródłowe projektu
-file(GLOB SOURCES "src/*.cpp")
+# Working directory
+WORKDIR /app
 
-# Tworzenie pliku wykonywalnego
-add_executable(MicroSociety ${SOURCES})
+# Copy project files
+COPY . .
 
-# Linkowanie bibliotek TensorFlow, SFML i JSON
-target_link_libraries(MicroSociety
-    sfml-graphics
-    sfml-audio
-    sfml-system
-    sfml-window
-    nlohmann_json::nlohmann_json
-    tensorflow
-)
+# Create build folder and build a project
+RUN mkdir build && cd build && cmake .. && cmake --build .
+
+# Uruchomienie aplikacji po starcie kontenera
+CMD ["./build/MicroSociety"]
