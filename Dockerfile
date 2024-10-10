@@ -30,6 +30,17 @@ RUN apt-get update && apt-get install -y \
     libtiff-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# Download TensorFlow C++ library
+WORKDIR /tensorflow
+RUN wget -q --no-check-certificate https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-linux-x86_64-2.16.0.tar.gz
+RUN tar -C /usr/local -xzf libtensorflow-cpu-linux-x86_64-2.16.0.tar.gz
+
+# Set environment variables for TensorFlow
+ENV TENSORFLOW_INCLUDE_DIR=/usr/local/include
+ENV TENSORFLOW_LIB_DIR=/usr/local/lib
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+ENV CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:/usr/local/include
+
 # Set working directory for the project
 WORKDIR /app
 

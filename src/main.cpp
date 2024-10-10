@@ -9,8 +9,7 @@
 #include <SFML/System.hpp>    // Do zarządzania czasem i wątkami
 #include <SFML/Window.hpp>    // Do obsługi okien i zdarzeń
 /* AI */
-// #include <tensorflow/core/public/session.h>      // Główna sesja TensorFlow
-// #include <tensorflow/core/protobuf/meta_graph.pb.h> // 
+#include <tensorflow/core/public/session.h>      // Główna sesja TensorFlow
 /* WIELOWĄTKOWOŚĆ */
 #include <thread>    // Do tworzenia i zarządzania wątkami
 #include <mutex>     // Do synchronizacji wątków
@@ -21,32 +20,25 @@
 using std::cout;
 using std::endl;
 
-void gameLoop(sf::RenderWindow& window) {
-    while (window.isOpen())
-    {
-        // Process events
+void createWindow(sf::RenderWindow &window) {
+    window.create(sf::VideoMode(800, 600), "SFML window");
+}
+
+void gameLoop(sf::RenderWindow &window) {
+    while (window.isOpen()) {
         sf::Event event;
-        while (window.pollEvent(event))
-        {
-            // Close window: exit
+        while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed)
                 window.close();
         }
- 
-        // Clear screen
         window.clear();
- 
-        // Update the window
         window.display();
     }
 }
 
-sf::RenderWindow createWindow() {
-    sf::RenderWindow window(sf::VideoMode(800, 600), "SFML window");
-    return window;
-}
-
-auto main() -> int {
+int main() {
+    sf::RenderWindow window;
+    createWindow(window);
     gameLoop(window);
     return 0;
 }
