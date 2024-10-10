@@ -16,7 +16,8 @@
 #include <condition_variable>  // Do bardziej złożonej synchronizacji
 /* JSON */
 #include <nlohmann/json.hpp>   // Do obsługi plików JSON
-/* DEBUGOWANIE */
+/* KLASY */
+#include <Entity.hpp>
 using std::cout;
 using std::endl;
 
