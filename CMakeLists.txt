@@ -4,7 +4,11 @@ project(MicroSociety)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# Automatically fetch SFML and nlohmann_json libraries
+# Include directories
+include_directories(${TENSORFLOW_INCLUDE_DIR})
+link_directories(${TENSORFLOW_LIB_DIR})
+
+# Fetch SFML and nlohmann_json
 include(FetchContent)
 
 FetchContent_Declare(
@@ -21,10 +25,10 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(json)
 
-# Source files for your project
+# Add sources
 file(GLOB SOURCES "src/*.cpp")
 
-# Create the executable
+# Add executable
 add_executable(MicroSociety ${SOURCES})
 
 # Link libraries
@@ -34,4 +38,5 @@ target_link_libraries(MicroSociety
     sfml-system
     sfml-window
     nlohmann_json::nlohmann_json
+    tensorflow_cc
 )
