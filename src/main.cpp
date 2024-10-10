@@ -22,6 +22,6 @@ using std::cout;
 using std::endl;
 
 auto main() -> int {
-    cout << "Hello, World :o" << endl;
+    cout << "Hello, World" << endl;
     return 0;
 }
