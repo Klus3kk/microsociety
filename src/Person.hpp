@@ -1,11 +1,12 @@
 #ifndef PERSON.HPP 
 #define PERSON.HPP
 
-class Person : Entity:
+class Person : Entity {
 protected:
 
 public:
     virtual ~Person();
 
+};
 
 #endif 

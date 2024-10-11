@@ -17,29 +17,38 @@
 /* JSON */
 #include <nlohmann/json.hpp>   // Do obsługi plików JSON
 /* KLASY */
-#include <Entity.hpp>
+#include "Entity.hpp"
 using std::cout;
 using std::endl;
+
+// Referencje w klasach
+void createObjects() {
+    sf::RenderWindow window;
+    sf::Font font;
+    if(!font.loadFromFile("IBMPlexSans-MediumItalic.ttf")) return EXIT_FAILURE;
+    sf::Text testText("Test Text", font, 48);
+}
 
 void createWindow(sf::RenderWindow &window) {
     window.create(sf::VideoMode(800, 600), "SFML window");
 }
 
 void gameLoop(sf::RenderWindow &window) {
+    createObjects();
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed)
                 window.close();
         }
-        window.clear();
+        window.clear(sf::Color::Red);
+        window.draw(text);
         window.display();
     }
 }
 
 int main() {
-    sf::RenderWindow window;
     createWindow(window);
     gameLoop(window);
-    return 0;
+    return EXIT_SUCCESS;
 }

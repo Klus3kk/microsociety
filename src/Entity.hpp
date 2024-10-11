@@ -10,14 +10,13 @@ protected:
     std::string name;
     sf::Vector2f position;
     sf::Texture texture;
-    sf::Sprite sprite(texture);
+    sf::Sprite sprite;
 
 public:
-    Entity(int id, const std::string& name, sf::Vector2f pos, 
-    sf::Texture texture, sf::Sprite sprite(texture));  
-    virtual ~Entity(); // Can be overwritten
+    Entity(int id, const std::string& name, sf::Vector2f pos, sf::Texture texture);  
+    virtual ~Entity();
 
-    sf::Vector2f getPosition() const;  
-}
+    sf::Vector2f getPosition() const;
+};
 
-#endif
+#endif // ENTITY_HPP
