@@ -22,17 +22,6 @@ using std::cout;
 using std::endl;
 
 // Referencje w klasach
-void createObjects() {
-    sf::RenderWindow window;
-    sf::Font font;
-    if(!font.loadFromFile("IBMPlexSans-MediumItalic.ttf")) return EXIT_FAILURE;
-    sf::Text testText("Test Text", font, 48);
-}
-
-void createWindow(sf::RenderWindow &window) {
-    window.create(sf::VideoMode(800, 600), "SFML window");
-}
-
 void gameLoop(sf::RenderWindow &window) {
     createObjects();
     while (window.isOpen()) {
