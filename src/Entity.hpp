@@ -9,9 +9,12 @@ protected:
     int id;
     std::string name;
     sf::Vector2f position;
+    sf::Texture texture;
+    sf::Sprite sprite(texture);
 
 public:
-    Entity(int id, const std::string& name, sf::Vector2f pos)  
+    Entity(int id, const std::string& name, sf::Vector2f pos, 
+    sf::Texture texture, sf::Sprite sprite(texture));  
     virtual ~Entity(); // Can be overwritten
 
     sf::Vector2f getPosition() const;  
