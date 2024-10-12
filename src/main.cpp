@@ -18,26 +18,14 @@
 #include <nlohmann/json.hpp>   // Do obsługi plików JSON
 /* KLASY */
 #include "Entity.hpp"
+#include "Game.hpp"
 using std::cout;
 using std::endl;
 
 // Referencje w klasach
-void gameLoop(sf::RenderWindow &window) {
-    createObjects();
-    while (window.isOpen()) {
-        sf::Event event;
-        while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed)
-                window.close();
-        }
-        window.clear(sf::Color::Red);
-        window.draw(text);
-        window.display();
-    }
-}
 
 int main() {
-    createWindow(window);
-    gameLoop(window);
+    Game game;
+    game.run();
     return EXIT_SUCCESS;
 }
