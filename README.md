@@ -17,3 +17,24 @@ docker build -t micro-society .
 ```bash
 docker run -it micro-society
 ```
+Or you can build it by using CMake:
+```bash
+mkdir build
+```
+
+```bash
+cd build
+```
+
+```bash
+cmake ..
+```
+
+```bash
+make
+```
+
+After that, you can run it just by writing:
+```bash
+./MicroSociety
+```
