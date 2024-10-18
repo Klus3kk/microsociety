@@ -1,43 +1,73 @@
-# microsociety
+# MicroSociety
 
 ## Description
 
-An object-oriented project, that represents the simulator of the society, with dynamically changing events and AI implemented methods for more lively environments.
+MicroSociety is an object-oriented simulation project that models a dynamic society with AI-driven behaviors, events, and interactions. The project uses AI to create a lively, ever-changing environment.
 
 ## Setup
 
-1. You need to build Docker image to run the simulator:
+### Using Docker
 
-```bash
-docker build -t micro-society .
-```
+1. Build the Docker image:
 
-2. After building run the container:
+   ```bash
+   docker build -t micro-society .
+   ```
 
-```bash
-docker run -it micro-society
-```
+2. Run the Docker container:
 
-Or you can build it by using CMake:
+   ```bash
+   docker run -it micro-society
+   ```
 
-```bash
-mkdir build
-```
+### Using CMake (Linux)
 
-```bash
-cd build
-```
+1. Create a build directory:
 
-```bash
-cmake ..
-```
+   ```bash
+   mkdir build && cd build
+   ```
 
-```bash
-make
-```
+2. Run CMake and build:
 
-After that, you can run it just by writing:
+   ```bash
+   cmake .. && make
+   ```
 
-```bash
-./MicroSociety
-```
+3. Run the executable:
+
+   ```bash
+   ./MicroSociety
+   ```
+
+### Using CMake (Windows)
+
+1. Open the **Developer Command Prompt** for your compiler (e.g., MSVC).
+
+2. Create a build directory:
+
+   ```bash
+   mkdir build && cd build
+   ```
+
+3. Generate the project:
+
+   ```bash
+   cmake -G "NMake Makefiles" ..
+   ```
+
+4. Build the project:
+
+   ```bash
+   nmake
+   ```
+
+5. Run the executable:
+
+   ```bash
+   MicroSociety.exe
+   ```
+
+---
+
+This version separates the CMake setup instructions for Linux and Windows.
