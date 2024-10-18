@@ -4,15 +4,23 @@ project(MicroSociety)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# Automatically fetch Raylib and nlohmann_json libraries
+# Include directories for TensorFlow, Bazel output, and Protobuf
+# include_directories("/usr/local/include/tensorflow")
+# include_directories("/usr/local/include/tensorflow/bazel-bin/tensorflow/")  # Bazel output directory
+# include_directories("/usr/include/google/protobuf")    # Include Protobuf
+
+# Link TensorFlow libraries
+link_directories("/usr/local/lib")
+
+# Fetch SFML and nlohmann_json libraries
 include(FetchContent)
 
 FetchContent_Declare(
-  raylib
-  GIT_REPOSITORY https://github.com/raysan5/raylib.git
-  GIT_TAG 4.5.0
+  sfml
+  GIT_REPOSITORY https://github.com/SFML/SFML.git
+  GIT_TAG 2.6.1
 )
-FetchContent_MakeAvailable(raylib)
+FetchContent_MakeAvailable(sfml)
 
 FetchContent_Declare(
   json
@@ -21,14 +29,19 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(json)
 
-# Source files for your project
+# Add sources
 file(GLOB SOURCES "src/*.cpp")
 
-# Create the executable
+# Add executable
 add_executable(MicroSociety ${SOURCES})
 
-# Link libraries
+# Link TensorFlow, SFML, and other libraries
 target_link_libraries(MicroSociety
-    raylib
+    sfml-graphics
+    sfml-audio
+    sfml-system
+    sfml-window
     nlohmann_json::nlohmann_json
+    # tensorflow_cc   # Link TensorFlow C++ API
+    # tensorflow_framework  # TensorFlow framework if needed
 )

@@ -13,7 +13,7 @@ protected:
     sf::Sprite sprite;
 
 public:
-    Entity(int id, const std::string& name, sf::Vector2f pos, sf::Texture texture);  
+    Entity(int id, const std::string& name, sf::Vector2f pos, sf::Texture texture);  // Konstruktor 
     virtual ~Entity();
 
     sf::Vector2f getPosition() const;
