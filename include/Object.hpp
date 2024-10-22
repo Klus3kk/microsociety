@@ -6,6 +6,7 @@
 class Object {
 protected:
     sf::Sprite sprite;
+    sf::Texture texture;
 public:
     virtual void draw(sf::RenderWindow& window) = 0;
     virtual ~Object() = default;
@@ -17,7 +18,8 @@ public:
 
 class Tree : public Object {
 public:
-    Tree(const sf::Texture& texture) {
+    Tree(const sf::Texture& tex) {
+        texture = tex;
         sprite.setTexture(texture);
     }
     void draw(sf::RenderWindow& window) override {
@@ -27,7 +29,8 @@ public:
 
 class Rock : public Object {
 public:
-    Rock(const sf::Texture& texture) {
+    Rock(const sf::Texture& tex) {
+        texture = tex;
         sprite.setTexture(texture);
     }
     void draw(sf::RenderWindow& window) override {
@@ -37,7 +40,8 @@ public:
 
 class Bush : public Object {
 public:
-    Bush(const sf::Texture& texture) {
+    Bush(const sf::Texture& tex) {
+        texture = tex;
         sprite.setTexture(texture);
     }
     void draw(sf::RenderWindow& window) override {
