@@ -9,7 +9,8 @@ protected:
 public:
     virtual void draw(sf::RenderWindow& window) = 0;
     virtual ~Object() = default;
-    virtual void setPosition(float x, float y) {
+
+    void setPosition(float x, float y) {
         sprite.setPosition(x, y);  // Set the sprite position
     }
 };

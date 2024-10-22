@@ -20,6 +20,9 @@ public:
 
     void setPosition(float x, float y) {
         sprite.setPosition(x, y);
+        if (object) {
+            object->setPosition(x, y);  // Ensure object position matches tile position
+        }
     }
 
     virtual void draw(sf::RenderWindow &window) const {

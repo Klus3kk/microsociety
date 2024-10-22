@@ -33,7 +33,7 @@ void Game::generateMap() {
     // Load textures for grass, stone, and flower tiles
     std::vector<sf::Texture> grassTextures(3), stoneTextures(3), flowerTextures(5); // Tiles textures
     std::vector<sf::Texture> bushTextures(2), rockTextures(3), treeTextures(5); // Object textures
-    
+
     grassTextures[0].loadFromFile("../assets/tiles/grass/grass1.png");
     grassTextures[1].loadFromFile("../assets/tiles/grass/grass2.png");
     grassTextures[2].loadFromFile("../assets/tiles/grass/grass3.png");
