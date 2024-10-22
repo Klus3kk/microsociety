@@ -20,3 +20,6 @@ CMakeCache.txt
 # Pliki systemowe
 .DS_Store
 Thumbs.db
+
+# Plik testowy
+test
