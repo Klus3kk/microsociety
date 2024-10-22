@@ -50,5 +50,5 @@ elseif(UNIX)
 endif()
 
 # Add the test executable for testing terrain generation and object placement
-add_executable(TestTerrain tests/test_terrain.cpp)
+add_executable(TestTerrain tests/test_terrain.cpp src/Game.cpp include/Tile.hpp include/Object.hpp)
 target_link_libraries(TestTerrain PRIVATE sfml-graphics sfml-audio sfml-system sfml-window nlohmann_json::nlohmann_json)
