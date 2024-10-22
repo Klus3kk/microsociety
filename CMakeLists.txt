@@ -8,6 +8,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # Option to build shared or static libraries
 option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 
+# Include the directory for headers (adjusted for include directory)
+include_directories(${CMAKE_SOURCE_DIR}/include)
+
 # Automatically fetch SFML and nlohmann_json libraries
 include(FetchContent)
 FetchContent_Declare(SFML
@@ -45,4 +48,3 @@ if(WIN32)
 elseif(UNIX)
     target_link_libraries(MicroSociety PRIVATE sfml-graphics sfml-audio sfml-system sfml-window nlohmann_json::nlohmann_json pthread)
 endif()
-
