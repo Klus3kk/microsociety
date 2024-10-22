@@ -17,18 +17,24 @@ void testTerrainGeneration() {
 // Test object placement on tiles
 void testObjectPlacement() {
     Game game;
+    game.generateMap();  // Ensure the map is generated
     const auto& tileMap = game.getTileMap();  // Use the getter
 
     for (const auto& row : tileMap) {
         for (const auto& tile : row) {
             if (auto grassTile = dynamic_cast<GrassTile*>(tile.get())) {
-                assert(!grassTile->getObject() || dynamic_cast<Tree*>(grassTile->getObject()) || dynamic_cast<Bush*>(grassTile->getObject()));
+                if (grassTile->getObject()) {
+                    assert(dynamic_cast<Tree*>(grassTile->getObject()) || dynamic_cast<Bush*>(grassTile->getObject()));
+                }
             } else if (auto stoneTile = dynamic_cast<StoneTile*>(tile.get())) {
-                assert(!stoneTile->getObject() || dynamic_cast<Rock*>(stoneTile->getObject()));
+                if (stoneTile->getObject()) {
+                    assert(dynamic_cast<Rock*>(stoneTile->getObject()));
+                }
             }
         }
     }
 }
+
 
 int main() {
     testTerrainGeneration();
