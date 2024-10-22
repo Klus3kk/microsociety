@@ -12,6 +12,7 @@
 class Game {
 private:
     sf::RenderWindow window;
+    float deltaTime;
     std::vector<std::vector<std::unique_ptr<Tile>>> tileMap;
 
 public:

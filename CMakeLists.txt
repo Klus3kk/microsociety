@@ -8,9 +8,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # Option to build shared or static libraries
 option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 
-# Include the directory for headers (adjusted for include directory)
-include_directories(${CMAKE_SOURCE_DIR}/include)
-
 # Automatically fetch SFML and nlohmann_json libraries
 include(FetchContent)
 FetchContent_Declare(SFML
@@ -25,6 +22,9 @@ FetchContent_Declare(nlohmann_json
     GIT_SHALLOW ON
     EXCLUDE_FROM_ALL)
 FetchContent_MakeAvailable(SFML nlohmann_json)
+
+# Add include directory
+include_directories(${CMAKE_SOURCE_DIR}/include)
 
 # Add source files
 file(GLOB SOURCES "src/*.cpp")
