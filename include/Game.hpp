@@ -20,6 +20,11 @@ public:
     void run();
     void generateMap();
     void render();
+    
+    // Getter to access tileMap for testing
+    const std::vector<std::vector<std::unique_ptr<Tile>>>& getTileMap() const {
+        return tileMap;
+    }
 };
 
 #endif // GAME_HPP

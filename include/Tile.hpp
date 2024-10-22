@@ -39,6 +39,10 @@ public:
         }
     }
 
+    Object* getObject() const {
+        return object.get();  // Return the stored object
+    }
+
 };
 
 #endif // TILE_HPP

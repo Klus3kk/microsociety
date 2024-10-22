@@ -32,7 +32,7 @@ file(GLOB SOURCES "src/*.cpp")
 # Add assets files
 file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
 
-# Add executable
+# Add executable for the main project
 add_executable(MicroSociety ${SOURCES})
 
 # Platform-specific settings
@@ -48,3 +48,7 @@ if(WIN32)
 elseif(UNIX)
     target_link_libraries(MicroSociety PRIVATE sfml-graphics sfml-audio sfml-system sfml-window nlohmann_json::nlohmann_json pthread)
 endif()
+
+# Add the test executable for testing terrain generation and object placement
+add_executable(TestTerrain tests/test_terrain.cpp)
+target_link_libraries(TestTerrain PRIVATE sfml-graphics sfml-audio sfml-system sfml-window nlohmann_json::nlohmann_json)
