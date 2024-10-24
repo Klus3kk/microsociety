@@ -1,15 +1,23 @@
 #include "Game.hpp"
 #include "FastNoiseLite.h"
-#include "PlayerEntity.hpp"
-
-PlayerEntity player(100, 50, 100, 2.0f, 10, 100);
+#include "Player.hpp"
 
 Game::Game() : window(sf::VideoMode(1024, 768), "MicroSociety") {
     generateMap();
 }
 
 void Game::run() {
-    sf::Clock clock;  // Create a clock for delta time
+    sf::Clock clock;
+    PlayerEntity player(100, 50, 50, 1.0f, 10, 100);
+    player.setSize(2.0f, 2.0f);
+    
+    sf::Texture playerTexture;
+    if (!playerTexture.loadFromFile("../assets/npc/person1.png")) {
+        std::cerr << "Error loading player texture\n";
+    }
+    player.setTexture(playerTexture);
+    player.setPosition(100, 100);
+
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -17,17 +25,17 @@ void Game::run() {
                 window.close();
         }
 
-        player.handleInput();
-        
-        // Calculating deltaTime
         sf::Time dt = clock.restart();
         deltaTime = dt.asSeconds();
 
         window.clear();
-        render();
+        render();  // Map render
+        player.handleInput();  // Player movement input
+        player.draw(window);   // Draw player entity
         window.display();
     }
 }
+
 
 void Game::generateMap() {
     // Initialize FastNoiseLite for Perlin Noise

@@ -1,5 +1,5 @@
-#ifndef PLAYERENTITY_HPP
-#define PLAYERENTITY_HPP
+#ifndef PLAYER_HPP
+#define PLAYER_HPP
 
 #include "Entity.hpp"
 #include <SFML/Window.hpp>

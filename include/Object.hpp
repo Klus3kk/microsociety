@@ -14,6 +14,10 @@ public:
     void setPosition(float x, float y) {
         sprite.setPosition(x, y);  // Set the sprite position
     }
+
+    void setSize(float scaleX, float scaleY) {
+        sprite.setScale(scaleX, scaleY);  
+    }
 };
 
 class Tree : public Object {

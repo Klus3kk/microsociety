@@ -2,7 +2,7 @@
 #define ENTITY_HPP
 
 #include <SFML/Graphics.hpp>
-
+#include <iostream>
 class Entity {
 protected:
     float health;
@@ -37,6 +37,15 @@ public:
         sprite.setPosition(position);
     }
 
+    void setSize(float scaleX, float scaleY) {
+        sprite.setScale(scaleX, scaleY);  
+    }
+
+    sf::Vector2f getPosition() const {
+        return position;
+    }
+    
+
     // Function to draw the entity
     void draw(sf::RenderWindow &window) {
         window.draw(sprite);
@@ -52,10 +61,11 @@ public:
     float getMoney() const { return money; }
 
     // Movement function (just an example for NPC movement)
-    void move(float dx, float dy) {
-        position.x += dx * speed;
-        position.y += dy * speed;
+    void move(float dx, float dy, float deltaTime) {
+        position.x += dx * speed * deltaTime;
+        position.y += dy * speed * deltaTime;
         sprite.setPosition(position);
+        std::cout << "Entity moved to (" << position.x << ", " << position.y << ")\n";
     }
 };
 
