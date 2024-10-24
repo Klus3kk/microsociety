@@ -16,6 +16,8 @@ private:
     std::vector<std::vector<std::unique_ptr<Tile>>> tileMap;
 
 public:
+    int mapWidth = 1024;
+    int mapHeight = 768;
     Game();
     void run();
     void generateMap();

@@ -2,13 +2,13 @@
 #include "FastNoiseLite.h"
 #include "Player.hpp"
 
-Game::Game() : window(sf::VideoMode(1024, 768), "MicroSociety") {
+Game::Game() : window(sf::VideoMode(mapHeight, mapWidth), "MicroSociety") {
     generateMap();
 }
 
 void Game::run() {
     sf::Clock clock;
-    PlayerEntity player(100, 50, 50, 1.0f, 10, 100);
+    PlayerEntity player(100, 50, 50, 150.0f, 10, 100);
     player.setSize(2.0f, 2.0f);
     
     sf::Texture playerTexture;
@@ -23,6 +23,9 @@ void Game::run() {
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed)
                 window.close();
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
+                exit(1);
+        }
         }
 
         sf::Time dt = clock.restart();
@@ -30,7 +33,7 @@ void Game::run() {
 
         window.clear();
         render();  // Map render
-        player.handleInput();  // Player movement input
+        player.handleInput(deltaTime);  // Player movement input
         player.draw(window);   // Draw player entity
         window.display();
     }

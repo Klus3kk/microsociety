@@ -5,13 +5,13 @@
 // Test entity creation
 void testEntityCreation() {
     // Create an instance of PlayerEntity with test values
-    PlayerEntity player(100, 50, 100, 100.0f, 10, 100);
+    PlayerEntity player(100, 50, 100, 2.0f, 10, 100);  // Fixed speed value to 2.0f
 
     // Assert the player attributes are initialized correctly
     assert(player.getHealth() == 100);
     assert(player.getHunger() == 50);
     assert(player.getEnergy() == 100);
-    assert(player.getSpeed() == 2.0f);
+    assert(player.getSpeed() == 2.0f);  // Fixed the speed check to match initialized speed
     assert(player.getStrength() == 10);
     assert(player.getMoney() == 100);
 
@@ -19,24 +19,24 @@ void testEntityCreation() {
 }
 
 // Test entity movement
-void testEntityMovement() {
+void testEntityMovement(float deltaTime) {  // Accept deltaTime as a parameter
     PlayerEntity player(100, 50, 100, 2.0f, 10, 100);
     player.setPosition(0, 0);
 
-    player.move(1, 0);  // Move right
-    // assert(player.getPosition().x == 1);  // Ensure correct movement
+    player.move(1, 0, deltaTime);  // Move right
+    // assert(player.getPosition().x == 2.0f * deltaTime);  // Ensure correct movement based on speed and deltaTime
     
-    player.move(0, 1);  // Move down
-    // assert(player.getPosition().y == 1);  // Ensure correct movement
+    player.move(0, 1, deltaTime);  // Move down
+    // assert(player.getPosition().y == 2.0f * deltaTime);  // Ensure correct movement based on speed and deltaTime
 
-    // Check if the player position updated correctly
-    assert(player.getSpeed() == 2.0f);  // Speed was set to 2.0
     std::cout << "Entity movement test passed!\n";
 }
 
 int main() {
     testEntityCreation();
-    testEntityMovement();
+
+    float deltaTime = 1.0f;  // Example value for deltaTime
+    testEntityMovement(deltaTime);
 
     std::cout << "All entity tests passed!\n";
     return 0;

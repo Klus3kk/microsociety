@@ -10,18 +10,18 @@ public:
         : Entity(initHealth, initHunger, initEnergy, initSpeed, initStrength, initMoney) {}
 
     // Handling user input for movement
-    void handleInput() {
+    void handleInput(float deltaTime) {
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
-            move(0, -1);  // Move up
+            move(0, -1, deltaTime);  // Move up
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
-            move(0, 1);   // Move down
+            move(0, 1, deltaTime);   // Move down
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
-            move(-1, 0);  // Move left
+            move(-1, 0, deltaTime);  // Move left
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
-            move(1, 0);   // Move right
+            move(1, 0, deltaTime);   // Move right
         }
     }
 };
