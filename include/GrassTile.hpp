@@ -6,8 +6,8 @@
 class GrassTile : public Tile {
 public:
     GrassTile(const sf::Texture& texture) {
-        setTexture(texture);  // Assign one of three grass textures here
+        setTexture(texture);  
     }
 };
 
-#endif // GRASSTILE_HPP
+#endif 
