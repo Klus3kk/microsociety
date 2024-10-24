@@ -49,6 +49,8 @@ elseif(UNIX)
     target_link_libraries(MicroSociety PRIVATE sfml-graphics sfml-audio sfml-system sfml-window nlohmann_json::nlohmann_json pthread)
 endif()
 
-# Add the test executable for testing terrain generation and object placement
+# Add the test executable for unit tests
 add_executable(TestTerrain tests/test_terrain.cpp src/Game.cpp include/Tile.hpp include/Object.hpp)
 target_link_libraries(TestTerrain PRIVATE sfml-graphics sfml-audio sfml-system sfml-window nlohmann_json::nlohmann_json)
+add_executable(TestEntity tests/test_entity.cpp)
+target_link_libraries(TestEntity PRIVATE sfml-graphics sfml-audio sfml-system sfml-window)

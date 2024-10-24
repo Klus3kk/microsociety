@@ -1,5 +1,8 @@
 #include "Game.hpp"
 #include "FastNoiseLite.h"
+#include "PlayerEntity.hpp"
+
+PlayerEntity player(100, 50, 100, 2.0f, 10, 100);
 
 Game::Game() : window(sf::VideoMode(1024, 768), "MicroSociety") {
     generateMap();
@@ -14,6 +17,8 @@ void Game::run() {
                 window.close();
         }
 
+        player.handleInput();
+        
         // Calculating deltaTime
         sf::Time dt = clock.restart();
         deltaTime = dt.asSeconds();

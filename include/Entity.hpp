@@ -40,6 +40,7 @@ public:
     // Function to draw the entity
     void draw(sf::RenderWindow &window) {
         window.draw(sprite);
+        std::cout << "Drawing entity at position (" << position.x << ", " << position.y << "\n";
     }
 
     // Accessors
