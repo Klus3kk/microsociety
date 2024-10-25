@@ -6,13 +6,13 @@
 class Object {
 protected:
     sf::Sprite sprite;
-    sf::Texture texture;
+    sf::Texture texture; // make sure that texture is declared here, because if you assign tex to the sprite, without assigning it to variable sf::Texture, it won't work
 public:
     virtual void draw(sf::RenderWindow& window) = 0;
     virtual ~Object() = default;
 
     void setPosition(float x, float y) {
-        sprite.setPosition(x, y);  // Set the sprite position
+        sprite.setPosition(x, y); 
     }
 
     void setSize(float scaleX, float scaleY) {
@@ -53,4 +53,4 @@ public:
     }
 };
 
-#endif // OBJECT_HPP
+#endif

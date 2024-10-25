@@ -11,4 +11,4 @@ public:
     virtual ~StoneTile() {}
 };
 
-#endif // STONETILE_HPP
+#endif 

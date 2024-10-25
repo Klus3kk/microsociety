@@ -12,47 +12,49 @@ protected:
     float strength;
     float money;
 
-    sf::Vector2f position;  // Position on the map
-    sf::Sprite sprite;      // For rendering the NPC
-    sf::Texture texture;    // NPC texture
+    sf::Vector2f position;  // position on the map
+    sf::Sprite sprite;      // for rendering the NPC
+    sf::Texture texture;    // Entity's texture
 
 public:
-    // Constructor to initialize attributes
+    // constructor to initialize attributes
     Entity(float initHealth, float initHunger, float initEnergy, float initSpeed, float initStrength, float initMoney)
         : health(initHealth), hunger(initHunger), energy(initEnergy), speed(initSpeed), strength(initStrength), money(initMoney) {
     }
 
-    // Destructor
+    // destructor
     virtual ~Entity() = default;
 
-    // Function to set texture for the entity
+    // function to set texture for the entity
     void setTexture(const sf::Texture& tex) {
         texture = tex;
         sprite.setTexture(texture);
     }
 
-    // Function to set position of the entity
+    // function to set position of the entity
     void setPosition(float x, float y) {
         position = {x, y};
         sprite.setPosition(position);
     }
 
+    // function to set the size of the entity
     void setSize(float scaleX, float scaleY) {
         sprite.setScale(scaleX, scaleY);  
     }
 
+    // function to get the current position of the entity
     sf::Vector2f getPosition() const {
         return position;
     }
     
 
-    // Function to draw the entity
+    // function to draw the entity
     void draw(sf::RenderWindow &window) {
         window.draw(sprite);
-        std::cout << "Drawing entity at position (" << position.x << ", " << position.y << "\n";
+        std::cout << "Drawing entity at position (" << position.x << ", " << position.y << ")\n";
     }
 
-    // Accessors
+    // accessors
     float getHealth() const { return health; }
     float getHunger() const { return hunger; }
     float getEnergy() const { return energy; }
@@ -60,7 +62,7 @@ public:
     float getStrength() const { return strength; }
     float getMoney() const { return money; }
 
-    // Movement function (just an example for NPC movement)
+    // movement function based on screen's framerate
     void move(float dx, float dy, float deltaTime) {
         position.x += dx * speed * deltaTime;
         position.y += dy * speed * deltaTime;

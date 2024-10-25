@@ -16,17 +16,17 @@ private:
     std::vector<std::vector<std::unique_ptr<Tile>>> tileMap;
 
 public:
-    int mapWidth = 1024;
-    int mapHeight = 768;
+    int mapWidth = 800;
+    int mapHeight = 800;
     Game();
     void run();
     void generateMap();
     void render();
     
-    // Getter to access tileMap for testing
+    // getter to access tileMap for testing
     const std::vector<std::vector<std::unique_ptr<Tile>>>& getTileMap() const {
         return tileMap;
     }
 };
 
-#endif // GAME_HPP
+#endif 

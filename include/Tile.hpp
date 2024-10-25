@@ -20,15 +20,15 @@ public:
 
     void setPosition(float x, float y) {
         sprite.setPosition(x, y);
-        if (object) {
-            object->setPosition(x, y);  // Ensure object position matches tile position
+        if (object) {  // if statement for ensuring object position matches tile position
+            object->setPosition(x, y); 
         }
     }
 
     virtual void draw(sf::RenderWindow &window) const {
         window.draw(sprite);
-        if (object) {
-            object->draw(window);  // Draw the object
+        if (object) { // if object exists, draw the object
+            object->draw(window);  
         }
     }
 
@@ -40,12 +40,12 @@ public:
     }
 
     Object* getObject() const {
-        return object.get();  // Return the stored object
+        return object.get();  // return the stored object
     }
 
 };
 
-#endif // TILE_HPP
+#endif 
 
 
 

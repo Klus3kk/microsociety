@@ -2,7 +2,7 @@
 #include "FastNoiseLite.h"
 #include "Player.hpp"
 
-Game::Game() : window(sf::VideoMode(mapHeight, mapWidth), "MicroSociety") {
+Game::Game() : window(sf::VideoMode(mapWidth, mapHeight), "MicroSociety") { // overloading
     generateMap();
 }
 
@@ -13,10 +13,11 @@ void Game::run() {
     
     sf::Texture playerTexture;
     if (!playerTexture.loadFromFile("../assets/npc/person1.png")) {
-        std::cerr << "Error loading player texture\n";
+        std::cerr << "Error loading player's texture\n";
     }
+
     player.setTexture(playerTexture);
-    player.setPosition(100, 100);
+    player.setPosition(mapWidth / 2, mapHeight / 2);
 
     while (window.isOpen()) {
         sf::Event event;
@@ -32,23 +33,23 @@ void Game::run() {
         deltaTime = dt.asSeconds();
 
         window.clear();
-        render();  // Map render
-        player.handleInput(deltaTime);  // Player movement input
-        player.draw(window);   // Draw player entity
+        render();  // map render
+        player.handleInput(deltaTime);  // player movement input (it will be changed automatically in the future)
+        player.draw(window);   // draw player's entity
         window.display();
     }
 }
 
 
 void Game::generateMap() {
-    // Initialize FastNoiseLite for Perlin Noise
+    // initialize FastNoiseLite for Perlin Noise
     FastNoiseLite noise;
     noise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
-    noise.SetFrequency(0.1f);  // Adjust for scaling of noise
-    noise.SetSeed(static_cast<int>(time(nullptr))); // Random map every time
-    // Load textures for grass, stone, and flower tiles
-    std::vector<sf::Texture> grassTextures(3), stoneTextures(3), flowerTextures(5); // Tiles textures
-    std::vector<sf::Texture> bushTextures(2), rockTextures(3), treeTextures(5); // Object textures
+    noise.SetFrequency(0.1f);  // adjust for scaling of noise
+    noise.SetSeed(static_cast<int>(time(nullptr))); // random map every time
+    // loading textures
+    std::vector<sf::Texture> grassTextures(3), stoneTextures(3), flowerTextures(5); // tiles textures
+    std::vector<sf::Texture> bushTextures(2), rockTextures(3), treeTextures(5); // object textures
 
     grassTextures[0].loadFromFile("../assets/tiles/grass/grass1.png");
     grassTextures[1].loadFromFile("../assets/tiles/grass/grass2.png");
@@ -81,10 +82,10 @@ void Game::generateMap() {
     for (int i = 0; i < rows; ++i) {
         tileMap[i].resize(cols);
         for (int j = 0; j < cols; ++j) {
-            float noiseValue = noise.GetNoise((float)i, (float)j);  // Get Perlin Noise value
-            noiseValue = (noiseValue + 1) / 2;  // Normalize value between 0 and 1
+            float noiseValue = noise.GetNoise((float)i, (float)j);  // get Perlin Noise value
+            noiseValue = (noiseValue + 1) / 2;  // normalize value between 0 and 1
 
-            // Determine terrain based on noise thresholds
+            // determine terrain based on noise thresholds
             if (noiseValue < 0.18f) { 
                 tileMap[i][j] = std::make_unique<FlowerTile>(flowerTextures[rand() % 5]);
             }else if (noiseValue < 0.6f)  
@@ -95,16 +96,16 @@ void Game::generateMap() {
 
             tileMap[i][j]->setPosition(j * 32, i * 32);
 
-            int objChance = rand() % 100;
+            int objChance = rand() % 100; // object chances for creation
             if (auto grassTile = dynamic_cast<GrassTile*>(tileMap[i][j].get())) {
                 if (objChance < 10) {
-                    tileMap[i][j]->placeObject(std::make_unique<Tree>(treeTextures[rand() % 3]));  // Random tree texture
+                    tileMap[i][j]->placeObject(std::make_unique<Tree>(treeTextures[rand() % 3]));  // random tree texture
                 } else if (objChance < 15) {
-                    tileMap[i][j]->placeObject(std::make_unique<Bush>(bushTextures[rand() % 2]));  // Random bush texture
+                    tileMap[i][j]->placeObject(std::make_unique<Bush>(bushTextures[rand() % 2]));  // random bush texture
                 }
             } else if (auto stoneTile = dynamic_cast<StoneTile*>(tileMap[i][j].get())) {
                 if (objChance < 20) {
-                    tileMap[i][j]->placeObject(std::make_unique<Rock>(rockTextures[rand() % 3]));  // Random rock texture
+                    tileMap[i][j]->placeObject(std::make_unique<Rock>(rockTextures[rand() % 3]));  // random rock texture
                 }
             }
         }

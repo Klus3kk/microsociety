@@ -9,7 +9,7 @@
 #include <SFML/System.hpp>    // Do zarządzania czasem i wątkami
 #include <SFML/Window.hpp>    // Do obsługi okien i zdarzeń
 /* AI */
-// #include <tensorflow/core/public/session.h>      // Główna sesja TensorFlow
+// #include <tensorflow/core/public/session.h>      // Główna sesja TensorFlow C++ API do importowania modelu z Pythona
 /* WIELOWĄTKOWOŚĆ */
 #include <thread>    // Do tworzenia i zarządzania wątkami
 #include <mutex>     // Do synchronizacji wątków

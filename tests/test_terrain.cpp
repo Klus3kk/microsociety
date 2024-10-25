@@ -1,24 +1,24 @@
-// test_terrain.cpp
 #include <cassert>
 #include "Game.hpp"
 #include <iostream>
 
-// Test terrain generation to ensure it generates all tile types
+// test terrain generation to ensure it generates all tile types
 void testTerrainGeneration() {
     Game game;
-    const auto& tileMap = game.getTileMap();  // Use the getter
+    const auto& tileMap = game.getTileMap();  // getter
 
     for (const auto& row : tileMap) {
         for (const auto& tile : row) {
-            assert(tile != nullptr);  // Ensure every tile exists
+            assert(tile != nullptr);  // ensure every tile exists
         }
     }
+    std::cout << "Test Terrain Generation passed!\n";
 }
-// Test object placement on tiles
+// test object placement on tiles
 void testObjectPlacement() {
     Game game;
-    game.generateMap();  // Ensure the map is generated
-    const auto& tileMap = game.getTileMap();  // Use the getter
+    game.generateMap();
+    const auto& tileMap = game.getTileMap(); 
 
     for (const auto& row : tileMap) {
         for (const auto& tile : row) {
@@ -33,6 +33,7 @@ void testObjectPlacement() {
             }
         }
     }
+    std::cout << "Test Object Placement passed!\n";
 }
 
 
