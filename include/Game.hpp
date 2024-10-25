@@ -16,8 +16,8 @@ private:
     std::vector<std::vector<std::unique_ptr<Tile>>> tileMap;
 
 public:
-    int mapWidth = 800;
-    int mapHeight = 800;
+    static constexpr int mapWidth = 800; // damn, thanks chat lol
+    static constexpr int mapHeight = 800;
     Game();
     void run();
     void generateMap();
