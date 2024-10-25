@@ -47,7 +47,10 @@ public:
     sf::Vector2f getPosition() const {
         return position;
     }
-    
+    // function for getting the current sprite of the entity
+    sf::Sprite& getSprite() {
+        return sprite;
+    }
 
     // function to draw the entity
     void draw(sf::RenderWindow &window) {

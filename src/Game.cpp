@@ -1,7 +1,7 @@
 #include "Game.hpp"
 #include "FastNoiseLite.h"
 #include "Player.hpp"
-
+#include <random>
 Game::Game() : window(sf::VideoMode(mapWidth, mapHeight), "MicroSociety") { // overloading
     generateMap();
 }
@@ -15,7 +15,15 @@ void Game::run() {
     if (!playerTexture.loadFromFile("../assets/npc/person1.png")) {
         std::cerr << "Error loading player's texture\n";
     }
-    
+
+    // Generate random color values
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> colorDist(0, 255);
+
+    sf::Color randomColor(colorDist(gen), colorDist(gen), colorDist(gen));
+    player.getSprite().setColor(randomColor);
+
 
     player.setTexture(playerTexture);
     player.setPosition(mapWidth / 2, mapHeight / 2);
