@@ -3,6 +3,7 @@
 
 #include <SFML/Graphics.hpp>
 #include <iostream>
+#include "Game.hpp"
 class Entity {
 protected:
     float health;
@@ -64,8 +65,17 @@ public:
 
     // movement function based on screen's framerate
     void move(float dx, float dy, float deltaTime) {
-        position.x += dx * speed * deltaTime;
-        position.y += dy * speed * deltaTime;
+        float newX = position.x + dx * speed * deltaTime;
+        float newY = position.y + dy * speed * deltaTime;
+
+        // Check if new position is within bounds
+        if (newX < -20) newX = -20; // Left boundary
+        if (newY < -8) newY = -8; // Top boundary
+        if (newX + sprite.getGlobalBounds().width > Game::mapWidth + 25)
+            newX = Game::mapWidth - sprite.getGlobalBounds().width + 25; // Right boundary
+        if (newY + sprite.getGlobalBounds().height > Game::mapHeight + 6)
+            newY = Game::mapHeight - sprite.getGlobalBounds().height + 6; // Bottom boundary
+        position = {newX, newY};
         sprite.setPosition(position);
         std::cout << "Entity moved to (" << position.x << ", " << position.y << ")\n";
     }

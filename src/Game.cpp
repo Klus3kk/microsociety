@@ -15,6 +15,7 @@ void Game::run() {
     if (!playerTexture.loadFromFile("../assets/npc/person1.png")) {
         std::cerr << "Error loading player's texture\n";
     }
+    
 
     player.setTexture(playerTexture);
     player.setPosition(mapWidth / 2, mapHeight / 2);
