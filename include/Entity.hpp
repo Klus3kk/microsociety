@@ -27,10 +27,12 @@ public:
     virtual ~Entity() = default;
 
     // function to set texture for the entity
-    void setTexture(const sf::Texture& tex) {
+    void setTexture(const sf::Texture& tex, const sf::Color& color = sf::Color::White) {
         texture = tex;
         sprite.setTexture(texture);
+        sprite.setColor(color); // Set the color directly
     }
+
 
     // function to set position of the entity
     void setPosition(float x, float y) {
@@ -48,9 +50,10 @@ public:
         return position;
     }
     // function for getting the current sprite of the entity
-    sf::Sprite& getSprite() {
+    const sf::Sprite& getSprite() const {
         return sprite;
     }
+
 
     // function to draw the entity
     void draw(sf::RenderWindow &window) {
@@ -82,6 +85,12 @@ public:
         sprite.setPosition(position);
         std::cout << "Entity moved to (" << position.x << ", " << position.y << ")\n";
     }
+
+    // function for cheching collision
+    bool checkCollision(const Entity& other) const {
+        return sprite.getGlobalBounds().intersects(other.getSprite().getGlobalBounds());
+    }
+
 };
 
 #endif 

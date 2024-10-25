@@ -22,10 +22,10 @@ void Game::run() {
     std::uniform_int_distribution<> colorDist(0, 255);
 
     sf::Color randomColor(colorDist(gen), colorDist(gen), colorDist(gen));
-    player.getSprite().setColor(randomColor);
 
+    // Set texture and color together
+    player.setTexture(playerTexture, randomColor);
 
-    player.setTexture(playerTexture);
     player.setPosition(mapWidth / 2, mapHeight / 2);
 
     while (window.isOpen()) {
@@ -35,15 +35,26 @@ void Game::run() {
                 window.close();
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
                 exit(1);
-        }
+            }
         }
 
         sf::Time dt = clock.restart();
         deltaTime = dt.asSeconds();
 
+        sf::Vector2f previousPosition = player.getPosition();
+        player.handleInput(deltaTime);  // player movement input (it will be changed automatically in the future)
+
+        int playerTileX = player.getPosition().x / 32;
+        int playerTileY = player.getPosition().y / 32;
+
+        if (tileMap[playerTileY][playerTileX]->hasObject() && 
+            player.getSprite().getGlobalBounds().intersects(tileMap[playerTileY][playerTileX]->getObjectBounds())) {
+            player.setPosition(previousPosition.x, previousPosition.y); // Revert to previous position if collision
+        }
+
+
         window.clear();
         render();  // map render
-        player.handleInput(deltaTime);  // player movement input (it will be changed automatically in the future)
         player.draw(window);   // draw player's entity
         window.display();
     }

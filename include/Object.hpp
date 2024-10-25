@@ -11,6 +11,10 @@ public:
     virtual void draw(sf::RenderWindow& window) = 0;
     virtual ~Object() = default;
 
+    const sf::Sprite& getSprite() const {
+        return sprite;
+    }
+
     void setPosition(float x, float y) {
         sprite.setPosition(x, y); 
     }

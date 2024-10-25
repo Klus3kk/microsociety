@@ -43,6 +43,15 @@ public:
         return object.get();  // return the stored object
     }
 
+    bool hasObject() const {
+        return object != nullptr;
+    }
+
+    sf::FloatRect getObjectBounds() const {
+        return object ? object->getSprite().getGlobalBounds() : sf::FloatRect();
+    }
+
+
 };
 
 #endif 
