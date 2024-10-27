@@ -11,6 +11,14 @@ void Game::run() {
     PlayerEntity player(100, 50, 50, 150.0f, 10, 100);
     player.setSize(2.0f, 2.0f);
     
+    sf::Image icon;
+    if (icon.loadFromFile("assets/icon/favicon.png")) {
+        window.setIcon(icon.getSize().x, icon.getSize().y, icon.getPixelsPtr());
+    } else {
+        std::cerr << "Error loading icon!\n";
+    }
+
+
     sf::Texture playerTexture;
     if (!playerTexture.loadFromFile("../assets/npc/person1.png")) {
         std::cerr << "Error loading player's texture\n";
