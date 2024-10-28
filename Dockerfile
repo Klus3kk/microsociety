@@ -33,8 +33,11 @@ WORKDIR /app
 # Copy project files into the container
 COPY . .
 
-# Create a build directory and build the project using the TensorFlow CMake file
-RUN mkdir build && cd build && cmake -C ../CMakeLists_with_tf.txt .. && cmake --build .
+# Use CMakeLists_with_tf.txt for Docker build and rename it to CMakeLists.txt
+RUN cp CMakeLists_with_tf.txt CMakeLists.txt
+
+# Create a build directory and build the project using CMake
+RUN mkdir build && cd build && cmake .. && cmake --build .
 
 # Run the application
 CMD ["./build/MicroSociety"]

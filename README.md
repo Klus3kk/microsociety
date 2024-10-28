@@ -4,9 +4,15 @@
 
 MicroSociety is an object-oriented simulation project that models a dynamic society with AI-driven behaviors, events, and interactions. The project uses AI to create a lively, ever-changing environment.
 
-## Setup
+## Setup Options
 
-1. Build the Docker image:
+MicroSociety offers two setup options:
+- **With TensorFlow (Docker-based)**: Enables advanced AI capabilities using TensorFlow.
+- **Without TensorFlow (Local build)**: Provides a simpler setup without TensorFlow dependencies.
+
+### Docker Setup with TensorFlow
+
+1. Build the Docker image (TensorFlow-enabled):
 
    ```bash
    docker build -t micro-society .
@@ -18,40 +24,50 @@ MicroSociety is an object-oriented simulation project that models a dynamic soci
    docker run -it micro-society
    ```
 
+### Local Setup without TensorFlow (Linux)
+
+1. Rename `CMakeLists_without_tf.txt` to `CMakeLists.txt` in your local folder.
+
+2. Create a build directory and compile:
+
+   ```bash
+   mkdir build && cd build
+   cmake ..
+   make
+   ```
+
 3. Run the executable:
 
    ```bash
    ./MicroSociety
    ```
 
-### Using CMake (Windows)
+### Local Setup without TensorFlow (Windows)
 
-1. Open the **Developer Command Prompt** for your compiler (e.g., MSVC).
+1. Rename `CMakeLists_without_tf.txt` to `CMakeLists.txt` in your local folder.
 
-2. Create a build directory:
+2. Open the **Developer Command Prompt** for your compiler (e.g., MSVC).
+
+3. Create a build directory:
 
    ```bash
    mkdir build && cd build
    ```
 
-3. Generate the project:
+4. Generate the project:
 
    ```bash
    cmake -G "NMake Makefiles" ..
    ```
 
-4. Build the project:
+5. Build the project:
 
    ```bash
    nmake
    ```
 
-5. Run the executable:
+6. Run the executable:
 
    ```bash
    MicroSociety.exe
    ```
-
----
-
-This version separates the CMake setup instructions for Linux and Windows.
