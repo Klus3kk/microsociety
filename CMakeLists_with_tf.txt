@@ -23,41 +23,29 @@ FetchContent_Declare(nlohmann_json
     EXCLUDE_FROM_ALL)
 FetchContent_MakeAvailable(SFML nlohmann_json)
 
+# Find TensorFlowCC package
+find_package(TensorflowCC REQUIRED)
+
 # Add include directory
 include_directories(${CMAKE_SOURCE_DIR}/include)
-
-# Add TensorFlow directories
-include_directories(${TENSORFLOW_INCLUDE_DIR})
-link_directories(${TENSORFLOW_LIB_DIR})
 
 # Add source files
 file(GLOB SOURCES "src/*.cpp")
 
-# Add assets files
-file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
-
 # Add executable for the main project
 add_executable(MicroSociety ${SOURCES})
 
-# Link TensorFlow libraries to the main executable
-target_link_libraries(MicroSociety PRIVATE sfml-graphics sfml-audio sfml-system sfml-window nlohmann_json::nlohmann_json tensorflow_cc tensorflow_framework)
+# Link TensorFlow C++ and other dependencies
+target_link_libraries(MicroSociety PRIVATE sfml-graphics sfml-audio sfml-system sfml-window nlohmann_json::nlohmann_json TensorflowCC::TensorflowCC)
 
 # Platform-specific settings
-if(WIN32)
-    # Windows-specific linking
-    add_custom_command(
-        TARGET MicroSociety
-        COMMENT "Copy OpenAL DLL"
-        PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${SFML_SOURCE_DIR}/extlibs/bin/$<IF:$<EQUAL:${CMAKE_SIZEOF_VOID_P},8>,x64,x86>/openal32.dll $<TARGET_FILE_DIR:MicroSociety>
-        VERBATIM)
-elseif(UNIX)
-    # Link additional pthread for Unix
+if(UNIX)
     target_link_libraries(MicroSociety PRIVATE pthread)
 endif()
 
 # Add the test executable for unit tests
 add_executable(TestTerrain tests/test_terrain.cpp src/Game.cpp include/Tile.hpp include/Object.hpp)
-target_link_libraries(TestTerrain PRIVATE sfml-graphics sfml-audio sfml-system sfml-window nlohmann_json::nlohmann_json tensorflow_cc tensorflow_framework)
+target_link_libraries(TestTerrain PRIVATE sfml-graphics sfml-audio sfml-system sfml-window nlohmann_json::nlohmann_json TensorflowCC::TensorflowCC)
 
 add_executable(TestEntity tests/test_entity.cpp)
 target_link_libraries(TestEntity PRIVATE sfml-graphics sfml-audio sfml-system sfml-window)

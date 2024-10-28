@@ -6,8 +6,6 @@ MicroSociety is an object-oriented simulation project that models a dynamic soci
 
 ## Setup
 
-### Using Docker
-
 1. Build the Docker image:
 
    ```bash
@@ -18,20 +16,6 @@ MicroSociety is an object-oriented simulation project that models a dynamic soci
 
    ```bash
    docker run -it micro-society
-   ```
-
-### Using CMake (Linux)
-
-1. Create a build directory:
-
-   ```bash
-   mkdir build && cd build
-   ```
-
-2. Run CMake and build:
-
-   ```bash
-   cmake .. && make
    ```
 
 3. Run the executable:
