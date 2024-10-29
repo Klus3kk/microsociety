@@ -3,11 +3,13 @@
 #include "Player.hpp"
 #include "debug.hpp"
 #include <random>
+
 Game::Game() : window(sf::VideoMode(mapWidth, mapHeight), "MicroSociety") { // overloading
     generateMap();
 }
 
 void Game::run() {
+    const int tileSize = 32;
     sf::Clock clock;
     PlayerEntity player(100, 50, 50, 150.0f, 10, 100);
     player.setSize(1.5f, 1.5f);
@@ -57,18 +59,27 @@ void Game::run() {
         player.handleInput(deltaTime);
 
         // Calculate target tile based on the tile size and player position
-        int targetTileX = player.getPosition().x / 30;  // Use exact tile size for calculation
-        int targetTileY = player.getPosition().y / 30;
+        int targetTileX = player.getPosition().x / tileSize;
+        int targetTileY = player.getPosition().y / tileSize;
 
         if (targetTileX >= 0 && targetTileX < tileMap[0].size() &&
             targetTileY >= 0 && targetTileY < tileMap.size()) {
 
             auto& targetTile = tileMap[targetTileY][targetTileX];
+
+            // Slow down on StoneTile
+            if (auto stoneTile = dynamic_cast<StoneTile*>(targetTile.get())) {
+                player.setSpeed(75.0f);  // Slow speed on stone tiles
+            } else {
+                player.setSpeed(150.0f); // Normal speed on other tiles
+            }
+
+            // Collision detection
             if (targetTile->hasObject()) {
                 auto objectBounds = targetTile->getObjectBounds();
                 if (player.getSprite().getGlobalBounds().intersects(objectBounds)) {
-                    player.setPosition(previousPosition.x, previousPosition.y);  // Reset position if collision detected
-                    std::cout << "Collision with object at tile (" << targetTileX << ", " << targetTileY << ")\n";
+                    player.setPosition(previousPosition.x, previousPosition.y);  // Revert position on collision
+                    std::cout << "Collision at tile (" << targetTileX << ", " << targetTileY << ")\n";
                 }
             }
         }
@@ -79,12 +90,26 @@ void Game::run() {
         if (debugMode) {
             // debugPlayerInfo(player);
             debugTileInfo(targetTileX, targetTileY, *this);
+            drawTileBorders();
         }
 
         window.clear();
         render();          // Render the map
         player.draw(window);   // Draw player's entity
         window.display();
+    }
+}
+
+void Game::drawTileBorders() {
+    for (int i = 0; i < tileMap.size(); ++i) {
+        for (int j = 0; j < tileMap[i].size(); ++j) {
+                sf::RectangleShape border(sf::Vector2f(tileSize, tileSize));
+                border.setPosition(j * tileSize, i * tileSize);
+                border.setOutlineThickness(1);
+                border.setOutlineColor(sf::Color::Black);
+                border.setFillColor(sf::Color::Transparent); // Make the border itself transparent
+                window.draw(border);
+        }
     }
 }
 
@@ -142,7 +167,7 @@ void Game::generateMap() {
                 tileMap[i][j] = std::make_unique<StoneTile>(stoneTextures[rand() % 3]);
                 
 
-            tileMap[i][j]->setPosition(j * 32, i * 32);
+            tileMap[i][j]->setPosition(j * tileSize, i * tileSize);
 
             int objChance = rand() % 100; // object chances for creation
             if (auto grassTile = dynamic_cast<GrassTile*>(tileMap[i][j].get())) {

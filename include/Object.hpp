@@ -15,6 +15,16 @@ public:
         return sprite;
     }
 
+    virtual sf::FloatRect getObjectBounds() const {
+        // Expand the object's bounds to make collision detection more forgiving
+        sf::FloatRect bounds = sprite.getGlobalBounds();
+        bounds.left -= 2;
+        bounds.top -= 2;
+        bounds.width += 4;
+        bounds.height += 4;
+        return bounds;
+    }
+
     void setPosition(float x, float y) {
         sprite.setPosition(x, y); 
     }
