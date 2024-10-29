@@ -1,6 +1,7 @@
 #include "Game.hpp"
 #include "FastNoiseLite.h"
 #include "Player.hpp"
+#include "debug.hpp"
 #include <random>
 Game::Game() : window(sf::VideoMode(mapWidth, mapHeight), "MicroSociety") { // overloading
     generateMap();
@@ -9,7 +10,7 @@ Game::Game() : window(sf::VideoMode(mapWidth, mapHeight), "MicroSociety") { // o
 void Game::run() {
     sf::Clock clock;
     PlayerEntity player(100, 50, 50, 150.0f, 10, 100);
-    player.setSize(2.0f, 2.0f);
+    player.setSize(1.5f, 1.5f);
     
     sf::Image icon;
     if (icon.loadFromFile("assets/icon/favicon.png")) {
@@ -36,6 +37,9 @@ void Game::run() {
 
     player.setPosition(mapWidth / 2, mapHeight / 2);
 
+    // Initial debug info
+    debugMapInfo(*this);
+
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -50,20 +54,36 @@ void Game::run() {
         deltaTime = dt.asSeconds();
 
         sf::Vector2f previousPosition = player.getPosition();
-        player.handleInput(deltaTime);  // player movement input (it will be changed automatically in the future)
+        player.handleInput(deltaTime);
 
-        int playerTileX = player.getPosition().x / 32;
-        int playerTileY = player.getPosition().y / 32;
+        // Calculate target tile based on the tile size and player position
+        int targetTileX = player.getPosition().x / 30;  // Use exact tile size for calculation
+        int targetTileY = player.getPosition().y / 30;
 
-        if (tileMap[playerTileY][playerTileX]->hasObject() && 
-            player.getSprite().getGlobalBounds().intersects(tileMap[playerTileY][playerTileX]->getObjectBounds())) {
-            player.setPosition(previousPosition.x, previousPosition.y); // Revert to previous position if collision
+        if (targetTileX >= 0 && targetTileX < tileMap[0].size() &&
+            targetTileY >= 0 && targetTileY < tileMap.size()) {
+
+            auto& targetTile = tileMap[targetTileY][targetTileX];
+            if (targetTile->hasObject()) {
+                auto objectBounds = targetTile->getObjectBounds();
+                if (player.getSprite().getGlobalBounds().intersects(objectBounds)) {
+                    player.setPosition(previousPosition.x, previousPosition.y);  // Reset position if collision detected
+                    std::cout << "Collision with object at tile (" << targetTileX << ", " << targetTileY << ")\n";
+                }
+            }
         }
 
+        // Debug each step
+        bool debugMode = true; // Add this at the top or make it a class member
+
+        if (debugMode) {
+            // debugPlayerInfo(player);
+            debugTileInfo(targetTileX, targetTileY, *this);
+        }
 
         window.clear();
-        render();  // map render
-        player.draw(window);   // draw player's entity
+        render();          // Render the map
+        player.draw(window);   // Draw player's entity
         window.display();
     }
 }

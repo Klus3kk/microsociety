@@ -58,7 +58,7 @@ public:
     // function to draw the entity
     void draw(sf::RenderWindow &window) {
         window.draw(sprite);
-        std::cout << "Drawing entity at position (" << position.x << ", " << position.y << ")\n";
+        // std::cout << "Drawing entity at position (" << position.x << ", " << position.y << ")\n";
     }
 
     // accessors
@@ -69,6 +69,8 @@ public:
     float getStrength() const { return strength; }
     float getMoney() const { return money; }
 
+
+    void setSpeed(float newSpeed) { speed = newSpeed; }
     // movement function based on screen's framerate
     void move(float dx, float dy, float deltaTime) {
         float newX = position.x + dx * speed * deltaTime;
@@ -83,7 +85,7 @@ public:
             newY = Game::mapHeight - sprite.getGlobalBounds().height + 6; // Bottom boundary
         position = {newX, newY};
         sprite.setPosition(position);
-        std::cout << "Entity moved to (" << position.x << ", " << position.y << ")\n";
+        // std::cout << "Entity moved to (" << position.x << ", " << position.y << ")\n";
     }
 
     // function for cheching collision

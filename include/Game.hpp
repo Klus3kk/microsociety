@@ -18,6 +18,7 @@ private:
 public:
     static constexpr int mapWidth = 800; // damn, thanks chat lol
     static constexpr int mapHeight = 800;
+    static constexpr int tileSize = 32; 
     Game();
     void run();
     void generateMap();
