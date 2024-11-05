@@ -3,7 +3,7 @@
 #include "Player.hpp"
 #include "debug.hpp"
 #include <random>
-
+#include <set>
 Game::Game() : window(sf::VideoMode(mapWidth, mapHeight), "MicroSociety") { // overloading
     generateMap();
 }
@@ -12,7 +12,7 @@ void Game::run() {
     const int tileSize = 32;
     sf::Clock clock;
     PlayerEntity player(100, 50, 50, 150.0f, 10, 100);
-    player.setSize(1.5f, 1.5f);
+    // player.setSize(1.5f, 1.5f);
     
     sf::Image icon;
     if (icon.loadFromFile("assets/icon/favicon.png")) {
@@ -41,7 +41,10 @@ void Game::run() {
 
     // Initial debug info
     debugMapInfo(*this);
+    debugObjectBoundaries(*this);
 
+    std::set<std::pair<int, int>> loggedTiles;
+    
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {

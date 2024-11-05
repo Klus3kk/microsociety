@@ -42,5 +42,18 @@ void debugTileInfo(int tileX, int tileY, const Game& game) {
     }
 }
 
+void debugObjectBoundaries(const Game& game) {
+    for (int y = 0; y < game.getTileMap().size(); ++y) {
+        for (int x = 0; x < game.getTileMap()[y].size(); ++x) {
+            auto& tile = game.getTileMap()[y][x];
+            if (tile->hasObject()) {
+                auto objectBounds = tile->getObjectBounds();
+                std::cout << "Object at Tile (" << x << ", " << y << ") with bounds ("
+                          << objectBounds.left << ", " << objectBounds.top << ", "
+                          << objectBounds.width << ", " << objectBounds.height << ")\n";
+            }
+        }
+    }
+}
 
 #endif
