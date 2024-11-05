@@ -41,7 +41,7 @@ void Game::run() {
 
     // Initial debug info
     debugMapInfo(*this);
-    debugObjectBoundaries(*this);
+    // debugObjectBoundaries(*this);
 
     std::set<std::pair<int, int>> loggedTiles;
     
@@ -62,8 +62,9 @@ void Game::run() {
         player.handleInput(deltaTime);
 
         // Calculate target tile based on the tile size and player position
-        int targetTileX = player.getPosition().x / tileSize;
-        int targetTileY = player.getPosition().y / tileSize;
+        int targetTileX = static_cast<int>(std::round(player.getPosition().x / tileSize));
+        int targetTileY = static_cast<int>(std::round(player.getPosition().y / tileSize));
+
 
         if (targetTileX >= 0 && targetTileX < tileMap[0].size() &&
             targetTileY >= 0 && targetTileY < tileMap.size()) {
