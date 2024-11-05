@@ -28,6 +28,7 @@ public:
     const std::vector<std::vector<std::unique_ptr<Tile>>>& getTileMap() const {
         return tileMap;
     }
+    bool detectCollisionWithTile(const PlayerEntity& player, int tileX, int tileY) const;
 };
 
 #endif 

@@ -1,46 +1,42 @@
-#include <cassert>
+#include <gtest/gtest.h>
 #include "Game.hpp"
-#include <iostream>
+#include "Tile.hpp"
 
-// test terrain generation to ensure it generates all tile types
-void testTerrainGeneration() {
+// Test terrain generation to ensure it generates all tile types
+TEST(TerrainTest, TerrainGeneration) {
     Game game;
-    const auto& tileMap = game.getTileMap();  // getter
+    const auto& tileMap = game.getTileMap();
 
     for (const auto& row : tileMap) {
         for (const auto& tile : row) {
-            assert(tile != nullptr);  // ensure every tile exists
+            ASSERT_NE(tile, nullptr);  // ensure every tile exists
         }
     }
-    std::cout << "Test Terrain Generation passed!\n";
 }
-// test object placement on tiles
-void testObjectPlacement() {
+
+// Test object placement on tiles
+TEST(TerrainTest, ObjectPlacement) {
     Game game;
     game.generateMap();
-    const auto& tileMap = game.getTileMap(); 
+    const auto& tileMap = game.getTileMap();
 
     for (const auto& row : tileMap) {
         for (const auto& tile : row) {
             if (auto grassTile = dynamic_cast<GrassTile*>(tile.get())) {
                 if (grassTile->getObject()) {
-                    assert(dynamic_cast<Tree*>(grassTile->getObject()) || dynamic_cast<Bush*>(grassTile->getObject()));
+                    EXPECT_TRUE(dynamic_cast<Tree*>(grassTile->getObject()) || dynamic_cast<Bush*>(grassTile->getObject()));
                 }
             } else if (auto stoneTile = dynamic_cast<StoneTile*>(tile.get())) {
                 if (stoneTile->getObject()) {
-                    assert(dynamic_cast<Rock*>(stoneTile->getObject()));
+                    EXPECT_TRUE(dynamic_cast<Rock*>(stoneTile->getObject()));
                 }
             }
         }
     }
-    std::cout << "Test Object Placement passed!\n";
 }
 
-
-int main() {
-    testTerrainGeneration();
-    testObjectPlacement();
-
-    std::cout << "All tests passed!\n";
-    return 0;
+// Main function to run all tests
+int main(int argc, char **argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }

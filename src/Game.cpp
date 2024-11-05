@@ -8,6 +8,13 @@ Game::Game() : window(sf::VideoMode(mapWidth, mapHeight), "MicroSociety") { // o
     generateMap();
 }
 
+bool Game::detectCollisionWithTile(const PlayerEntity& player, int tileX, int tileY) const {
+    if (tileX >= 0 && tileX < tileMap[0].size() && tileY >= 0 && tileY < tileMap.size()) {
+        return tileMap[tileY][tileX]->checkCollision(player);  // Delegate collision check to the Tile
+    }
+    return false;
+}
+
 void Game::run() {
     const int tileSize = 32;
     sf::Clock clock;

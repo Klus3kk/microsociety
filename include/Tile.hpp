@@ -51,6 +51,13 @@ public:
         return object ? object->getSprite().getGlobalBounds() : sf::FloatRect();
     }
 
+    bool checkCollision(const Entity& entity) const {
+        if (object) {  // If an object exists on the tile
+            return entity.getSprite().getGlobalBounds().intersects(object->getSprite().getGlobalBounds());
+        }
+        return false;
+    }
+
 
 };
 
