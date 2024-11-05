@@ -4,13 +4,15 @@
 #include "debug.hpp"
 #include <random>
 #include <set>
+
+
 Game::Game() : window(sf::VideoMode(mapWidth, mapHeight), "MicroSociety") { // overloading
     generateMap();
 }
 
 bool Game::detectCollisionWithTile(const PlayerEntity& player, int tileX, int tileY) const {
     if (tileX >= 0 && tileX < tileMap[0].size() && tileY >= 0 && tileY < tileMap.size()) {
-        return tileMap[tileY][tileX]->checkCollision(player);  // Delegate collision check to the Tile
+        return tileMap[tileY][tileX]->checkCollision(player);
     }
     return false;
 }

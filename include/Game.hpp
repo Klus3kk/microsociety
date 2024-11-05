@@ -5,9 +5,8 @@
 #include <vector>
 #include <memory>
 #include "Tile.hpp"
-#include "GrassTile.hpp"
-#include "StoneTile.hpp"
-#include "FlowerTile.hpp"
+
+class PlayerEntity;  // Forward declaration
 
 class Game {
 private:
@@ -16,7 +15,7 @@ private:
     std::vector<std::vector<std::unique_ptr<Tile>>> tileMap;
 
 public:
-    static constexpr int mapWidth = 800; // damn, thanks chat lol
+    static constexpr int mapWidth = 800;
     static constexpr int mapHeight = 800;
     static constexpr int tileSize = 32; 
     Game();
@@ -24,11 +23,12 @@ public:
     void generateMap();
     void render();
     void drawTileBorders();
-    // getter to access tileMap for testing
+
     const std::vector<std::vector<std::unique_ptr<Tile>>>& getTileMap() const {
         return tileMap;
     }
+
     bool detectCollisionWithTile(const PlayerEntity& player, int tileX, int tileY) const;
 };
 
-#endif 
+#endif

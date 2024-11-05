@@ -3,6 +3,9 @@
 
 #include <SFML/Graphics.hpp>
 #include "Object.hpp"
+
+class Entity;  // Forward declaration
+
 class Tile {
 protected:
     sf::Sprite sprite;
@@ -20,15 +23,15 @@ public:
 
     void setPosition(float x, float y) {
         sprite.setPosition(x, y);
-        if (object) {  // if statement for ensuring object position matches tile position
-            object->setPosition(x, y); 
+        if (object) {
+            object->setPosition(x, y);
         }
     }
 
     virtual void draw(sf::RenderWindow &window) const {
         window.draw(sprite);
-        if (object) { // if object exists, draw the object
-            object->draw(window);  
+        if (object) {
+            object->draw(window);
         }
     }
 
@@ -40,7 +43,7 @@ public:
     }
 
     Object* getObject() const {
-        return object.get();  // return the stored object
+        return object.get();
     }
 
     bool hasObject() const {
@@ -51,17 +54,7 @@ public:
         return object ? object->getSprite().getGlobalBounds() : sf::FloatRect();
     }
 
-    bool checkCollision(const Entity& entity) const {
-        if (object) {  // If an object exists on the tile
-            return entity.getSprite().getGlobalBounds().intersects(object->getSprite().getGlobalBounds());
-        }
-        return false;
-    }
-
-
+    bool checkCollision(const Entity& entity) const;  // Declaration only
 };
 
-#endif 
-
-
-
+#endif
