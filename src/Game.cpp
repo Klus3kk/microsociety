@@ -1,4 +1,5 @@
 #include "Game.hpp"
+#include "Tile.hpp"
 #include "FastNoiseLite.h"
 #include "Player.hpp"
 #include "debug.hpp"
@@ -10,9 +11,17 @@ Game::Game() : window(sf::VideoMode(mapWidth, mapHeight), "MicroSociety") { // o
     generateMap();
 }
 
-bool Game::detectCollisionWithTile(const PlayerEntity& player, int tileX, int tileY) const {
-    if (tileX >= 0 && tileX < tileMap[0].size() && tileY >= 0 && tileY < tileMap.size()) {
-        return tileMap[tileY][tileX]->checkCollision(player);
+bool Game::detectCollision(const PlayerEntity& player) const {
+    int tileX = player.getPosition().x / tileSize;
+    int tileY = player.getPosition().y / tileSize;
+
+    if (tileX >= 0 && tileX < tileMap[0].size() &&
+        tileY >= 0 && tileY < tileMap.size()) {
+
+        auto& tile = tileMap[tileY][tileX];
+        if (tile->hasObject()) {
+            return player.getSprite().getGlobalBounds().intersects(tile->getObjectBounds());
+        }
     }
     return false;
 }

@@ -2,7 +2,8 @@
 #include "Game.hpp"
 #include "Player.hpp"
 #include "Tile.hpp"
-#include "Object.hpp" 
+#include "Object.hpp"
+#include <SFML/Graphics.hpp>
 
 // Test that an NPC collides with a static object (e.g., tree)
 TEST(CollisionTest, NPCTreeCollision) {

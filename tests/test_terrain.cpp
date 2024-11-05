@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 #include "Game.hpp"
 #include "Tile.hpp"
-
 // Test terrain generation to ensure it generates all tile types
 TEST(TerrainTest, TerrainGeneration) {
     Game game;

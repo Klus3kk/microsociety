@@ -3,8 +3,8 @@
 
 #include <SFML/Graphics.hpp>
 #include "Object.hpp"
-
-class Entity;  // Forward declaration
+#include <memory>
+#include "Entity.hpp"
 
 class Tile {
 protected:
@@ -56,5 +56,29 @@ public:
 
     bool checkCollision(const Entity& entity) const;  // Declaration only
 };
+
+class StoneTile : public Tile {
+public:
+    StoneTile(const sf::Texture &texture) {
+        this->setTexture(texture);  
+    }
+    virtual ~StoneTile() {}
+};
+
+class GrassTile : public Tile {
+public:
+    GrassTile(const sf::Texture& texture) {
+        setTexture(texture);  
+    }
+};
+
+class FlowerTile : public Tile {
+public:
+    FlowerTile(const sf::Texture &texture) {
+        this->setTexture(texture);  
+    }
+    virtual ~FlowerTile() {}
+};
+
 
 #endif

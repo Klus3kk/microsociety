@@ -5,8 +5,7 @@
 #include <vector>
 #include <memory>
 #include "Tile.hpp"
-
-class PlayerEntity;  // Forward declaration
+#include "Player.hpp"
 
 class Game {
 private:
@@ -28,7 +27,7 @@ public:
         return tileMap;
     }
 
-    bool detectCollisionWithTile(const PlayerEntity& player, int tileX, int tileY) const;
+    bool detectCollision(const PlayerEntity& player) const;
 };
 
 #endif
