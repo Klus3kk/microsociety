@@ -11,16 +11,14 @@ Game::Game() : window(sf::VideoMode(mapWidth, mapHeight), "MicroSociety") { // o
     generateMap();
 }
 
-bool Game::detectCollision(const PlayerEntity& player) const {
-    int tileX = player.getPosition().x / tileSize;
-    int tileY = player.getPosition().y / tileSize;
+bool Game::detectCollision(const PlayerEntity& npc) {
+    int tileX = static_cast<int>(npc.getPosition().x / tileSize);
+    int tileY = static_cast<int>(npc.getPosition().y / tileSize);
 
-    if (tileX >= 0 && tileX < tileMap[0].size() &&
-        tileY >= 0 && tileY < tileMap.size()) {
-
+    if (tileX >= 0 && tileX < tileMap[0].size() && tileY >= 0 && tileY < tileMap.size()) {
         auto& tile = tileMap[tileY][tileX];
         if (tile->hasObject()) {
-            return player.getSprite().getGlobalBounds().intersects(tile->getObjectBounds());
+            return npc.getSprite().getGlobalBounds().intersects(tile->getObjectBounds());
         }
     }
     return false;

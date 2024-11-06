@@ -18,9 +18,6 @@
 #include <nlohmann/json.hpp>   // Do obsługi plików JSON
 /* KLASY */
 #include "Tile.hpp"
-#include "GrassTile.hpp"
-#include "StoneTile.hpp"
-#include "FlowerTile.hpp"
 #include "Game.hpp"
 
 using std::cout;

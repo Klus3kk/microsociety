@@ -4,7 +4,6 @@
 #include <SFML/Graphics.hpp>
 #include "Object.hpp"
 #include <memory>
-#include "Entity.hpp"
 
 class Tile {
 protected:
@@ -53,8 +52,6 @@ public:
     sf::FloatRect getObjectBounds() const {
         return object ? object->getSprite().getGlobalBounds() : sf::FloatRect();
     }
-
-    bool checkCollision(const Entity& entity) const;  // Declaration only
 };
 
 class StoneTile : public Tile {

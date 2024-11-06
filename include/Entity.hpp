@@ -4,7 +4,6 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include "Game.hpp"
-
 class Entity {
 protected:
     float health;
