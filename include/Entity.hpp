@@ -1,9 +1,8 @@
 #ifndef ENTITY_HPP
 #define ENTITY_HPP
-
 #include <SFML/Graphics.hpp>
 #include <iostream>
-#include "Game.hpp"
+#include "Configuration.hpp"
 class Entity {
 protected:
     float health;
@@ -20,7 +19,8 @@ protected:
 public:
     // constructor to initialize attributes
     Entity(float initHealth, float initHunger, float initEnergy, float initSpeed, float initStrength, float initMoney)
-        : health(initHealth), hunger(initHunger), energy(initEnergy), speed(initSpeed), strength(initStrength), money(initMoney) {
+        : health(initHealth), hunger(initHunger), energy(initEnergy), speed(initSpeed),
+          strength(initStrength), money(initMoney) {
     }
 
     // destructor
@@ -69,20 +69,21 @@ public:
     float getStrength() const { return strength; }
     float getMoney() const { return money; }
 
-
     void setSpeed(float newSpeed) { speed = newSpeed; }
+
     // movement function based on screen's framerate
     void move(float dx, float dy, float deltaTime) {
         float newX = position.x + dx * speed * deltaTime;
         float newY = position.y + dy * speed * deltaTime;
 
         // Check if new position is within bounds
-        if (newX < -20) newX = -20; // Left boundary
-        if (newY < -8) newY = -8; // Top boundary
-        if (newX + sprite.getGlobalBounds().width > Game::mapWidth + 25)
-            newX = Game::mapWidth - sprite.getGlobalBounds().width + 25; // Right boundary
-        if (newY + sprite.getGlobalBounds().height > Game::mapHeight + 6)
-            newY = Game::mapHeight - sprite.getGlobalBounds().height + 6; // Bottom boundary
+        if (newX < -20) newX = -20; 
+        if (newY < -8) newY = -8; 
+        if (newX + sprite.getGlobalBounds().width > GameConfig::mapWidth + 25)
+            newX = GameConfig::mapWidth - sprite.getGlobalBounds().width + 25;
+        if (newY + sprite.getGlobalBounds().height > GameConfig::mapHeight + 6)
+            newY = GameConfig::mapHeight - sprite.getGlobalBounds().height + 6;
+
         position = {newX, newY};
         sprite.setPosition(position);
         // std::cout << "Entity moved to (" << position.x << ", " << position.y << ")\n";

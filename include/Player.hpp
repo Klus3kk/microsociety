@@ -1,13 +1,14 @@
 #ifndef PLAYER_HPP
 #define PLAYER_HPP
 
+
 #include "Entity.hpp"
 #include <SFML/Window.hpp>
 
 class PlayerEntity : public Entity {
 public:
     PlayerEntity(float initHealth, float initHunger, float initEnergy, float initSpeed, float initStrength, float initMoney)
-        : Entity(initHealth, initHunger, initEnergy, initSpeed, initStrength, initMoney) {}
+    : Entity(initHealth, initHunger, initEnergy, initSpeed, initStrength, initMoney) {}
 
     // handling user input for movement
     void handleInput(float deltaTime) {

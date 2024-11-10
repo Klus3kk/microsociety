@@ -6,6 +6,7 @@
 #include <memory>
 #include "Tile.hpp"
 #include "Player.hpp"  
+#include "Configuration.hpp" 
 
 class Game {
 private:
@@ -13,10 +14,11 @@ private:
     float deltaTime;
     std::vector<std::vector<std::unique_ptr<Tile>>> tileMap;
 
+    int mapWidth;
+    int mapHeight;
+    int tileSize;
+
 public:
-    static constexpr int mapWidth = 800; // damn, thanks chat lol
-    static constexpr int mapHeight = 800;
-    static constexpr int tileSize = 32; 
     Game();
     void run();
     void generateMap();

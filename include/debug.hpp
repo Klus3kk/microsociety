@@ -3,9 +3,8 @@
 
 #include <iostream>
 #include <vector>
-#include "Game.hpp"
 #include "Player.hpp"
-
+#include "Configuration.hpp"
 void debugPlayerInfo(const PlayerEntity& player) {
     std::cout << "Player Position: (" << player.getPosition().x << ", " << player.getPosition().y << ")\n";
     std::cout << "Player Speed: " << player.getSpeed() << "\n";
@@ -13,8 +12,8 @@ void debugPlayerInfo(const PlayerEntity& player) {
 }
 
 void debugMapInfo(const Game& game) {
-    std::cout << "Map Width: " << Game::mapWidth << ", Map Height: " << Game::mapHeight << "\n";
-    std::cout << "Tile Size: " << Game::tileSize << "\n";
+    std::cout << "Map Width: " << GameConfig::mapWidth << ", Map Height: " << GameConfig::mapHeight << "\n";
+    std::cout << "Tile Size: " << GameConfig::tileSize << "\n";
     std::cout << "Map Layout:\n";
     
     for (int y = 0; y < game.getTileMap().size(); ++y) {

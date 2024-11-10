@@ -34,6 +34,10 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 # Add main source files
 file(GLOB SOURCES "src/*.cpp")
 
+# Add assets files
+file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
+
+# Add main executable
 add_executable(MicroSociety ${SOURCES})
 
 if(WIN32)

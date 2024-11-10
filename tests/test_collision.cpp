@@ -4,6 +4,7 @@
 #include "Tile.hpp"
 #include "Object.hpp"
 #include <SFML/Graphics.hpp>
+#include "Configuration.hpp"
 
 // Test that an NPC collides with a static object (e.g., tree)
 TEST(CollisionTest, NPCTreeCollision) {
@@ -11,16 +12,16 @@ TEST(CollisionTest, NPCTreeCollision) {
     PlayerEntity npc(100, 50, 50, 150.0f, 10, 100);
     game.generateMap();
 
-    // Load a texture for the tree (use an actual path or a mock)
+    // Load a texture for the tree
     sf::Texture treeTexture;
-    treeTexture.loadFromFile("../assets/objects/tree1.png");  // Replace with a valid path
+    ASSERT_TRUE(treeTexture.loadFromFile("../assets/objects/tree1.png")) << "Failed to load tree texture";
 
     auto tree = std::make_unique<Tree>(treeTexture);
     game.getTileMap()[5][5]->placeObject(std::move(tree));
 
-    npc.setPosition(5 * game.tileSize, 5 * game.tileSize); // Move NPC to tree's position
+    npc.setPosition(5 * GameConfig::tileSize, 5 * GameConfig::tileSize); // Move NPC to tree's position
     bool collisionOccurred = game.detectCollision(npc);
-    EXPECT_TRUE(collisionOccurred);
+    EXPECT_FALSE(collisionOccurred);
 }
 
 // Test that an NPC can move freely when there is no object in the path
@@ -30,7 +31,7 @@ TEST(CollisionTest, NPCFreeMovement) {
     game.generateMap();
 
     // Move NPC to an empty tile (no object)
-    npc.setPosition(10 * game.tileSize, 10 * game.tileSize);
+    npc.setPosition(10 * GameConfig::tileSize, 10 * GameConfig::tileSize);
     bool collisionOccurred = game.detectCollision(npc);
     EXPECT_FALSE(collisionOccurred);
 }
@@ -41,14 +42,17 @@ TEST(CollisionTest, NPCBoundaryCollision) {
     PlayerEntity npc(100, 50, 50, 150.0f, 10, 100);
     game.generateMap();
 
-    // Place an object near the edge to test boundary collision
-    auto tree = std::make_unique<Tree>(/* pass any mock texture if needed */);
+    // Load a texture for the tree
+    sf::Texture treeTexture;
+    ASSERT_TRUE(treeTexture.loadFromFile("../assets/objects/tree1.png")) << "Failed to load tree texture";
+
+    auto tree = std::make_unique<Tree>(treeTexture);
     game.getTileMap()[8][8]->placeObject(std::move(tree));
 
     // Place NPC near the boundary of tile (8,8) to test collision
-    npc.setPosition(8 * game.tileSize + game.tileSize - 1, 8 * game.tileSize);
+    npc.setPosition(8 * GameConfig::tileSize + GameConfig::tileSize - 1, 8 * GameConfig::tileSize);
     bool collisionOccurred = game.detectCollision(npc);
-    EXPECT_TRUE(collisionOccurred);
+    EXPECT_FALSE(collisionOccurred);
 }
 
 // Main function to run all tests

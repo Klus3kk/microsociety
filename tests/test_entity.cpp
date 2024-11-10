@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include "Player.hpp"
-
+#include "Configuration.hpp"
 // Test entity creation
 TEST(EntityTest, EntityCreation) {
     PlayerEntity player(100, 50, 100, 2.0f, 10, 100);

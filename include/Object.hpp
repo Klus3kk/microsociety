@@ -3,6 +3,7 @@
 
 #include <SFML/Graphics.hpp>
 
+
 class Object {
 protected:
     sf::Sprite sprite;

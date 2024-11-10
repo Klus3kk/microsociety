@@ -1,5 +1,4 @@
 #include "Game.hpp"
-#include "Tile.hpp"
 #include "FastNoiseLite.h"
 #include "Player.hpp"
 #include "debug.hpp"
@@ -7,13 +6,13 @@
 #include <set>
 
 
-Game::Game() : window(sf::VideoMode(mapWidth, mapHeight), "MicroSociety") { // overloading
+Game::Game() : window(sf::VideoMode(GameConfig::mapWidth, GameConfig::mapHeight), "MicroSociety") {
     generateMap();
 }
 
 bool Game::detectCollision(const PlayerEntity& npc) {
-    int tileX = static_cast<int>(npc.getPosition().x / tileSize);
-    int tileY = static_cast<int>(npc.getPosition().y / tileSize);
+    int tileX = static_cast<int>(npc.getPosition().x / GameConfig::tileSize);
+    int tileY = static_cast<int>(npc.getPosition().y / GameConfig::tileSize);
 
     if (tileX >= 0 && tileX < tileMap[0].size() && tileY >= 0 && tileY < tileMap.size()) {
         auto& tile = tileMap[tileY][tileX];
@@ -25,7 +24,6 @@ bool Game::detectCollision(const PlayerEntity& npc) {
 }
 
 void Game::run() {
-    const int tileSize = 32;
     sf::Clock clock;
     PlayerEntity player(100, 50, 50, 150.0f, 10, 100);
     // player.setSize(1.5f, 1.5f);
@@ -53,7 +51,7 @@ void Game::run() {
     // Set texture and color together
     player.setTexture(playerTexture, randomColor);
 
-    player.setPosition(mapWidth / 2, mapHeight / 2);
+    player.setPosition(GameConfig::mapWidth / 2, GameConfig::mapHeight / 2);
 
     // Initial debug info
     debugMapInfo(*this);
@@ -78,8 +76,8 @@ void Game::run() {
         player.handleInput(deltaTime);
 
         // Calculate target tile based on the tile size and player position
-        int targetTileX = static_cast<int>(std::round(player.getPosition().x / tileSize));
-        int targetTileY = static_cast<int>(std::round(player.getPosition().y / tileSize));
+        int targetTileX = static_cast<int>(std::round(player.getPosition().x / GameConfig::tileSize));
+        int targetTileY = static_cast<int>(std::round(player.getPosition().y / GameConfig::tileSize));
 
 
         if (targetTileX >= 0 && targetTileX < tileMap[0].size() &&
@@ -123,8 +121,8 @@ void Game::run() {
 void Game::drawTileBorders() {
     for (int i = 0; i < tileMap.size(); ++i) {
         for (int j = 0; j < tileMap[i].size(); ++j) {
-                sf::RectangleShape border(sf::Vector2f(tileSize, tileSize));
-                border.setPosition(j * tileSize, i * tileSize);
+                sf::RectangleShape border(sf::Vector2f(GameConfig::tileSize, GameConfig::tileSize));
+                border.setPosition(j * GameConfig::tileSize, i * GameConfig::tileSize);
                 border.setOutlineThickness(1);
                 border.setOutlineColor(sf::Color::Black);
                 border.setFillColor(sf::Color::Transparent); // Make the border itself transparent
@@ -187,7 +185,7 @@ void Game::generateMap() {
                 tileMap[i][j] = std::make_unique<StoneTile>(stoneTextures[rand() % 3]);
                 
 
-            tileMap[i][j]->setPosition(j * tileSize, i * tileSize);
+            tileMap[i][j]->setPosition(j * GameConfig::tileSize, i * GameConfig::tileSize);
 
             int objChance = rand() % 100; // object chances for creation
             if (auto grassTile = dynamic_cast<GrassTile*>(tileMap[i][j].get())) {
