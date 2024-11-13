@@ -15,7 +15,7 @@ enum class ActionType {
 // Base class for actions
 class Action {
 public:
-    virtual void perform(PlayerEntity& player) = 0; // Pure virtual function for action
+    virtual void perform(PlayerEntity& player, Tile& tile) = 0; // Pure virtual function for action
     virtual std::string getActionName() const = 0;  // Name of the action
     virtual ~Action() = default;
 };
