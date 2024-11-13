@@ -7,6 +7,7 @@
 #include "Tile.hpp"
 #include "Player.hpp"  
 #include "Configuration.hpp" 
+#include "Actions.hpp"
 
 class Game {
 private:

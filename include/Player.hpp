@@ -4,8 +4,11 @@
 
 #include "Entity.hpp"
 #include <SFML/Window.hpp>
-
+#include <unordered_map>
 class PlayerEntity : public Entity {
+private:
+    std::unordered_map<std::string, int> inventory; // String - name of the item, int - quantity
+    // Capacity needed
 public:
     PlayerEntity(float initHealth, float initHunger, float initEnergy, float initSpeed, float initStrength, float initMoney)
     : Entity(initHealth, initHunger, initEnergy, initSpeed, initStrength, initMoney) {}
@@ -25,6 +28,26 @@ public:
             move(1, 0, deltaTime);   // right
         }
     }
+
+    void addToInventory(const std::string& item, int quantity) {
+        inventory[item] += quantity;
+    }
+
+    int getInventoryItemCount(const std::string& item) const {
+        auto it = inventory.find(item);
+        return (it != inventory.end()) ? it->second : 0;
+    }
+
+    void displayInventory() const {
+        for (const auto& [item, quantity] : inventory) {
+            std::cout << item << ": " << quantity << "\n";
+        }
+    }
+
+    const std::unordered_map<std::string, int>& getInventory() const {
+        return inventory;
+    }
+
 };
 
 #endif 

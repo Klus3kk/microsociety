@@ -29,7 +29,7 @@ void Game::run() {
     // player.setSize(1.5f, 1.5f);
     
     sf::Image icon;
-    if (icon.loadFromFile("assets/icon/favicon.png")) {
+    if (icon.loadFromFile("../assets/icon/favicon.png")) {
         window.setIcon(icon.getSize().x, icon.getSize().y, icon.getPixelsPtr());
     } else {
         std::cerr << "Error loading icon!\n";
@@ -84,6 +84,47 @@ void Game::run() {
             targetTileY >= 0 && targetTileY < tileMap.size()) {
 
             auto& targetTile = tileMap[targetTileY][targetTileX];
+
+            // Actions
+            ActionType actionType = ActionType::None;
+
+            if (auto tree = dynamic_cast<Tree*>(targetTile->getObject())) {
+                actionType = ActionType::ChopTree;
+                std::cout << "Press 'T' to chop tree.\n";
+            } else if (auto stone = dynamic_cast<Rock*>(targetTile->getObject())) {
+                actionType = ActionType::MineRock;
+                std::cout << "Press 'M' to mine rock.\n";
+            } else if (auto bush = dynamic_cast<Bush*>(targetTile->getObject())) {
+                actionType = ActionType::GatherBush;
+                std::cout << "Press 'G' to gather bush resources.\n";
+            }
+
+
+
+            // Check for user input to perform action
+            if (actionType != ActionType::None) {
+                if ((actionType == ActionType::ChopTree && sf::Keyboard::isKeyPressed(sf::Keyboard::T)) ||
+                    (actionType == ActionType::MineRock && sf::Keyboard::isKeyPressed(sf::Keyboard::M)) ||
+                    (actionType == ActionType::GatherBush && sf::Keyboard::isKeyPressed(sf::Keyboard::G))) {
+                    
+                    // Execute the action based on the object type
+                    std::unique_ptr<Action> action;
+                    if (actionType == ActionType::ChopTree) {
+                        action = std::make_unique<TreeAction>();
+                    } else if (actionType == ActionType::MineRock) {
+                        action = std::make_unique<StoneAction>();
+                    } else if (actionType == ActionType::GatherBush) {
+                        action = std::make_unique<BushAction>();
+                    }
+
+                    // Perform the action and update inventory
+                    if (action) {
+                        action->perform(player);
+                        std::cout << "Performed action: " << action->getActionName() << "\n";
+                        player.displayInventory();
+                    }
+                }
+            }
 
             // Slow down on StoneTile
             if (auto stoneTile = dynamic_cast<StoneTile*>(targetTile.get())) {

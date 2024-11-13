@@ -64,3 +64,8 @@ gtest_discover_tests(TestEntity)
 add_executable(TestCollision tests/test_collision.cpp src/Game.cpp) # Adjust source files to match project
 target_link_libraries(TestCollision PRIVATE sfml-graphics sfml-audio sfml-system sfml-window nlohmann_json::nlohmann_json gtest_main)
 gtest_discover_tests(TestCollision)
+
+# Collision tests executable
+add_executable(TestActions tests/test_actions.cpp src/Game.cpp) # Adjust source files to match project
+target_link_libraries(TestActions PRIVATE sfml-graphics sfml-audio sfml-system sfml-window nlohmann_json::nlohmann_json gtest_main)
+gtest_discover_tests(TestActions)
