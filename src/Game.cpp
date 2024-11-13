@@ -107,7 +107,6 @@ void Game::run() {
                     (actionType == ActionType::MineRock && sf::Keyboard::isKeyPressed(sf::Keyboard::M)) ||
                     (actionType == ActionType::GatherBush && sf::Keyboard::isKeyPressed(sf::Keyboard::G))) {
                     
-                    // Execute the action based on the object type
                     std::unique_ptr<Action> action;
                     if (actionType == ActionType::ChopTree) {
                         action = std::make_unique<TreeAction>();
@@ -117,9 +116,9 @@ void Game::run() {
                         action = std::make_unique<BushAction>();
                     }
 
-                    // Perform the action and update inventory
+                    // Perform the action on the player and the tile
                     if (action) {
-                        action->perform(player);
+                        action->perform(player, *targetTile); // Call action with tile reference
                         std::cout << "Performed action: " << action->getActionName() << "\n";
                         player.displayInventory();
                     }

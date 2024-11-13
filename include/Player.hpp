@@ -8,7 +8,7 @@
 class PlayerEntity : public Entity {
 private:
     std::unordered_map<std::string, int> inventory; // String - name of the item, int - quantity
-    // Capacity needed
+    int inventoryCapacity = 10;
 public:
     PlayerEntity(float initHealth, float initHunger, float initEnergy, float initSpeed, float initStrength, float initMoney)
     : Entity(initHealth, initHunger, initEnergy, initSpeed, initStrength, initMoney) {}
@@ -29,8 +29,17 @@ public:
         }
     }
 
-    void addToInventory(const std::string& item, int quantity) {
+    bool addToInventory(const std::string& item, int quantity) {
+        int currentTotal = 0;
+        for (const auto& [key, count] : inventory) {
+            currentTotal += count;
+        }
+        if (currentTotal + quantity > inventoryCapacity) {
+            std::cout << "Inventory full! Cannot add more items.\n";
+            return false; // Failure to add due to capacity
+        }
         inventory[item] += quantity;
+        return true; 
     }
 
     int getInventoryItemCount(const std::string& item) const {

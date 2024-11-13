@@ -50,6 +50,10 @@ public:
     sf::FloatRect getObjectBounds() const {
         return object ? object->getSprite().getGlobalBounds() : sf::FloatRect();
     }
+
+    void removeObject() {
+        object.reset();
+    }
 };
 
 class StoneTile : public Tile {
