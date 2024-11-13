@@ -50,12 +50,16 @@ void Game::run() {
 
     // Set texture and color together
     player.setTexture(playerTexture, randomColor);
-
     player.setPosition(GameConfig::mapWidth / 2, GameConfig::mapHeight / 2);
 
     // Initial debug info
-    debugMapInfo(*this);
+    // debugMapInfo(*this);
     // debugObjectBoundaries(*this);
+
+    // Action testing
+    std::vector<std::unique_ptr<Action>> actions;
+    actions.emplace_back(std::make_unique<MoveAction>());
+    actions.emplace_back(std::make_unique<TradeAction>());
 
     std::set<std::pair<int, int>> loggedTiles;
     
