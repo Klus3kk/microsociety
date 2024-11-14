@@ -184,43 +184,34 @@ void Game::generateMap() {
     noise.SetSeed(static_cast<int>(time(nullptr))); // random map every time
     // loading textures
     std::vector<sf::Texture> grassTextures(3), stoneTextures(3), flowerTextures(5); // tiles textures
-    std::vector<sf::Texture> bushTextures(2), rockTextures(3), treeTextures(5); // object textures
+    std::vector<sf::Texture> bushTextures(2), rockTextures(3), treeTextures(3); // object textures
     std::vector<sf::Texture> houseTextures(4), marketTextures(3);
 
-    houseTextures[0].loadFromFile("../assets/objects/house1.png");
-    houseTextures[1].loadFromFile("../assets/objects/house2.png");
-    houseTextures[2].loadFromFile("../assets/objects/house3.png");
-    houseTextures[3].loadFromFile("../assets/objects/house4.png");
+    for (int i = 0; i < 4; ++i) {
+        houseTextures[i].loadFromFile("../assets/objects/house" + std::to_string(i + 1) + ".png");
+    }
 
-    marketTextures[0].loadFromFile("../assets/objects/market1.png");
-    marketTextures[1].loadFromFile("../assets/objects/market2.png");
-    marketTextures[2].loadFromFile("../assets/objects/market3.png");
+    for (int i = 0; i < 3; ++i) {
+        marketTextures[i].loadFromFile("../assets/objects/market" + std::to_string(i + 1) + ".png");
+        treeTextures[i].loadFromFile("../assets/objects/tree" + std::to_string(i + 1) + ".png");
+        rockTextures[i].loadFromFile("../assets/objects/rock" + std::to_string(i + 1) + ".png");
+    }
 
+    for (int i = 0; i < 3; ++i) {
+        grassTextures[i].loadFromFile("../assets/tiles/grass/grass" + std::to_string(i + 1) + ".png");
+    }
 
-    grassTextures[0].loadFromFile("../assets/tiles/grass/grass1.png");
-    grassTextures[1].loadFromFile("../assets/tiles/grass/grass2.png");
-    grassTextures[2].loadFromFile("../assets/tiles/grass/grass3.png");
+    for (int i = 0; i < 3; ++i) {
+        stoneTextures[i].loadFromFile("../assets/tiles/stone/stone" + std::to_string(i + 1) + ".png");
+    }
 
-    stoneTextures[0].loadFromFile("../assets/tiles/stone/stone1.png");
-    stoneTextures[1].loadFromFile("../assets/tiles/stone/stone2.png");
-    stoneTextures[2].loadFromFile("../assets/tiles/stone/stone3.png");
+    for (int i = 0; i < 2; ++i) {
+        bushTextures[i].loadFromFile("../assets/objects/bush" + std::to_string(i + 1) + ".png");
+    }
 
-    flowerTextures[0].loadFromFile("../assets/tiles/flower/flower1.png");
-    flowerTextures[1].loadFromFile("../assets/tiles/flower/flower2.png");
-    flowerTextures[2].loadFromFile("../assets/tiles/flower/flower3.png");
-    flowerTextures[3].loadFromFile("../assets/tiles/flower/flower4.png");
-    flowerTextures[4].loadFromFile("../assets/tiles/flower/flower5.png");
-
-    treeTextures[0].loadFromFile("../assets/objects/tree1.png");
-    treeTextures[1].loadFromFile("../assets/objects/tree2.png");
-    treeTextures[2].loadFromFile("../assets/objects/tree3.png");
-
-    rockTextures[0].loadFromFile("../assets/objects/rock1.png");
-    rockTextures[1].loadFromFile("../assets/objects/rock2.png");
-    rockTextures[2].loadFromFile("../assets/objects/rock3.png");
-
-    bushTextures[0].loadFromFile("../assets/objects/bush1.png");
-    bushTextures[1].loadFromFile("../assets/objects/bush2.png");
+    for (int i = 0; i < 5; ++i) {
+        flowerTextures[i].loadFromFile("../assets/tiles/flower/flower" + std::to_string(i + 1) + ".png");
+    }
 
     int rows = 64, cols = 64;
     tileMap.resize(rows);
@@ -255,6 +246,17 @@ void Game::generateMap() {
                 }
             }
         }
+    }
+
+    int playerHouseX = GameConfig::mapWidth / 2;
+    int playerHouseY = GameConfig::mapHeight / 2;
+    tileMap[playerHouseY / GameConfig::tileSize][playerHouseX / GameConfig::tileSize]->placeObject(std::make_unique<House>(houseTextures[0]));
+
+    int marketCount = 2 + rand() % 2; // Place 2 or 3 markets
+    for (int m = 0; m < marketCount; ++m) {
+        int marketX = rand() % cols;
+        int marketY = rand() % rows;
+        tileMap[marketY][marketX]->placeObject(std::make_unique<Market>(marketTextures[m % 3]));  
     }
 }
 
