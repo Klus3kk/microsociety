@@ -185,6 +185,17 @@ void Game::generateMap() {
     // loading textures
     std::vector<sf::Texture> grassTextures(3), stoneTextures(3), flowerTextures(5); // tiles textures
     std::vector<sf::Texture> bushTextures(2), rockTextures(3), treeTextures(5); // object textures
+    std::vector<sf::Texture> houseTextures(4), marketTextures(3);
+
+    houseTextures[0].loadFromFile("../assets/objects/house1.png");
+    houseTextures[1].loadFromFile("../assets/objects/house2.png");
+    houseTextures[2].loadFromFile("../assets/objects/house3.png");
+    houseTextures[3].loadFromFile("../assets/objects/house4.png");
+
+    marketTextures[0].loadFromFile("../assets/objects/market1.png");
+    marketTextures[1].loadFromFile("../assets/objects/market2.png");
+    marketTextures[2].loadFromFile("../assets/objects/market3.png");
+
 
     grassTextures[0].loadFromFile("../assets/tiles/grass/grass1.png");
     grassTextures[1].loadFromFile("../assets/tiles/grass/grass2.png");
