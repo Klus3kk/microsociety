@@ -5,6 +5,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+if(MSVC)
+    # Use MultiThreadedDLL for both Debug and Release for consistency.
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
+endif()
+
 option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 
 include(FetchContent)
@@ -31,14 +36,15 @@ include(GoogleTest)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
-# Add main source files
+# Add main source files, excluding main.cpp for tests
 file(GLOB SOURCES "src/*.cpp")
+list(REMOVE_ITEM SOURCES "${CMAKE_SOURCE_DIR}/src/main.cpp")
 
 # Add assets files
 file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
 
 # Add main executable
-add_executable(MicroSociety ${SOURCES})
+add_executable(MicroSociety src/main.cpp ${SOURCES})
 
 if(WIN32)
     target_link_libraries(MicroSociety PRIVATE sfml-graphics sfml-audio sfml-system sfml-window nlohmann_json::nlohmann_json)
@@ -51,21 +57,19 @@ elseif(UNIX)
     target_link_libraries(MicroSociety PRIVATE sfml-graphics sfml-audio sfml-system sfml-window nlohmann_json::nlohmann_json pthread)
 endif()
 
-# Unit test executables - add only files that exist
-add_executable(TestTerrain tests/test_terrain.cpp src/Game.cpp) # Adjusted sources for existing files
+# Separate unit test files to avoid duplicate main definitions
+add_executable(TestTerrain tests/test_terrain.cpp ${SOURCES})
 target_link_libraries(TestTerrain PRIVATE sfml-graphics sfml-audio sfml-system sfml-window nlohmann_json::nlohmann_json gtest_main)
 gtest_discover_tests(TestTerrain)
 
-add_executable(TestEntity tests/test_entity.cpp)  # Add sources here as needed
-target_link_libraries(TestEntity PRIVATE sfml-graphics sfml-audio sfml-system sfml-window gtest_main)
+add_executable(TestEntity tests/test_entity.cpp ${SOURCES})
+target_link_libraries(TestEntity PRIVATE sfml-graphics sfml-audio sfml-system sfml-window nlohmann_json::nlohmann_json gtest_main)
 gtest_discover_tests(TestEntity)
 
-# Collision tests executable
-add_executable(TestCollision tests/test_collision.cpp src/Game.cpp) # Adjust source files to match project
+add_executable(TestCollision tests/test_collision.cpp ${SOURCES})
 target_link_libraries(TestCollision PRIVATE sfml-graphics sfml-audio sfml-system sfml-window nlohmann_json::nlohmann_json gtest_main)
 gtest_discover_tests(TestCollision)
 
-# Collision tests executable
-add_executable(TestActions tests/test_actions.cpp src/Game.cpp) # Adjust source files to match project
+add_executable(TestActions tests/test_actions.cpp ${SOURCES})
 target_link_libraries(TestActions PRIVATE sfml-graphics sfml-audio sfml-system sfml-window nlohmann_json::nlohmann_json gtest_main)
 gtest_discover_tests(TestActions)
