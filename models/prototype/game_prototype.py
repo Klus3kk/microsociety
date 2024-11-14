@@ -113,7 +113,7 @@ if __name__ == "__main__":
     env = Environment()
     agent = DQLAgent(state_size=5, action_size=4)
     
-    episodes = 5
+    episodes = 3
     rewards = []
     successes = []
     epsilons = []
