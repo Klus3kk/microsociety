@@ -26,7 +26,7 @@ bool Game::detectCollision(const PlayerEntity& npc) {
 void Game::run() {
     sf::Clock clock;
     PlayerEntity player(100, 50, 50, 150.0f, 10, 100);
-    // player.setSize(1.5f, 1.5f);
+    player.setSize(1.5f, 1.5f);
     
     sf::Image icon;
     if (icon.loadFromFile("../assets/icon/favicon.png")) {
@@ -53,7 +53,7 @@ void Game::run() {
     player.setPosition(GameConfig::mapWidth / 2, GameConfig::mapHeight / 2);
 
     // Initial debug info
-    // debugMapInfo(*this);
+    debugMapInfo(*this);
     // debugObjectBoundaries(*this);
 
     // Action testing
