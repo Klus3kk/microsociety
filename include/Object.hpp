@@ -68,18 +68,6 @@ public:
     }
 };
 
-class House : public Object {
-public:
-    House(const sf::Texture& tex) {
-        texture = tex;
-        sprite.setTexture(texture);
-    }
-    void draw(sf::RenderWindow& window) override {
-        window.draw(sprite);
-    }
-};
-
-
 class Market : public Object {
 public:
     Market(const sf::Texture& tex) {
