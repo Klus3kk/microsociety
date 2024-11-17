@@ -41,6 +41,10 @@ public:
         for (const auto& [item, quantity] : inventory) std::cout << item << ": " << quantity << "\n";
     }
 
+    void setMoney(float newMoney) {
+        money = newMoney;
+    }
+
     const std::unordered_map<std::string, int>& getInventory() const { return inventory; }
 };
 

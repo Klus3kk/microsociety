@@ -247,7 +247,8 @@ void Game::generateMap() {
 
     int playerHouseX = GameConfig::mapWidth / 2;
     int playerHouseY = GameConfig::mapHeight / 2;
-    tileMap[playerHouseY / GameConfig::tileSize][playerHouseX / GameConfig::tileSize]->placeObject(std::make_unique<House>(houseTextures[0]));
+    tileMap[playerHouseY / GameConfig::tileSize][playerHouseX / GameConfig::tileSize]
+    ->placeObject(std::make_unique<House>(houseTextures[0]));
 
     int marketCount = 2 + rand() % 2; // Place 2 or 3 markets
     for (int m = 0; m < marketCount; ++m) {

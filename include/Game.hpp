@@ -8,6 +8,7 @@
 #include "Player.hpp"  
 #include "Configuration.hpp" 
 #include "Actions.hpp"
+#include "House.hpp"
 
 class Game {
 private:
