@@ -69,7 +69,10 @@ public:
     float getStrength() const { return strength; }
     float getMoney() const { return money; }
 
+    // Setters
     void setSpeed(float newSpeed) { speed = newSpeed; }
+    void setEnergy(float newEnergy) { energy = newEnergy; } 
+    void setMoney(float newMoney) { money = newMoney; }
 
     // movement function based on screen's framerate
     void move(float dx, float dy, float deltaTime) {

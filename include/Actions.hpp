@@ -5,14 +5,18 @@
 #include "Tile.hpp"
 #include <iostream>
 #include <string>
+#include "House.hpp"
 
 enum class ActionType {
     None,
     ChopTree,
     MineRock,
     GatherBush,
-    Move,             // New type for move actions
-    Trade             // New type for trading actions
+    Move,
+    Trade,
+    RegenerateEnergy,
+    UpgradeHouse,
+    StoreItem             
 };
 
 // Existing Base Action class for resource gathering
@@ -56,7 +60,7 @@ public:
     std::string getActionName() const override { return "Gather from Bush"; }
 };
 
-// New flexible MoveAction for navigation
+// Flexible MoveAction for navigation
 class MoveAction : public Action {
 public:
     void perform(PlayerEntity& player, Tile&) override {
@@ -65,7 +69,7 @@ public:
     std::string getActionName() const override { return "Move"; }
 };
 
-// New TradeAction for trading with other NPCs or the market
+// TradeAction for trading with other NPCs or the market
 class TradeAction : public Action {
 public:
     void perform(PlayerEntity& player, Tile&) override {
@@ -74,4 +78,67 @@ public:
     std::string getActionName() const override { return "Trade"; }
 };
 
-#endif // ACTIONS_HPP
+class RegenerateEnergyAction : public Action {
+public:
+    void perform(PlayerEntity& player, Tile& tile) override {
+        if (auto house = dynamic_cast<House*>(tile.getObject())) {
+            house->regenerateEnergy(player);
+        }
+    }
+    std::string getActionName() const override { return "Regenerate Energy"; }
+};
+
+// UpgradeHouseAction for upgrading the house
+class UpgradeHouseAction : public Action {
+public:
+    void perform(PlayerEntity& player, Tile& tile) override {
+        if (auto house = dynamic_cast<House*>(tile.getObject())) {
+            int playerMoney = player.getMoney();
+            if (house->upgrade(playerMoney)) {
+                player.setMoney(playerMoney); // Update player's money after upgrade
+            }
+        }
+    }
+    std::string getActionName() const override { return "Upgrade House"; }
+};
+
+// StoreItemAction for storing items in the house
+class StoreItemAction : public Action {
+private:
+    std::string item; 
+    int quantity;     
+
+public:
+    StoreItemAction(const std::string& item, int quantity)
+        : item(item), quantity(quantity) {}
+
+    void perform(PlayerEntity& player, Tile& tile) override {
+        if (auto house = dynamic_cast<House*>(tile.getObject())) {
+            const auto& inventory = player.getInventory();
+            
+            if (inventory.empty()) {
+                std::cout << "No items in inventory to store.\n";
+                return;
+            }
+
+            // Iterate through player's inventory and store items
+            for (const auto& [item, quantity] : inventory) {
+                if (house->storeItem(item, quantity)) {
+                    player.addToInventory(item, -quantity); // Remove stored items from player inventory
+                    std::cout << "Stored " << quantity << " " << item << " in the house.\n";
+                } else {
+                    std::cout << "House storage is full! Could not store all items.\n";
+                }
+            }
+        } else {
+            std::cout << "No house present on this tile.\n";
+        }
+    }
+
+    std::string getActionName() const override {
+        return "Store Items in House";
+    }
+};
+
+
+#endif 

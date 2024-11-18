@@ -3,56 +3,103 @@
 
 #include <iostream>
 #include <vector>
+#include <string>
+#include <sstream>
 #include "Player.hpp"
+#include "Game.hpp"
 #include "Configuration.hpp"
-void debugPlayerInfo(const PlayerEntity& player) {
-    std::cout << "Player Position: (" << player.getPosition().x << ", " << player.getPosition().y << ")\n";
-    std::cout << "Player Speed: " << player.getSpeed() << "\n";
-    std::cout << "Player Health: " << player.getHealth() << "\n";
+
+class Debug {
+private:
+    bool debugMode = false;          // Toggle for enabling/disabling debug
+    std::vector<std::string> logs;  // Buffer for storing debug messages
+
+public:
+    static Debug& getInstance() {
+        static Debug instance;
+        return instance;
+    }
+
+    void enable() { debugMode = true; }
+    void disable() { debugMode = false; }
+    bool isEnabled() const { return debugMode; }
+
+    void log(const std::string& message) {
+        if (debugMode) {
+            logs.push_back(message);
+            std::cout << message << std::endl; // Print to console for now
+        }
+    }
+
+    void clearLogs() { logs.clear(); }
+
+    const std::vector<std::string>& getLogs() const { return logs; }
+
+    // Disallow copying
+    Debug(const Debug&) = delete;
+    Debug& operator=(const Debug&) = delete;
+
+private:
+    Debug() = default; // Private constructor for Singleton
+};
+
+// Debug functions
+inline void debugPlayerInfo(const PlayerEntity& player) {
+    std::ostringstream oss;
+    oss << "Player Position: (" << player.getPosition().x << ", " << player.getPosition().y << ")\n";
+    oss << "Player Speed: " << player.getSpeed() << "\n";
+    oss << "Player Health: " << player.getHealth() << "\n";
+    Debug::getInstance().log(oss.str());
 }
 
-void debugMapInfo(const Game& game) {
-    std::cout << "Map Width: " << GameConfig::mapWidth << ", Map Height: " << GameConfig::mapHeight << "\n";
-    std::cout << "Tile Size: " << GameConfig::tileSize << "\n";
-    std::cout << "Map Layout:\n";
-    
+inline void debugMapInfo(const Game& game) {
+    std::ostringstream oss;
+    oss << "Map Width: " << GameConfig::mapWidth << ", Map Height: " << GameConfig::mapHeight << "\n";
+    oss << "Tile Size: " << GameConfig::tileSize << "\n";
+    oss << "Map Layout:\n";
+
     for (int y = 0; y < game.getTileMap().size(); ++y) {
         for (int x = 0; x < game.getTileMap()[y].size(); ++x) {
-            std::cout << (game.getTileMap()[y][x]->hasObject() ? "O" : ".") << " ";
+            oss << (game.getTileMap()[y][x]->hasObject() ? "O" : ".") << " ";
         }
-        std::cout << "\n";
+        oss << "\n";
     }
+    Debug::getInstance().log(oss.str());
 }
 
-void debugTileInfo(int tileX, int tileY, const Game& game) {
+inline void debugTileInfo(int tileX, int tileY, const Game& game) {
     if (tileX >= 0 && tileX < game.getTileMap()[0].size() && tileY >= 0 && tileY < game.getTileMap().size()) {
         auto& tile = game.getTileMap()[tileY][tileX];
-        std::cout << "Tile (" << tileX << ", " << tileY << ") ";
+        std::ostringstream oss;
+        oss << "Tile (" << tileX << ", " << tileY << ") ";
         if (tile->hasObject()) {
-            std::cout << "contains object";
+            oss << "contains object";
             auto objectBounds = tile->getObjectBounds();
-            std::cout << " with bounds (" << objectBounds.left << ", " << objectBounds.top << ", "
-                      << objectBounds.width << ", " << objectBounds.height << ")\n";
+            oss << " with bounds (" << objectBounds.left << ", " << objectBounds.top << ", "
+                << objectBounds.width << ", " << objectBounds.height << ")\n";
         } else {
-            std::cout << "is empty\n";
+            oss << "is empty\n";
         }
+        Debug::getInstance().log(oss.str());
     } else {
-        std::cout << "Tile out of bounds\n";
+        Debug::getInstance().log("Tile out of bounds\n");
     }
 }
 
-void debugObjectBoundaries(const Game& game) {
+inline void debugObjectBoundaries(const Game& game) {
+    std::ostringstream oss;
     for (int y = 0; y < game.getTileMap().size(); ++y) {
         for (int x = 0; x < game.getTileMap()[y].size(); ++x) {
             auto& tile = game.getTileMap()[y][x];
             if (tile->hasObject()) {
                 auto objectBounds = tile->getObjectBounds();
-                std::cout << "Object at Tile (" << x << ", " << y << ") with bounds ("
-                          << objectBounds.left << ", " << objectBounds.top << ", "
-                          << objectBounds.width << ", " << objectBounds.height << ")\n";
+                oss << "Object at Tile (" << x << ", " << y << ") with bounds ("
+                    << objectBounds.left << ", " << objectBounds.top << ", "
+                    << objectBounds.width << ", " << objectBounds.height << ")\n";
             }
         }
     }
+    Debug::getInstance().log(oss.str());
 }
 
-#endif
+#endif // DEBUG_HPP
