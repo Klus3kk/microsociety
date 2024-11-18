@@ -9,9 +9,11 @@
 #include "Configuration.hpp" 
 #include "Actions.hpp"
 #include "House.hpp"
+#include "UI.hpp"
 
 class Game {
 private:
+    UI ui;
     sf::RenderWindow window;
     float deltaTime;
     std::vector<std::vector<std::unique_ptr<Tile>>> tileMap;

@@ -2,6 +2,7 @@
 #include "FastNoiseLite.h"
 #include "Player.hpp"
 #include "debug.hpp"
+#include "UI.hpp"
 #include <random>
 #include <set>
 
@@ -72,6 +73,8 @@ void Game::run() {
             if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::F1) {
                 debugConsole.toggle();
             }
+
+            ui.handleButtonClicks(window, event);
         }
 
 
@@ -93,6 +96,7 @@ void Game::run() {
             
             targetTile = tileMap[targetTileY][targetTileX].get();
 
+            
             // Keep track of whether we showed debug info for this tile
             static std::pair<int, int> lastDebugTile = {-1, -1};
             if (std::make_pair(targetTileX, targetTileY) != lastDebugTile) {
@@ -194,9 +198,11 @@ void Game::run() {
             }
         }
 
+        ui.updateStatus(1, "12:00", 10, 1000); // Example values for now
         debugPlayerInfo(player);
         window.clear();
         render();          // Render the map
+        ui.render(window); 
         player.draw(window);   // Draw player's entity
         debugConsole.render(window);
         window.display();
