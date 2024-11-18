@@ -28,11 +28,16 @@ void Game::run() {
     PlayerEntity player(100, 50, 50, 150.0f, 10, 100);
     player.setSize(1.5f, 1.5f);
     
+    // Set up the debug console
+    DebugConsole& debugConsole = getDebugConsole();
+    debugConsole.enable(); 
+    std::set<std::pair<int, int>> shownMessages;
+
     sf::Image icon;
     if (icon.loadFromFile("../assets/icon/favicon.png")) {
         window.setIcon(icon.getSize().x, icon.getSize().y, icon.getPixelsPtr());
     } else {
-        std::cerr << "Error loading icon!\n";
+        debugConsole.log("Error loading icon!");
     }
 
 
@@ -52,10 +57,6 @@ void Game::run() {
     player.setTexture(playerTexture, randomColor);
     player.setPosition(GameConfig::mapWidth / 2, GameConfig::mapHeight / 2);
 
-    // Initial debug info
-    debugMapInfo(*this);
-    // debugObjectBoundaries(*this);
-
     // Action testing
     std::vector<std::unique_ptr<Action>> actions;
     actions.emplace_back(std::make_unique<MoveAction>());
@@ -66,12 +67,13 @@ void Game::run() {
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed)
-                window.close();
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
-                exit(1);
+            if (event.type == sf::Event::Closed) window.close();
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) window.close();
+            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::F1) {
+                debugConsole.toggle();
             }
         }
+
 
         sf::Time dt = clock.restart();
         deltaTime = dt.asSeconds();
@@ -83,100 +85,120 @@ void Game::run() {
         int targetTileX = static_cast<int>(std::round(player.getPosition().x / GameConfig::tileSize));
         int targetTileY = static_cast<int>(std::round(player.getPosition().y / GameConfig::tileSize));
 
+        // Declare a raw pointer to the tile for use throughout the logic
+        Tile* targetTile = nullptr;
 
         if (targetTileX >= 0 && targetTileX < tileMap[0].size() &&
             targetTileY >= 0 && targetTileY < tileMap.size()) {
             
-            auto& targetTile = tileMap[targetTileY][targetTileX];
+            targetTile = tileMap[targetTileY][targetTileX].get();
 
-            // Determine the action type
-            ActionType actionType = ActionType::None;
+            // Keep track of whether we showed debug info for this tile
+            static std::pair<int, int> lastDebugTile = {-1, -1};
+            if (std::make_pair(targetTileX, targetTileY) != lastDebugTile) {
+                lastDebugTile = {targetTileX, targetTileY};
 
-            if (auto tree = dynamic_cast<Tree*>(targetTile->getObject())) {
-                actionType = ActionType::ChopTree;
-                std::cout << "Press 'T' to chop tree.\n";
-            } else if (auto stone = dynamic_cast<Rock*>(targetTile->getObject())) {
-                actionType = ActionType::MineRock;
-                std::cout << "Press 'M' to mine rock.\n";
-            } else if (auto bush = dynamic_cast<Bush*>(targetTile->getObject())) {
-                actionType = ActionType::GatherBush;
-                std::cout << "Press 'G' to gather bush resources.\n";
-            } else if (auto house = dynamic_cast<House*>(targetTile->getObject())) {
-                std::cout << "Press 'H' to regenerate energy.\n";
-                std::cout << "Press 'U' to upgrade the house.\n";
-                std::cout << "Press 'I' to store items in the house.\n";
-
-                if (sf::Keyboard::isKeyPressed(sf::Keyboard::H)) {
-                    actionType = ActionType::RegenerateEnergy;
-                }
-                if (sf::Keyboard::isKeyPressed(sf::Keyboard::U)) {
-                    actionType = ActionType::UpgradeHouse;
-                }
-                if (sf::Keyboard::isKeyPressed(sf::Keyboard::I)) {
-                    actionType = ActionType::StoreItem;
+                // Log debug information for the target tile
+                if (auto tree = dynamic_cast<Tree*>(targetTile->getObject())) {
+                    debugConsole.log("Press 'T' to chop tree.");
+                } else if (auto stone = dynamic_cast<Rock*>(targetTile->getObject())) {
+                    debugConsole.log("Press 'M' to mine rock.");
+                } else if (auto bush = dynamic_cast<Bush*>(targetTile->getObject())) {
+                    debugConsole.log("Press 'G' to gather bush resources.");
+                } else if (auto house = dynamic_cast<House*>(targetTile->getObject())) {
+                    debugConsole.log("Press 'H' to regenerate energy.");
+                    debugConsole.log("Press 'U' to upgrade the house.");
+                    debugConsole.log("Press 'I' to store items in the house.");
                 }
             }
 
-            // Execute the action
-            if (actionType != ActionType::None) {
-                std::unique_ptr<Action> action;
-                if (actionType == ActionType::ChopTree) {
-                    action = std::make_unique<TreeAction>();
-                } else if (actionType == ActionType::MineRock) {
-                    action = std::make_unique<StoneAction>();
-                } else if (actionType == ActionType::GatherBush) {
-                    action = std::make_unique<BushAction>();
-                } else if (actionType == ActionType::RegenerateEnergy) {
-                    action = std::make_unique<RegenerateEnergyAction>();
-                } else if (actionType == ActionType::UpgradeHouse) {
-                    action = std::make_unique<UpgradeHouseAction>();
-                } else if (actionType == ActionType::StoreItem) {
-                    const auto& inventory = player.getInventory();
-                    if (!inventory.empty()) {
-                        auto it = inventory.begin(); // Get the first item in the inventory
-                        action = std::make_unique<StoreItemAction>(it->first, it->second); // Pass item name and quantity
-                    } else {
-                        std::cout << "Inventory is empty, no items to store!\n";
+            // Execute actions based on input (no continuous execution)
+            static bool keyProcessed = false;
+
+            if (!keyProcessed) {
+                if (sf::Keyboard::isKeyPressed(sf::Keyboard::T)) {
+                    if (auto tree = dynamic_cast<Tree*>(targetTile->getObject())) {
+                        std::unique_ptr<Action> action = std::make_unique<TreeAction>();
+                        action->perform(player, *targetTile);
+                        debugConsole.log("Performed action: " + action->getActionName());
+                        keyProcessed = true;
+                    }
+                } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::M)) {
+                    if (auto stone = dynamic_cast<Rock*>(targetTile->getObject())) {
+                        std::unique_ptr<Action> action = std::make_unique<StoneAction>();
+                        action->perform(player, *targetTile);
+                        debugConsole.log("Performed action: " + action->getActionName());
+                        keyProcessed = true;
+                    }
+                } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::G)) {
+                    if (auto bush = dynamic_cast<Bush*>(targetTile->getObject())) {
+                        std::unique_ptr<Action> action = std::make_unique<BushAction>();
+                        action->perform(player, *targetTile);
+                        debugConsole.log("Performed action: " + action->getActionName());
+                        keyProcessed = true;
+                    }
+                } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::H)) {
+                    if (auto house = dynamic_cast<House*>(targetTile->getObject())) {
+                        std::unique_ptr<Action> action = std::make_unique<RegenerateEnergyAction>();
+                        action->perform(player, *targetTile);
+                        debugConsole.log("Energy regenerated to 100.");
+                        keyProcessed = true;
+                    }
+                } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::U)) {
+                    if (auto house = dynamic_cast<House*>(targetTile->getObject())) {
+                        std::unique_ptr<Action> action = std::make_unique<UpgradeHouseAction>();
+                        action->perform(player, *targetTile);
+                        debugConsole.log("Attempted to upgrade house.");
+                        keyProcessed = true;
+                    }
+                } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::I)) {
+                    if (auto house = dynamic_cast<House*>(targetTile->getObject())) {
+                        const auto& inventory = player.getInventory();
+                        if (!inventory.empty()) {
+                            auto it = inventory.begin(); // Get the first item in the inventory
+                            std::unique_ptr<Action> action = std::make_unique<StoreItemAction>(it->first, it->second);
+                            action->perform(player, *targetTile);
+                            debugConsole.log("Stored " + std::to_string(it->second) + " " + it->first + " in the house.");
+                        } else {
+                            debugConsole.log("Inventory is empty, no items to store.");
+                        }
+                        keyProcessed = true;
                     }
                 }
-
-                if (action) {
-                    action->perform(player, *targetTile);
-                    std::cout << "Performed action: " << action->getActionName() << "\n";
-                }
             }
 
-
-
-            // Slow down on StoneTile
-            if (auto stoneTile = dynamic_cast<StoneTile*>(targetTile.get())) {
-                player.setSpeed(75.0f);  // Slow speed on stone tiles
-            } else {
-                player.setSpeed(150.0f); // Normal speed on other tiles
-            }
-
-            // Collision detection
-            if (targetTile->hasObject()) {
-                auto objectBounds = targetTile->getObjectBounds();
-                if (player.getSprite().getGlobalBounds().intersects(objectBounds)) {
-                    player.setPosition(previousPosition.x, previousPosition.y);  // Revert position on collision
-                    std::cout << "Collision at tile (" << targetTileX << ", " << targetTileY << ")\n";
-                }
+            // Reset the keyProcessed flag when no key is pressed
+            if (!sf::Keyboard::isKeyPressed(sf::Keyboard::T) &&
+                !sf::Keyboard::isKeyPressed(sf::Keyboard::M) &&
+                !sf::Keyboard::isKeyPressed(sf::Keyboard::G) &&
+                !sf::Keyboard::isKeyPressed(sf::Keyboard::H) &&
+                !sf::Keyboard::isKeyPressed(sf::Keyboard::U) &&
+                !sf::Keyboard::isKeyPressed(sf::Keyboard::I)) {
+                keyProcessed = false;
             }
         }
 
-        // Debug each step
-        bool debugMode = true; // Add this at the top or make it a class member
-
-        if (debugMode) {
-            // debugPlayerInfo(player);
-            debugTileInfo(targetTileX, targetTileY, *this);
-            drawTileBorders();
+        // Slow down on StoneTile
+        if (auto stoneTile = dynamic_cast<StoneTile*>(targetTile)) { // Use targetTile directly, no .get()
+            player.setSpeed(75.0f);  // Slow speed on stone tiles
+        } else {
+            player.setSpeed(150.0f); // Normal speed on other tiles
         }
 
+        // Collision detection
+        if (targetTile->hasObject()) {
+            auto objectBounds = targetTile->getObjectBounds();
+            if (player.getSprite().getGlobalBounds().intersects(objectBounds)) {
+                player.setPosition(previousPosition.x, previousPosition.y);  // Revert position on collision
+                debugConsole.log("Collision at tile (" + std::to_string(targetTileX) + ", " + std::to_string(targetTileY) + ").");
+            }
+        }
+
+        debugPlayerInfo(player);
         window.clear();
         render();          // Render the map
         player.draw(window);   // Draw player's entity
+        debugConsole.render(window);
         window.display();
     }
 }
