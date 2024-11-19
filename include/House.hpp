@@ -12,9 +12,12 @@ private:
     int maxStorageCapacity;
     float energyRegenRate;
     std::unordered_map<std::string, int> storage;
+    
 
 public:
     House(const sf::Texture& tex, int initialLevel = 1);
+    const std::unordered_map<std::string, int>& getStorage() const { return storage; }
+
 
     // Energy regeneration
     void regenerateEnergy(PlayerEntity& player);

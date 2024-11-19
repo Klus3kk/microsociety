@@ -2,29 +2,33 @@
 #define UI_HPP
 
 #include <SFML/Graphics.hpp>
+#include <unordered_map>
 #include <string>
-#include <vector>
-#include <functional>
+#include "UIButton.hpp"
 
 class UI {
 private:
     sf::Font font;
 
-    // Status Panel
+    // Panels
     sf::RectangleShape statusPanel;
     sf::Text statusText;
 
-    // Tooltip Panel
+    sf::RectangleShape inventoryPanel;
+    sf::Text inventoryText;
+
     sf::RectangleShape tooltipPanel;
     sf::Text tooltipText;
 
     // Buttons
-    void createButtons();
-    void updateTooltipPosition(const sf::Vector2i& mousePosition);
+    UIButton npcButton;
+    UIButton statsButton;
+    UIButton optionsButton;
 
 public:
     UI();
-    void updateStatus(int day, const std::string& time, int npcCount, int totalMoney);
+
+    void updateStatus(int day, const std::string& time, int npcCount, int totalMoney, const std::unordered_map<std::string, int>& allResources);
     void handleButtonClicks(sf::RenderWindow& window, sf::Event& event);
     void handleHover(sf::RenderWindow& window);
     void render(sf::RenderWindow& window);

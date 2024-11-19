@@ -11,6 +11,8 @@ Game::Game() : window(sf::VideoMode(GameConfig::mapWidth, GameConfig::mapHeight)
     generateMap();
 }
 
+
+
 bool Game::detectCollision(const PlayerEntity& npc) {
     int tileX = static_cast<int>(npc.getPosition().x / GameConfig::tileSize);
     int tileY = static_cast<int>(npc.getPosition().y / GameConfig::tileSize);
@@ -145,30 +147,28 @@ void Game::run() {
                     if (auto house = dynamic_cast<House*>(targetTile->getObject())) {
                         std::unique_ptr<Action> action = std::make_unique<RegenerateEnergyAction>();
                         action->perform(player, *targetTile);
-                        debugConsole.log("Energy regenerated to 100.");
-                        keyProcessed = true;
+                        debugConsole.log("Energy regenerated.");
                     }
                 } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::U)) {
                     if (auto house = dynamic_cast<House*>(targetTile->getObject())) {
                         std::unique_ptr<Action> action = std::make_unique<UpgradeHouseAction>();
                         action->perform(player, *targetTile);
-                        debugConsole.log("Attempted to upgrade house.");
-                        keyProcessed = true;
+                        debugConsole.log("House upgraded.");
                     }
                 } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::I)) {
                     if (auto house = dynamic_cast<House*>(targetTile->getObject())) {
                         const auto& inventory = player.getInventory();
                         if (!inventory.empty()) {
-                            auto it = inventory.begin(); // Get the first item in the inventory
+                            auto it = inventory.begin();
                             std::unique_ptr<Action> action = std::make_unique<StoreItemAction>(it->first, it->second);
                             action->perform(player, *targetTile);
-                            debugConsole.log("Stored " + std::to_string(it->second) + " " + it->first + " in the house.");
+                            debugConsole.log("Stored items in the house.");
                         } else {
-                            debugConsole.log("Inventory is empty, no items to store.");
+                            debugConsole.log("Inventory is empty.");
                         }
-                        keyProcessed = true;
                     }
                 }
+
             }
 
             // Reset the keyProcessed flag when no key is pressed
@@ -198,7 +198,7 @@ void Game::run() {
             }
         }
 
-        ui.updateStatus(1, "12:00", 10, 1000); // Example values for now
+        ui.updateStatus(1, "12:00", 10, 1000, player.getInventory());  // Example values for now
         debugPlayerInfo(player);
         window.clear();
         render();          // Render the map
