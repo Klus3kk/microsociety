@@ -4,6 +4,7 @@
 #include <SFML/Graphics.hpp>
 #include <vector>
 #include <memory>
+#include <unordered_map>
 #include "Tile.hpp"
 #include "Player.hpp"  
 #include "Configuration.hpp" 
@@ -28,12 +29,14 @@ public:
     void generateMap();
     void render();
     void drawTileBorders();
-    
-    // getter to access tileMap for testing
-    const std::vector<std::vector<std::unique_ptr<Tile>>>& getTileMap() const {
-        return tileMap;
-    }
     bool detectCollision(const PlayerEntity& npc);
+
+    // New methods
+    std::unordered_map<std::string, int> aggregateResources(const std::vector<PlayerEntity>& npcs) const;
+    std::vector<PlayerEntity> generateNPCs() const;  // For testing
+    // Might remove later
+    const std::vector<std::vector<std::unique_ptr<Tile>>>& getTileMap() const;
+
 
 };
 

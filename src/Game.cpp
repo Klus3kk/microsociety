@@ -5,10 +5,15 @@
 #include "UI.hpp"
 #include <random>
 #include <set>
+#include <unordered_map>
 
 
 Game::Game() : window(sf::VideoMode(GameConfig::mapWidth, GameConfig::mapHeight), "MicroSociety") {
     generateMap();
+}
+
+const std::vector<std::vector<std::unique_ptr<Tile>>>& Game::getTileMap() const {
+    return tileMap;
 }
 
 
@@ -198,7 +203,12 @@ void Game::run() {
             }
         }
 
-        ui.updateStatus(1, "12:00", 10, 1000, player.getInventory());  // Example values for now
+        // Aggregate resources from all NPCs
+        std::unordered_map<std::string, int> allResources = aggregateResources(npcs);
+
+        // Update UI
+        ui.updateStatus(1, "12:00", npcs.size(), 1000, allResources);  // Example values for now
+
         debugPlayerInfo(player);
         window.clear();
         render();          // Render the map
@@ -243,9 +253,6 @@ void Game::generateMap() {
 
     for (int i = 0; i < 3; ++i) {
         grassTextures[i].loadFromFile("../assets/tiles/grass/grass" + std::to_string(i + 1) + ".png");
-    }
-
-    for (int i = 0; i < 3; ++i) {
         stoneTextures[i].loadFromFile("../assets/tiles/stone/stone" + std::to_string(i + 1) + ".png");
     }
 
@@ -311,5 +318,32 @@ void Game::render() {
             tile->draw(window);
         }
     }
+}
+
+std::unordered_map<std::string, int> Game::aggregateResources(const std::vector<PlayerEntity>& npcs) const {
+    std::unordered_map<std::string, int> allResources;
+
+    for (const auto& npc : npcs) {
+        const auto& inventory = npc.getInventory();
+        for (const auto& [item, quantity] : inventory) {
+            allResources[item] += quantity;
+        }
+    }
+
+    return allResources;
+}
+
+std::vector<PlayerEntity> Game::generateNPCs() const {
+    std::vector<PlayerEntity> npcs;
+
+    for (int i = 0; i < 3; ++i) {
+        PlayerEntity npc(100, 50, 50, 150.0f, 10, 100);
+        npc.addToInventory("wood", i + 1);
+        npc.addToInventory("stone", 2 * i);
+        npc.addToInventory("food", 5 - i);
+        npcs.push_back(npc);
+    }
+
+    return npcs;
 }
 
