@@ -6,12 +6,10 @@
 #include <string>
 #include <sstream>
 #include <SFML/Graphics.hpp>
-#include <map>
 #include <unordered_map>
-#include "Configuration.hpp"
-#include "Player.hpp"
 
 class Game; // Forward declaration of Game class
+class PlayerEntity;
 
 // Debug system for centralized logging
 class DebugConsole {
