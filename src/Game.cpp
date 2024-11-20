@@ -71,7 +71,10 @@ void Game::run() {
     actions.emplace_back(std::make_unique<TradeAction>());
 
     std::set<std::pair<int, int>> loggedTiles;
-    
+
+    // Generate NPCs
+    std::vector<PlayerEntity> npcs = generateNPCs();
+
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -232,6 +235,32 @@ void Game::drawTileBorders() {
     }
 }
 
+std::unordered_map<std::string, int> Game::aggregateResources(const std::vector<PlayerEntity>& npcs) const {
+    std::unordered_map<std::string, int> allResources;
+
+    for (const auto& npc : npcs) {
+        const auto& inventory = npc.getInventory();
+        for (const auto& [item, quantity] : inventory) {
+            allResources[item] += quantity;
+        }
+    }
+
+    return allResources;
+}
+
+std::vector<PlayerEntity> Game::generateNPCs() const {
+    std::vector<PlayerEntity> npcs;
+
+    for (int i = 0; i < 3; ++i) {
+        PlayerEntity npc(100, 50, 50, 150.0f, 10, 100);
+        npc.addToInventory("wood", i + 1);
+        npc.addToInventory("stone", 2 * i);
+        npc.addToInventory("food", 5 - i);
+        npcs.push_back(npc);
+    }
+
+    return npcs;
+}
 
 void Game::generateMap() {
     // initialize FastNoiseLite for Perlin Noise
@@ -320,30 +349,5 @@ void Game::render() {
     }
 }
 
-std::unordered_map<std::string, int> Game::aggregateResources(const std::vector<PlayerEntity>& npcs) const {
-    std::unordered_map<std::string, int> allResources;
 
-    for (const auto& npc : npcs) {
-        const auto& inventory = npc.getInventory();
-        for (const auto& [item, quantity] : inventory) {
-            allResources[item] += quantity;
-        }
-    }
-
-    return allResources;
-}
-
-std::vector<PlayerEntity> Game::generateNPCs() const {
-    std::vector<PlayerEntity> npcs;
-
-    for (int i = 0; i < 3; ++i) {
-        PlayerEntity npc(100, 50, 50, 150.0f, 10, 100);
-        npc.addToInventory("wood", i + 1);
-        npc.addToInventory("stone", 2 * i);
-        npc.addToInventory("food", 5 - i);
-        npcs.push_back(npc);
-    }
-
-    return npcs;
-}
 
