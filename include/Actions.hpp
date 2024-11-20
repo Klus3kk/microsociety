@@ -6,6 +6,7 @@
 #include <iostream>
 #include <string>
 #include "House.hpp"
+#include "debug.hpp"
 
 enum class ActionType {
     None,
@@ -32,9 +33,13 @@ class TreeAction : public Action {
 public:
     void perform(PlayerEntity& player, Tile& tile) override {
         if (player.addToInventory("wood", 1)) {
-            tile.removeObject(); // Remove the tree after chopping
+            tile.removeObject();
+            getDebugConsole().log("Tree chopped! Wood added to inventory.");
+        } else {
+            getDebugConsole().log("Failed to chop tree. Inventory is full.");
         }
     }
+
     std::string getActionName() const override { return "Chop Tree"; }
 };
 
@@ -43,9 +48,13 @@ class StoneAction : public Action {
 public:
     void perform(PlayerEntity& player, Tile& tile) override {
         if (player.addToInventory("stone", 1)) {
-            tile.removeObject(); // Remove the rock after mining
+            tile.removeObject();
+            getDebugConsole().log("Rock mined! Stone added to inventory.");
+        } else {
+            getDebugConsole().log("Failed to mine rock. Inventory is full.");
         }
     }
+
     std::string getActionName() const override { return "Mine Stone"; }
 };
 
@@ -54,9 +63,13 @@ class BushAction : public Action {
 public:
     void perform(PlayerEntity& player, Tile& tile) override {
         if (player.addToInventory("food", 1)) {
-            tile.removeObject(); // Remove the bush after gathering
+            tile.removeObject();
+            getDebugConsole().log("Food gathered from bush!");
+        } else {
+            getDebugConsole().log("Failed to gather food. Inventory is full.");
         }
     }
+
     std::string getActionName() const override { return "Gather from Bush"; }
 };
 
@@ -64,7 +77,7 @@ public:
 class MoveAction : public Action {
 public:
     void perform(PlayerEntity& player, Tile&) override {
-        std::cout << "Executing Move Action\n";
+        getDebugConsole().log("Player moved.");
     }
     std::string getActionName() const override { return "Move"; }
 };
@@ -73,7 +86,7 @@ public:
 class TradeAction : public Action {
 public:
     void perform(PlayerEntity& player, Tile&) override {
-        std::cout << "Executing Trade Action\n";
+        getDebugConsole().log("Trade action performed.");
     }
     std::string getActionName() const override { return "Trade"; }
 };
@@ -83,6 +96,9 @@ public:
     void perform(PlayerEntity& player, Tile& tile) override {
         if (auto house = dynamic_cast<House*>(tile.getObject())) {
             house->regenerateEnergy(player);
+            getDebugConsole().log("Player energy regenerated.");
+        } else {
+            getDebugConsole().log("No house found to regenerate energy.");
         }
     }
     std::string getActionName() const override { return "Regenerate Energy"; }
@@ -96,7 +112,12 @@ public:
             int playerMoney = player.getMoney();
             if (house->upgrade(playerMoney)) {
                 player.setMoney(playerMoney); // Update player's money after upgrade
+                getDebugConsole().log("House upgraded successfully.");
+            } else {
+                getDebugConsole().log("Not enough money to upgrade the house.");
             }
+        } else {
+            getDebugConsole().log("No house found to upgrade.");
         }
     }
     std::string getActionName() const override { return "Upgrade House"; }
@@ -117,7 +138,7 @@ public:
             const auto& inventory = player.getInventory();
             
             if (inventory.empty()) {
-                std::cout << "No items in inventory to store.\n";
+                getDebugConsole().log("No items in inventory to store.");
                 return;
             }
 
@@ -125,13 +146,13 @@ public:
             for (const auto& [item, quantity] : inventory) {
                 if (house->storeItem(item, quantity)) {
                     player.addToInventory(item, -quantity); // Remove stored items from player inventory
-                    std::cout << "Stored " << quantity << " " << item << " in the house.\n";
+                    getDebugConsole().log("Stored " + std::to_string(quantity) + " " + item + " in the house.");
                 } else {
-                    std::cout << "House storage is full! Could not store all items.\n";
+                    getDebugConsole().log("House storage is full! Could not store all items.");
                 }
             }
         } else {
-            std::cout << "No house present on this tile.\n";
+            getDebugConsole().log("No house present on this tile.");
         }
     }
 

@@ -6,6 +6,8 @@
 #include <string>
 #include <sstream>
 #include <SFML/Graphics.hpp>
+#include <map>
+#include "Configuration.hpp"
 
 // Debug system for centralized logging
 class DebugConsole {
@@ -72,9 +74,17 @@ inline DebugConsole& getDebugConsole() {
 // Debug helper functions
 inline void debugPlayerInfo(const PlayerEntity& player) {
     std::ostringstream oss;
-    oss << "Player Position: (" << player.getPosition().x << ", " << player.getPosition().y << ")";
-    oss << " Speed: " << player.getSpeed();
-    oss << " Health: " << player.getHealth();
+    oss << "Player Stats:\n";
+    oss << "- Position: (" << player.getPosition().x << ", " << player.getPosition().y << ")\n";
+    oss << "- Speed: " << player.getSpeed() << "\n";
+    oss << "- Health: " << player.getHealth() << "\n";
+    oss << "- Hunger: " << player.getHunger() << "\n";
+    oss << "- Energy: " << player.getEnergy() << "\n";
+    oss << "- Money: $" << player.getMoney() << "\n";
+    oss << "Inventory: ";
+    for (const auto& [item, qty] : player.getInventory()) {
+        oss << item << " (" << qty << ") ";
+    }
     getDebugConsole().log(oss.str());
 }
 
@@ -89,5 +99,28 @@ inline void debugTileInfo(int tileX, int tileY, const Game& game) {
     }
     getDebugConsole().log(oss.str());
 }
+
+inline void debugMarketPrices(const std::unordered_map<std::string, float>& marketPrices) {
+    std::ostringstream oss;
+    oss << "Market Prices:\n";
+    for (const auto& [resource, price] : marketPrices) {
+        oss << "- " << resource << ": $" << price << "\n";
+    }
+    getDebugConsole().log(oss.str());
+}
+
+inline void debugCollisionEvent(const PlayerEntity& player, int tileX, int tileY) {
+    std::ostringstream oss;
+    oss << "Collision detected! Player at (" << player.getPosition().x << ", " << player.getPosition().y << ")";
+    oss << " collided with object on Tile (" << tileX << ", " << tileY << ").\n";
+    getDebugConsole().log(oss.str());
+}
+
+inline void debugActionPerformed(const std::string& actionName, const std::string& objectType) {
+    std::ostringstream oss;
+    oss << "Action Performed: " << actionName << " on " << objectType << "\n";
+    getDebugConsole().log(oss.str());
+}
+
 
 #endif // DEBUG_HPP
