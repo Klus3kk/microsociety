@@ -28,11 +28,18 @@ private:
 public:
     UI();
 
+    // Update status with relevant information
     void updateStatus(int day, const std::string& time, int npcCount, int totalMoney, const std::unordered_map<std::string, int>& allResources);
+
+    // Handle button interactions
     void handleButtonClicks(sf::RenderWindow& window, sf::Event& event);
     void handleHover(sf::RenderWindow& window);
+
+    // Render UI
     void render(sf::RenderWindow& window);
+
+    // Set tooltip text content
     void setTooltipContent(const std::string& content);
 };
 
-#endif 
+#endif // UI_HPP

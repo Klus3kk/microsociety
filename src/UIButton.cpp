@@ -1,7 +1,7 @@
 #include "UIButton.hpp"
 
 UIButton::UIButton() {
-    // Default initialization
+    // Default colors
     normalColor = sf::Color(70, 70, 70, 255);
     hoverColor = sf::Color(100, 100, 100, 255);
     buttonShape.setFillColor(normalColor);
@@ -15,14 +15,14 @@ UIButton::UIButton(float x, float y, float width, float height, const std::strin
 }
 
 void UIButton::setProperties(float x, float y, float width, float height, const std::string& text, const sf::Font& font) {
-    // Set button shape
+    // Configure button shape
     buttonShape.setPosition(x, y);
     buttonShape.setSize({width, height});
     buttonShape.setFillColor(normalColor);
     buttonShape.setOutlineThickness(2);
     buttonShape.setOutlineColor(sf::Color::White);
 
-    // Set button text
+    // Configure button text
     buttonText.setString(text);
     buttonText.setFont(font);
     buttonText.setCharacterSize(16);
@@ -53,7 +53,7 @@ void UIButton::handleHover(sf::RenderWindow& window) {
 }
 
 bool UIButton::isClicked(sf::RenderWindow& window, sf::Event& event) {
-    // Check if button is clicked
+    // Check for mouse click within button bounds
     if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
         sf::Vector2i mousePos = sf::Mouse::getPosition(window);
         if (buttonShape.getGlobalBounds().contains(static_cast<sf::Vector2f>(mousePos))) {
@@ -64,7 +64,7 @@ bool UIButton::isClicked(sf::RenderWindow& window, sf::Event& event) {
 }
 
 void UIButton::draw(sf::RenderWindow& window) {
-    // Render the button
+    // Render button and text
     window.draw(buttonShape);
     window.draw(buttonText);
 }

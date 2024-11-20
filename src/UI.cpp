@@ -57,35 +57,27 @@ UI::UI() {
 }
 
 void UI::updateStatus(int day, const std::string& time, int npcCount, int totalMoney, const std::unordered_map<std::string, int>& allResources) {
-    // Update status information
     std::ostringstream status;
     status << "Day: " << day << "\nTime: " << time << "\nNPCs: " << npcCount << "\nTotal Money: $" << totalMoney;
     statusText.setString(status.str());
 
-    // Update aggregated resources
     std::ostringstream inventoryStream;
-    if (allResources.empty()) {
-        inventoryStream << "Resources:\n- (none)";
-    } else {
-        inventoryStream << "Resources:\n";
-        for (const auto& [item, quantity] : allResources) {
-            inventoryStream << "- " << item << ": " << quantity << "\n";
-        }
+    inventoryStream << "Resources:\n";
+    for (const auto& [item, quantity] : allResources) {
+        inventoryStream << "- " << item << ": " << quantity << "\n";
     }
     inventoryText.setString(inventoryStream.str());
 }
 
-
 void UI::handleButtonClicks(sf::RenderWindow& window, sf::Event& event) {
-    // Handle button clicks and update tooltip content
     if (npcButton.isClicked(window, event)) {
-        tooltipPanel.setPosition(20, 100); // Slide in
-        setTooltipContent("NPC Stats:\nHealth: 100\nHunger: 50\nEnergy: 75");
+        tooltipPanel.setPosition(20, 100);
+        setTooltipContent("NPC Stats:\nClick to view NPC details!");
     } else if (statsButton.isClicked(window, event)) {
-        tooltipPanel.setPosition(20, 100); // Slide in
-        setTooltipContent("Simulation Stats:\nDay: 1\nTotal Money: 1000");
+        tooltipPanel.setPosition(20, 100);
+        setTooltipContent("Simulation Stats:\nSummary info!");
     } else if (optionsButton.isClicked(window, event)) {
-        tooltipPanel.setPosition(20, 100); // Slide in
+        tooltipPanel.setPosition(20, 100);
         setTooltipContent("Options Menu:\n- Toggle Debug\n- Exit");
     }
 }
