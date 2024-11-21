@@ -31,9 +31,8 @@ public:
     void drawTileBorders();
     bool detectCollision(const PlayerEntity& npc);
 
-    // New methods
     std::unordered_map<std::string, int> aggregateResources(const std::vector<PlayerEntity>& npcs) const;
-    std::vector<PlayerEntity> generateNPCs() const;  // For testing
+    std::vector<PlayerEntity> generateNPCs() const;  // For generating npcs
     // Might remove later
     const std::vector<std::vector<std::unique_ptr<Tile>>>& getTileMap() const;
 

@@ -7,7 +7,6 @@
 #include <set>
 #include <unordered_map>
 
-
 Game::Game() : window(sf::VideoMode(GameConfig::mapWidth, GameConfig::mapHeight), "MicroSociety") {
     generateMap();
 }
@@ -15,8 +14,6 @@ Game::Game() : window(sf::VideoMode(GameConfig::mapWidth, GameConfig::mapHeight)
 const std::vector<std::vector<std::unique_ptr<Tile>>>& Game::getTileMap() const {
     return tileMap;
 }
-
-
 
 bool Game::detectCollision(const PlayerEntity& npc) {
     int tileX = static_cast<int>(npc.getPosition().x / GameConfig::tileSize);
@@ -105,7 +102,6 @@ void Game::run() {
             targetTileY >= 0 && targetTileY < tileMap.size()) {
             
             targetTile = tileMap[targetTileY][targetTileX].get();
-
             
             // Keep track of whether we showed debug info for this tile
             static std::pair<int, int> lastDebugTile = {-1, -1};
@@ -221,7 +217,7 @@ void Game::run() {
         window.display();
     }
 }
-
+/* MIGHT DELETE LATER*/
 void Game::drawTileBorders() {
     for (int i = 0; i < tileMap.size(); ++i) {
         for (int j = 0; j < tileMap[i].size(); ++j) {

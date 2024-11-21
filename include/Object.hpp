@@ -17,7 +17,7 @@ public:
     }
 
     virtual sf::FloatRect getObjectBounds() const {
-        // Expand the object's bounds to make collision detection more forgiving
+        // Expanded the object's bounds to make collision detection more forgiving
         sf::FloatRect bounds = sprite.getGlobalBounds();
         bounds.left -= 2;
         bounds.top -= 2;

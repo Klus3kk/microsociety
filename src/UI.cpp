@@ -4,7 +4,6 @@
 #include <iostream>
 
 UI::UI() {
-    // Load font
     if (!font.loadFromFile("../assets/fonts/font.ttf")) {
         throw std::runtime_error("Failed to load font!");
     }
@@ -83,14 +82,12 @@ void UI::handleButtonClicks(sf::RenderWindow& window, sf::Event& event) {
 }
 
 void UI::handleHover(sf::RenderWindow& window) {
-    // Handle hover effects for buttons
     npcButton.handleHover(window);
     statsButton.handleHover(window);
     optionsButton.handleHover(window);
 }
 
 void UI::render(sf::RenderWindow& window) {
-    // Draw UI elements
     window.draw(statusPanel);
     window.draw(statusText);
 

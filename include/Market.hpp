@@ -13,7 +13,7 @@ private:
     // Adjust price dynamically based on supply and demand
     void adjustPrice(const std::string& item) {
         int demand = supplyDemand[item];
-        prices[item] += demand * 0.5f; // Example: Increase price by 0.5 per demand unit
+        prices[item] += demand * 0.5f; // Increase price by 0.5 per demand unit (for now)
         prices[item] = std::max(1.0f, prices[item]); // Ensure price doesn't drop below 1.0
     }
 
@@ -37,7 +37,6 @@ public:
             player.setMoney(player.getMoney() - price);
             player.addToInventory(item, quantity);
 
-            // Update supply/demand
             supplyDemand[item] += quantity;
             adjustPrice(item);
 
@@ -53,7 +52,6 @@ public:
             player.removeFromInventory(item, quantity);
             player.setMoney(player.getMoney() + price);
 
-            // Update supply/demand
             supplyDemand[item] -= quantity;
             adjustPrice(item);
 
@@ -63,4 +61,4 @@ public:
     }
 };
 
-#endif // MARKET_HPP
+#endif 

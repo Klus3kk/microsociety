@@ -9,10 +9,10 @@
 #include <unordered_map>
 #include <chrono>
 
-class Game; // Forward declaration of Game class
+class Game; // Forward declaration 
 class PlayerEntity;
 
-// Debug system for centralized logging
+// Debug system for in-game console
 class DebugConsole {
 private:
     bool enabled = false;                          // Toggle for enabling/disabling debug
@@ -37,7 +37,7 @@ public:
     void scrollDown();
 };
 
-// Singleton instance
+// Singleton 
 DebugConsole& getDebugConsole();
 
 // Debug helper functions
@@ -48,4 +48,4 @@ void debugCollisionEvent(const std::string& message, int throttleMs = 500);
 void debugActionPerformed(const std::string& actionName, const std::string& objectType);
 
 
-#endif // DEBUG_HPP
+#endif 

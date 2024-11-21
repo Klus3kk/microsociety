@@ -4,9 +4,8 @@
 #include <sstream>
 #include <unordered_map>
 #include <chrono>
-#include <algorithm> // For std::max
+#include <algorithm> 
 
-// DebugConsole implementation
 DebugConsole::DebugConsole(float windowWidth, float windowHeight) {
     if (!consoleFont.loadFromFile("../assets/fonts/font.ttf")) {
         std::cerr << "Failed to load console font!" << std::endl;
@@ -27,7 +26,7 @@ bool DebugConsole::isEnabled() const { return enabled; }
 
 void DebugConsole::log(const std::string& message) {
     logs.push_back(message);
-    if (logs.size() > 50) logs.erase(logs.begin()); // Limit total log size
+    if (logs.size() > 50) logs.erase(logs.begin()); // Limit log size
 }
 
 void DebugConsole::render(sf::RenderWindow& window) {
@@ -44,8 +43,8 @@ void DebugConsole::render(sf::RenderWindow& window) {
     }
 }
 
-void DebugConsole::scrollUp() { /* Removed scrollOffset as it's unused */ }
-void DebugConsole::scrollDown() { /* Removed scrollOffset as it's unused */ }
+void DebugConsole::scrollUp() { return; }
+void DebugConsole::scrollDown() { return; }
 
 // Singleton instance
 DebugConsole& getDebugConsole() {
@@ -53,7 +52,7 @@ DebugConsole& getDebugConsole() {
     return instance;
 }
 
-// Helper functions to throttle logs
+// Helper functions to throttle logs (chrono is great here)
 bool shouldThrottleLog(std::chrono::high_resolution_clock::time_point& lastLogTime, int ms) {
     auto now = std::chrono::high_resolution_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastLogTime).count();
@@ -121,7 +120,7 @@ void debugCollisionEvent(const std::string& message, int throttleMs) {
     auto now = std::chrono::high_resolution_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastCollisionLogTime).count();
 
-    if (elapsed > throttleMs) { // Throttle collision messages
+    if (elapsed > throttleMs) { 
         getDebugConsole().log(message);
         lastCollisionLogTime = now;
     }

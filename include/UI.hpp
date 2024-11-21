@@ -42,4 +42,4 @@ public:
     void setTooltipContent(const std::string& content);
 };
 
-#endif // UI_HPP
+#endif 

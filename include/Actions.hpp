@@ -111,7 +111,7 @@ public:
         if (auto house = dynamic_cast<House*>(tile.getObject())) {
             int playerMoney = player.getMoney();
             if (house->upgrade(playerMoney)) {
-                player.setMoney(playerMoney); // Update player's money after upgrade
+                player.setMoney(playerMoney); 
                 getDebugConsole().log("House upgraded successfully.");
             } else {
                 getDebugConsole().log("Not enough money to upgrade the house.");
@@ -145,7 +145,7 @@ public:
             // Iterate through player's inventory and store items
             for (const auto& [item, quantity] : inventory) {
                 if (house->storeItem(item, quantity)) {
-                    player.addToInventory(item, -quantity); // Remove stored items from player inventory
+                    player.addToInventory(item, -quantity); // Remove stored items from player inventory (that's what's minus for)
                     getDebugConsole().log("Stored " + std::to_string(quantity) + " " + item + " in the house.");
                 } else {
                     getDebugConsole().log("House storage is full! Could not store all items.");

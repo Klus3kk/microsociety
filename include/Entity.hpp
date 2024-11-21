@@ -58,7 +58,6 @@ public:
     // function to draw the entity
     void draw(sf::RenderWindow &window) {
         window.draw(sprite);
-        // std::cout << "Drawing entity at position (" << position.x << ", " << position.y << ")\n";
     }
 
     // accessors
@@ -69,7 +68,7 @@ public:
     float getStrength() const { return strength; }
     float getMoney() const { return money; }
 
-    // Setters
+    // setters
     void setSpeed(float newSpeed) { speed = newSpeed; }
     void setEnergy(float newEnergy) { energy = newEnergy; } 
     void setMoney(float newMoney) { money = newMoney; }
@@ -89,7 +88,6 @@ public:
 
         position = {newX, newY};
         sprite.setPosition(position);
-        // std::cout << "Entity moved to (" << position.x << ", " << position.y << ")\n";
     }
 
     // function for cheching collision

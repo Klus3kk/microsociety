@@ -64,7 +64,6 @@ bool UIButton::isClicked(sf::RenderWindow& window, sf::Event& event) {
 }
 
 void UIButton::draw(sf::RenderWindow& window) {
-    // Render button and text
     window.draw(buttonShape);
     window.draw(buttonText);
 }
