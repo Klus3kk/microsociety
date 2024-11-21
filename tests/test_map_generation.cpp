@@ -5,9 +5,11 @@ TEST(MapGenerationTest, MapDimensions) {
     Game game;
     game.generateMap();
 
-    EXPECT_EQ(game.getTileMap().size(), GameConfig::mapHeight) << "TileMap height mismatch!";
-    EXPECT_EQ(game.getTileMap()[0].size(), GameConfig::mapWidth) << "TileMap width mismatch!";
+    const auto& tileMap = game.getTileMap();
+    EXPECT_EQ(tileMap.size(), GameConfig::mapHeight);  // Check rows
+    EXPECT_EQ(tileMap[0].size(), GameConfig::mapWidth); // Check columns
 }
+
 
 
 TEST(MapGenerationTest, TerrainDistribution) {

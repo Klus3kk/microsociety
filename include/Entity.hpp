@@ -73,22 +73,27 @@ public:
     void setEnergy(float newEnergy) { energy = newEnergy; } 
     void setMoney(float newMoney) { money = newMoney; }
 
-    // movement function based on screen's framerate
+    // movement function based on screen's framerate (cool, that was wrong for 2 months)
     void move(float dx, float dy, float deltaTime) {
         float newX = position.x + dx * speed * deltaTime;
         float newY = position.y + dy * speed * deltaTime;
 
-        // Check if new position is within bounds
-        if (newX < -20) newX = -20; 
-        if (newY < -8) newY = -8; 
-        if (newX + sprite.getGlobalBounds().width > GameConfig::mapWidth + 25)
-            newX = GameConfig::mapWidth - sprite.getGlobalBounds().width + 25;
-        if (newY + sprite.getGlobalBounds().height > GameConfig::mapHeight + 6)
-            newY = GameConfig::mapHeight - sprite.getGlobalBounds().height + 6;
+        // Logical bounds for movement, configurable via GameConfig
+        const float minX = -10.0f; // Left edge boundary
+        const float minY = -8.0f;  // Top edge boundary
+        const float maxX = GameConfig::mapWidth * GameConfig::tileSize - sprite.getGlobalBounds().width + 15.0f; // Right edge
+        const float maxY = GameConfig::mapHeight * GameConfig::tileSize - sprite.getGlobalBounds().height + 6.0f; // Bottom edge
 
+        // Clamp the new position to these bounds
+        newX = std::clamp(newX, minX, maxX);
+        newY = std::clamp(newY, minY, maxY);
+
+        // Update position and sprite
         position = {newX, newY};
         sprite.setPosition(position);
     }
+
+
 
     // function for cheching collision
     bool checkCollision(const Entity& other) const {

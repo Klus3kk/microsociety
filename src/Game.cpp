@@ -7,9 +7,10 @@
 #include <set>
 #include <unordered_map>
 
-Game::Game() : window(sf::VideoMode(GameConfig::mapWidth, GameConfig::mapHeight), "MicroSociety") {
+Game::Game() : window(sf::VideoMode(GameConfig::windowWidth, GameConfig::windowHeight), "MicroSociety") {
     generateMap();
 }
+
 
 const std::vector<std::vector<std::unique_ptr<Tile>>>& Game::getTileMap() const {
     return tileMap;
@@ -31,7 +32,7 @@ bool Game::detectCollision(const PlayerEntity& npc) {
 void Game::run() {
     sf::Clock clock;
     PlayerEntity player(100, 50, 50, 150.0f, 10, 100);
-    player.setSize(1.5f, 1.5f);
+    // player.setSize(1.5f, 1.5f);
     
     // Set up the debug console
     DebugConsole& debugConsole = getDebugConsole();
@@ -287,38 +288,34 @@ void Game::generateMap() {
     std::vector<sf::Texture> houseTextures(3), marketTextures(3);
 
     for (int i = 0; i < 3; ++i) {
+        grassTextures[i].loadFromFile("../assets/tiles/grass/grass" + std::to_string(i + 1) + ".png");
+        stoneTextures[i].loadFromFile("../assets/tiles/stone/stone" + std::to_string(i + 1) + ".png");
         marketTextures[i].loadFromFile("../assets/objects/market" + std::to_string(i + 1) + ".png");
         treeTextures[i].loadFromFile("../assets/objects/tree" + std::to_string(i + 1) + ".png");
         rockTextures[i].loadFromFile("../assets/objects/rock" + std::to_string(i + 1) + ".png");
         houseTextures[i].loadFromFile("../assets/objects/house" + std::to_string(i + 1) + ".png");
     }
-
-    for (int i = 0; i < 3; ++i) {
-        grassTextures[i].loadFromFile("../assets/tiles/grass/grass" + std::to_string(i + 1) + ".png");
-        stoneTextures[i].loadFromFile("../assets/tiles/stone/stone" + std::to_string(i + 1) + ".png");
-    }
-
     for (int i = 0; i < 2; ++i) {
         bushTextures[i].loadFromFile("../assets/objects/bush" + std::to_string(i + 1) + ".png");
     }
-
     for (int i = 0; i < 5; ++i) {
         flowerTextures[i].loadFromFile("../assets/tiles/flower/flower" + std::to_string(i + 1) + ".png");
     }
 
-    int rows = 64, cols = 64;
-    tileMap.resize(rows);
+    tileMap.resize(GameConfig::mapHeight);
+    for (auto& row : tileMap) {
+        row.resize(GameConfig::mapWidth);
+    }
 
-    for (int i = 0; i < rows; ++i) {
-        tileMap[i].resize(cols);
-        for (int j = 0; j < cols; ++j) {
-            float noiseValue = noise.GetNoise((float)i, (float)j);  // get Perlin Noise value
+    for (int i = 0; i < GameConfig::mapHeight; ++i) {
+        for (int j = 0; j < GameConfig::mapWidth; ++j) {
+            float noiseValue = noise.GetNoise(static_cast<float>(i), static_cast<float>(j)); // get Perlin Noise value
             noiseValue = (noiseValue + 1) / 2;  // normalize value between 0 and 1
 
             // determine terrain based on noise thresholds
             if (noiseValue < 0.18f) { 
                 tileMap[i][j] = std::make_unique<FlowerTile>(flowerTextures[rand() % 5]);
-            }else if (noiseValue < 0.6f)  
+            } else if (noiseValue < 0.6f)  
                 tileMap[i][j] = std::make_unique<GrassTile>(grassTextures[rand() % 3]);
             else 
                 tileMap[i][j] = std::make_unique<StoneTile>(stoneTextures[rand() % 3]);
@@ -352,18 +349,22 @@ void Game::generateMap() {
     if (tileMap[0].size() != GameConfig::mapWidth) {
         std::cerr << "Error: tileMap width mismatch" << std::endl;
     }
+    std::cout << "tileMap Height: " << tileMap.size() << std::endl;
+    if (!tileMap.empty()) {
+        std::cout << "tileMap Width: " << tileMap[0].size() << std::endl;
+    }
+
 
 
     int playerHouseX = GameConfig::mapWidth / 2;
     int playerHouseY = GameConfig::mapHeight / 2;
-    tileMap[playerHouseY / GameConfig::tileSize][playerHouseX / GameConfig::tileSize]
-    ->placeObject(std::make_unique<House>(houseTextures[0]));
+    tileMap[playerHouseY][playerHouseX]->placeObject(std::make_unique<House>(houseTextures[0]));
 
     int marketCount = 2 + rand() % 2; // Place 2 or 3 markets
     for (int m = 0; m < marketCount; ++m) {
-        int marketX = rand() % cols;
-        int marketY = rand() % rows;
-        tileMap[marketY][marketX]->placeObject(std::make_unique<Market>(marketTextures[m % 3]));  
+        int marketX = rand() % GameConfig::mapWidth;
+        int marketY = rand() % GameConfig::mapHeight;
+        tileMap[marketY][marketX]->placeObject(std::make_unique<Market>(marketTextures[m % 3]));
     }
 }
 

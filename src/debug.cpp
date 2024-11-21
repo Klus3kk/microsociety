@@ -27,6 +27,7 @@ bool DebugConsole::isEnabled() const { return enabled; }
 void DebugConsole::log(const std::string& message) {
     logs.push_back(message);
     if (logs.size() > 50) logs.erase(logs.begin()); // Limit log size
+    std::cerr << message << std::endl;
 }
 
 void DebugConsole::render(sf::RenderWindow& window) {
@@ -43,12 +44,12 @@ void DebugConsole::render(sf::RenderWindow& window) {
     }
 }
 
-void DebugConsole::scrollUp() { return; }
-void DebugConsole::scrollDown() { return; }
+// void DebugConsole::scrollUp() { return; }
+// void DebugConsole::scrollDown() { return; }
 
 // Singleton instance
 DebugConsole& getDebugConsole() {
-    static DebugConsole instance(GameConfig::mapWidth, GameConfig::mapHeight);
+    static DebugConsole instance(GameConfig::windowWidth, GameConfig::windowHeight);
     return instance;
 }
 
