@@ -212,7 +212,7 @@ void Game::run() {
         // Update UI
         ui.updateStatus(1, "12:00", npcs.size(), 1000, allResources);  // Example values for now
 
-        debugPlayerInfo(player);
+        // debugPlayerInfo(player);
         window.clear();
         render();          // Render the map
         ui.render(window); 
@@ -250,17 +250,34 @@ std::unordered_map<std::string, int> Game::aggregateResources(const std::vector<
 
 std::vector<PlayerEntity> Game::generateNPCs() const {
     std::vector<PlayerEntity> npcs;
+    std::set<std::pair<int, int>> occupiedPositions; // Keep track of occupied tiles
 
-    for (int i = 0; i < 3; ++i) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> distX(0, tileMap[0].size() - 1);
+    std::uniform_int_distribution<> distY(0, tileMap.size() - 1);
+
+    for (int i = 0; i < 1; ++i) { // Number of NPCs to generate
+        int x, y;
+        do {
+            x = distX(gen);
+            y = distY(gen);
+        } while (occupiedPositions.count({x, y}) > 0 || tileMap[y][x]->hasObject()); // Ensure position is unique and not blocked
+
+        occupiedPositions.insert({x, y});
+
         PlayerEntity npc(100, 50, 50, 150.0f, 10, 100);
         npc.addToInventory("wood", i + 1);
         npc.addToInventory("stone", 2 * i);
         npc.addToInventory("food", 5 - i);
+
+        npc.setPosition(x * GameConfig::tileSize, y * GameConfig::tileSize); // Place NPC on the map
         npcs.push_back(npc);
     }
 
     return npcs;
 }
+
 
 void Game::generateMap() {
     // initialize FastNoiseLite for Perlin Noise

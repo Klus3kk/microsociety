@@ -64,25 +64,25 @@ bool shouldThrottleLog(std::chrono::high_resolution_clock::time_point& lastLogTi
     return true;
 }
 
-void debugPlayerInfo(const PlayerEntity& player) {
-    static sf::Vector2f lastPosition(-1, -1);
-    if (player.getPosition() != lastPosition) {
-        std::ostringstream oss;
-        oss << "Player Stats:\n";
-        oss << "- Position: (" << player.getPosition().x << ", " << player.getPosition().y << ")\n";
-        oss << "- Speed: " << player.getSpeed() << "\n";
-        oss << "- Health: " << player.getHealth() << "\n";
-        oss << "- Hunger: " << player.getHunger() << "\n";
-        oss << "- Energy: " << player.getEnergy() << "\n";
-        oss << "- Money: $" << player.getMoney() << "\n";
-        oss << "Inventory: ";
-        for (const auto& [item, qty] : player.getInventory()) {
-            oss << item << " (" << qty << ") ";
-        }
-        getDebugConsole().log(oss.str());
-        lastPosition = player.getPosition();
-    }
-}
+// void debugPlayerInfo(const PlayerEntity& player) {
+//     static sf::Vector2f lastPosition(-1, -1);
+//     if (player.getPosition() != lastPosition) {
+//         std::ostringstream oss;
+//         oss << "Player Stats:\n";
+//         oss << "- Position: (" << player.getPosition().x << ", " << player.getPosition().y << ")\n";
+//         oss << "- Speed: " << player.getSpeed() << "\n";
+//         oss << "- Health: " << player.getHealth() << "\n";
+//         oss << "- Hunger: " << player.getHunger() << "\n";
+//         oss << "- Energy: " << player.getEnergy() << "\n";
+//         oss << "- Money: $" << player.getMoney() << "\n";
+//         oss << "Inventory: ";
+//         for (const auto& [item, qty] : player.getInventory()) {
+//             oss << item << " (" << qty << ") ";
+//         }
+//         getDebugConsole().log(oss.str());
+//         lastPosition = player.getPosition();
+//     }
+// }
 
 void debugTileInfo(int tileX, int tileY, const Game& game) {
     static auto lastTileLog = std::make_pair(-1, -1);
@@ -102,22 +102,31 @@ void debugTileInfo(int tileX, int tileY, const Game& game) {
 
 void debugMarketPrices(const std::unordered_map<std::string, float>& marketPrices) {
     static auto lastMarketLogTime = std::chrono::high_resolution_clock::now();
-    if (!shouldThrottleLog(lastMarketLogTime, 1000)) {
+    auto now = std::chrono::high_resolution_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastMarketLogTime).count();
+
+    if (elapsed > 1000) { // 1 second throttle
         std::ostringstream oss;
         oss << "Market Prices:\n";
         for (const auto& [resource, price] : marketPrices) {
             oss << "- " << resource << ": $" << price << "\n";
         }
         getDebugConsole().log(oss.str());
+        lastMarketLogTime = now;
     }
 }
 
-void debugCollisionEvent(const PlayerEntity& player, int tileX, int tileY) {
-    std::ostringstream oss;
-    oss << "Collision detected! Player at (" << player.getPosition().x << ", " << player.getPosition().y << ")";
-    oss << " collided with object on Tile (" << tileX << ", " << tileY << ").";
-    getDebugConsole().log(oss.str());
+void debugCollisionEvent(const std::string& message, int throttleMs) {
+    static auto lastCollisionLogTime = std::chrono::high_resolution_clock::now();
+    auto now = std::chrono::high_resolution_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastCollisionLogTime).count();
+
+    if (elapsed > throttleMs) { // Throttle collision messages
+        getDebugConsole().log(message);
+        lastCollisionLogTime = now;
+    }
 }
+
 
 void debugActionPerformed(const std::string& actionName, const std::string& objectType) {
     std::ostringstream oss;

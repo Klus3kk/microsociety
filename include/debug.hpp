@@ -7,6 +7,7 @@
 #include <sstream>
 #include <SFML/Graphics.hpp>
 #include <unordered_map>
+#include <chrono>
 
 class Game; // Forward declaration of Game class
 class PlayerEntity;
@@ -43,7 +44,8 @@ DebugConsole& getDebugConsole();
 void debugPlayerInfo(const PlayerEntity& player);
 void debugTileInfo(int tileX, int tileY, const Game& game);
 void debugMarketPrices(const std::unordered_map<std::string, float>& marketPrices);
-void debugCollisionEvent(const PlayerEntity& player, int tileX, int tileY);
+void debugCollisionEvent(const std::string& message, int throttleMs = 500);
 void debugActionPerformed(const std::string& actionName, const std::string& objectType);
+
 
 #endif // DEBUG_HPP

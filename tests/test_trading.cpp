@@ -24,11 +24,27 @@ TEST(TradingTest, InsufficientFunds) {
     EXPECT_EQ(player.getInventoryItemCount("stone"), 0);
 }
 
+TEST(TradingTest, SellItem) {
+    Market market;
+    PlayerEntity player(100, 50, 50, 150.0f, 10, 0);
+
+    market.setPrice("food", 5);
+    player.addToInventory("food", 2);
+
+    EXPECT_TRUE(market.sellItem(player, "food", 1));
+    EXPECT_EQ(player.getInventoryItemCount("food"), 1); // One removed
+    EXPECT_EQ(player.getMoney(), 5);                   // Earned 5 from sale
+}
+
 TEST(TradingTest, DynamicPricing) {
     Market market;
+    PlayerEntity player(100, 50, 50, 150.0f, 10, 100); // Create a player
 
     // Initial prices
     market.setPrice("wood", 10);
-    market.sellItem("wood", 5); // Increase demand
-    EXPECT_GT(market.getPrice("wood"), 10); // Expect price to rise
+    player.addToInventory("wood", 5); // Add items to the player's inventory
+    market.sellItem(player, "wood", 5); // Increase supply
+
+    EXPECT_GT(market.getPrice("wood"), 10); // Expect price to increase
 }
+
