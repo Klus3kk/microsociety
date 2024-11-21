@@ -5,9 +5,11 @@ TEST(MapGenerationTest, MapDimensions) {
     Game game;
     game.generateMap();
 
-    EXPECT_EQ(game.getTileMap().size(), GameConfig::mapHeight);
-    EXPECT_EQ(game.getTileMap()[0].size(), GameConfig::mapWidth);
+    const auto& tileMap = game.getTileMap();
+    EXPECT_EQ(tileMap.size(), GameConfig::mapHeight / GameConfig::tileSize);
+    EXPECT_EQ(tileMap[0].size(), GameConfig::mapWidth / GameConfig::tileSize);
 }
+
 
 TEST(MapGenerationTest, TerrainDistribution) {
     Game game;
