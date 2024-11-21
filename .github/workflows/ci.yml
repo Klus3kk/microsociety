@@ -21,7 +21,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y g++ cmake libsfml-dev libudev-dev libopenal-dev libvorbis-dev libogg-dev lcov
+          sudo apt-get install -y g++ cmake libsfml-dev libudev-dev libopenal-dev libvorbis-dev libogg-dev libflac-dev lcov
 
       # Configure the project using CMake
       - name: Configure project
