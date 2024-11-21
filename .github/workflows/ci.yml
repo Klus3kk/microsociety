@@ -1,0 +1,55 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Set up C++ environment
+      - name: Set up C++ environment
+        uses: lukka/setup-cpp@v1
+        with:
+          compiler: gcc
+          architecture: x64
+          cpp-version: 17
+
+      # Install dependencies
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libsfml-dev cmake
+
+      # Configure the project using CMake
+      - name: Configure project
+        run: cmake -S . -B build
+
+      # Build the project
+      - name: Build project
+        run: cmake --build build
+
+      # Run unit tests
+      - name: Run tests
+        run: |
+          cd build
+          ctest --output-on-failure
+
+      # Report code coverage (optional, if using a tool like gcov)
+      - name: Upload code coverage
+        if: success()
+        run: |
+          sudo apt-get install -y lcov
+          lcov --directory . --capture --output-file coverage.info
+          lcov --remove coverage.info '/usr/*' '*/tests/*' --output-file coverage.info
+          lcov --list coverage.info

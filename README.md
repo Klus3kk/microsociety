@@ -1,4 +1,6 @@
 # MicroSociety
+![CI](https://github.com/Klus3kk/microsociety/actions/workflows/ci.yml/badge.svg)
+![Coverage](https://codecov.io/gh/Klus3kk/microsociety/branch/main/graph/badge.svg)
 
 ## Description
 
