@@ -323,14 +323,19 @@ void Game::generateMap() {
             else 
                 tileMap[i][j] = std::make_unique<StoneTile>(stoneTextures[rand() % 3]);
                 
+            
+            if (!tileMap[i][j]) { // Debugging output
+                std::cerr << "Error: TileMap[" << i << "][" << j << "] not initialized!" << std::endl;
+                throw std::runtime_error("TileMap initialization failed.");
+            }
 
             tileMap[i][j]->setPosition(j * GameConfig::tileSize, i * GameConfig::tileSize);
 
             int objChance = rand() % 100; // object chances for creation
             if (auto grassTile = dynamic_cast<GrassTile*>(tileMap[i][j].get())) {
-                if (objChance < 10) {
+                if (objChance < 20) {
                     tileMap[i][j]->placeObject(std::make_unique<Tree>(treeTextures[rand() % 3]));  // random tree texture
-                } else if (objChance < 15) {
+                } else if (objChance < 30) {
                     tileMap[i][j]->placeObject(std::make_unique<Bush>(bushTextures[rand() % 2]));  // random bush texture
                 }
             } else if (auto stoneTile = dynamic_cast<StoneTile*>(tileMap[i][j].get())) {
@@ -340,6 +345,14 @@ void Game::generateMap() {
             }
         }
     }
+
+    if (tileMap.size() != GameConfig::mapHeight) {
+        std::cerr << "Error: tileMap height mismatch" << std::endl;
+    }
+    if (tileMap[0].size() != GameConfig::mapWidth) {
+        std::cerr << "Error: tileMap width mismatch" << std::endl;
+    }
+
 
     int playerHouseX = GameConfig::mapWidth / 2;
     int playerHouseY = GameConfig::mapHeight / 2;

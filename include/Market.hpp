@@ -11,11 +11,13 @@ private:
     std::unordered_map<std::string, int> supplyDemand;  // Supply/Demand tracking
 
     // Adjust price dynamically based on supply and demand
-    void adjustPrice(const std::string& item) {
+    void Market::adjustPrice(const std::string& item) {
         int demand = supplyDemand[item];
-        prices[item] += demand * 0.5f; // Increase price by 0.5 per demand unit (for now)
-        prices[item] = std::max(1.0f, prices[item]); // Ensure price doesn't drop below 1.0
+        prices[item] += 0.1f * demand;  // Increase price slightly based on demand
+        prices[item] = std::max(1.0f, prices[item]); // Ensure minimum price is 1.0
+        std::cout << "Adjusted price for " << item << ": " << prices[item] << std::endl;
     }
+
 
 public:
     Market() {}
