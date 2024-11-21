@@ -21,7 +21,12 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y g++ cmake libsfml-dev libudev-dev libopenal-dev libvorbis-dev libogg-dev libflac-dev libxrandr-dev libxcursor-dev lcov
+          sudo apt-get install -y g++ cmake libsfml-dev libudev-dev libopenal-dev libvorbis-dev libogg-dev libflac-dev libxrandr-dev libxcursor-dev xvfb lcov
+
+      # Start Xvfb
+      - name: Start Xvfb
+        run: |
+          Xvfb :99 & export DISPLAY=:99
 
       # Configure the project using CMake
       - name: Configure project
@@ -34,6 +39,7 @@ jobs:
       # Run unit tests
       - name: Run tests
         run: |
+          export DISPLAY=:99
           cd build
           ctest --output-on-failure
 
