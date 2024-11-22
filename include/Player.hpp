@@ -11,11 +11,13 @@ class PlayerEntity : public Entity {
 private:
     std::unordered_map<std::string, int> inventory; // Item, quantity
     int inventoryCapacity = 10;
+    std::string name;
 
 public:
-    PlayerEntity(float initHealth, float initHunger, float initEnergy, float initSpeed, float initStrength, float initMoney)
-        : Entity(initHealth, initHunger, initEnergy, initSpeed, initStrength, initMoney) {}
+    PlayerEntity(const std::string& playerName, float initHealth, float initHunger, float initEnergy, float initSpeed, float initStrength, float initMoney)
+        : Entity(initHealth, initHunger, initEnergy, initSpeed, initStrength, initMoney), name(playerName) {}
 
+    const std::string& getName() const { return name; } // Getter for the name of the NPC
     void handleInput(float deltaTime) {
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) move(0, -1, deltaTime);
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) move(0, 1, deltaTime);
@@ -23,17 +25,35 @@ public:
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) move(1, 0, deltaTime);
     }
 
+    // Setters for health, strength, and speed
+    void setHealth(float newHealth) {
+        health = std::clamp(newHealth, 0.0f, 100.0f); // Ensure health stays within 0-100
+        getDebugConsole().log("Player", "Health set to: " + std::to_string(health));
+    }
+
+    void setStrength(float newStrength) {
+        strength = std::max(0.0f, newStrength); // Ensure strength is non-negative
+        getDebugConsole().log("Player", "Strength set to: " + std::to_string(strength));
+    }
+
+    void setSpeed(float newSpeed) {
+        speed = std::max(0.0f, newSpeed); // Ensure speed is non-negative
+        getDebugConsole().log("Player", "Speed set to: " + std::to_string(speed));
+    }
+
+
+    // Inventory management
     bool addToInventory(const std::string& item, int quantity) {
         int currentTotal = 0;
         for (const auto& [key, count] : inventory) currentTotal += count;
 
         if (currentTotal + quantity > inventoryCapacity) {
-            getDebugConsole().log("Inventory full! Cannot add " + item);
+            getDebugConsole().log("Inventory", "Inventory full! Cannot add " + item + ".");
             return false;
         }
 
         inventory[item] += quantity;
-        getDebugConsole().log("Added " + std::to_string(quantity) + " " + item + "(s) to inventory.");
+        getDebugConsole().log("Inventory", "Added " + std::to_string(quantity) + " " + item + "(s) to inventory.");
         return true;
     }
 
@@ -42,11 +62,11 @@ public:
         if (it != inventory.end() && it->second >= quantity) {
             it->second -= quantity;
             if (it->second == 0) inventory.erase(it);
-            getDebugConsole().log("Removed " + std::to_string(quantity) + " " + item + "(s) from inventory.");
+            getDebugConsole().log("Inventory", "Removed " + std::to_string(quantity) + " " + item + "(s) from inventory.");
             return true;
         }
 
-        getDebugConsole().log("Failed to remove " + std::to_string(quantity) + " " + item + "(s) from inventory.");
+        getDebugConsole().log("Inventory", "Failed to remove " + std::to_string(quantity) + " " + item + ".");
         return false;
     }
 
@@ -71,12 +91,12 @@ public:
         for (const auto& [item, quantity] : inventory) {
             oss << "- " << item << ": " << quantity << "\n";
         }
-        getDebugConsole().log(oss.str());
+        getDebugConsole().log("Player", oss.str());
     }
 
     void setMoney(float newMoney) {
         money = newMoney;
-        getDebugConsole().log("Money updated to: " + std::to_string(money));
+        getDebugConsole().log("Player", "Money updated to: " + std::to_string(money));
     }
 
     const std::unordered_map<std::string, int>& getInventory() const { return inventory; }

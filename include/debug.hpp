@@ -15,13 +15,14 @@ class PlayerEntity;
 // Debug system for in-game console
 class DebugConsole {
 private:
-    std::vector<std::string> logs;                // Buffer for logs
-    sf::Font consoleFont;                         // Font for console
-    sf::RectangleShape background;                // Background for console UI
-    sf::Text text;                                // Text object for rendering logs
-    const int maxLogs = 50;                             // Maximum number of logs shown
+    std::vector<std::pair<std::string, std::string>> logs; // Logs with categories
+    sf::Font consoleFont;                                  // Font for console
+    sf::RectangleShape background;                         // Background for console UI
+    sf::Text text;                                         // Text object for rendering logs
+    const int maxLogs = 50;                                // Maximum number of logs shown
     const sf::Color backgroundColor = sf::Color(0, 0, 0, 150); // Opaque black background
-    bool enabled = false;                          // Toggle for enabling/disabling debug
+    bool enabled = false;                                  // Toggle for enabling/disabling debug
+    std::unordered_map<std::string, std::chrono::high_resolution_clock::time_point> throttleTimers;
 
 public:
     DebugConsole(float windowWidth, float windowHeight);
@@ -30,13 +31,14 @@ public:
     void disable();
     bool isEnabled() const;
 
-    void log(const std::string& message);
+    // Log with category
+    void log(const std::string& category, const std::string& message);
+    // Throttled logging
+    void logThrottled(const std::string& category, const std::string& message, int throttleMs);
+
     void render(sf::RenderWindow& window);
-
-    // void scrollUp();
-    // void scrollDown();
+    void clearLogs(); // Clear all logs
 };
-
 // Singleton 
 DebugConsole& getDebugConsole();
 
@@ -46,6 +48,5 @@ void debugTileInfo(int tileX, int tileY, const Game& game);
 void debugMarketPrices(const std::unordered_map<std::string, float>& marketPrices);
 void debugCollisionEvent(const std::string& message, int throttleMs = 500);
 void debugActionPerformed(const std::string& actionName, const std::string& objectType);
-
 
 #endif 

@@ -3,6 +3,14 @@
 
 #include <SFML/Graphics.hpp>
 
+enum class ObjectType {
+    None,
+    Tree,
+    Rock,
+    Bush,
+    House,
+    Market
+};
 
 class Object {
 protected:
@@ -11,8 +19,9 @@ protected:
 public:
     virtual void draw(sf::RenderWindow& window) = 0;
     virtual ~Object() = default;
-
-    const sf::Sprite& getSprite() const {
+    virtual ObjectType getType() const = 0; // Getting a type
+    
+    sf::Sprite& getSprite() {
         return sprite;
     }
 
@@ -41,8 +50,13 @@ public:
         texture = tex;
         sprite.setTexture(texture);
     }
+
     void draw(sf::RenderWindow& window) override {
         window.draw(sprite);
+    }
+
+    ObjectType getType() const override {
+        return ObjectType::Tree;
     }
 };
 
@@ -52,10 +66,16 @@ public:
         texture = tex;
         sprite.setTexture(texture);
     }
+
     void draw(sf::RenderWindow& window) override {
         window.draw(sprite);
     }
+
+    ObjectType getType() const override {
+        return ObjectType::Rock;
+    }
 };
+
 
 class Bush : public Object {
 public:
@@ -63,20 +83,15 @@ public:
         texture = tex;
         sprite.setTexture(texture);
     }
+
     void draw(sf::RenderWindow& window) override {
         window.draw(sprite);
+    }
+
+    ObjectType getType() const override {
+        return ObjectType::Bush;
     }
 };
 
-class Market : public Object {
-public:
-    Market(const sf::Texture& tex) {
-        texture = tex;
-        sprite.setTexture(texture);
-    }
-    void draw(sf::RenderWindow& window) override {
-        window.draw(sprite);
-    }
-};
 
 #endif

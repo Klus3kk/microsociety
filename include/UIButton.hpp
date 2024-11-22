@@ -21,6 +21,7 @@ public:
 
     void handleHover(sf::RenderWindow& window);
     bool isClicked(sf::RenderWindow& window, sf::Event& event);
+    bool isMouseOver(sf::RenderWindow& window) const; 
 
     void draw(sf::RenderWindow& window);
 };

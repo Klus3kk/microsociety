@@ -42,6 +42,12 @@ void UIButton::setColors(const sf::Color& normal, const sf::Color& hover) {
     buttonShape.setFillColor(normalColor);
 }
 
+bool UIButton::isMouseOver(sf::RenderWindow& window) const {
+    // Check if the mouse cursor is over the button
+    sf::Vector2i mousePos = sf::Mouse::getPosition(window);
+    return buttonShape.getGlobalBounds().contains(static_cast<sf::Vector2f>(mousePos));
+}
+
 void UIButton::handleHover(sf::RenderWindow& window) {
     // Change button color on hover
     sf::Vector2i mousePos = sf::Mouse::getPosition(window);

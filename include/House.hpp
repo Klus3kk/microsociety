@@ -11,11 +11,14 @@ private:
     int level;
     int maxStorageCapacity;
     float energyRegenRate;
+    int healthBonus;
+    int strengthBonus;
+    int speedBonus;
     std::unordered_map<std::string, int> storage;
-    
 
 public:
     House(const sf::Texture& tex, int initialLevel = 1);
+
     const std::unordered_map<std::string, int>& getStorage() const { return storage; }
 
     // Energy regeneration
@@ -27,11 +30,22 @@ public:
     // Upgrade house
     bool upgrade(int& playerMoney);
 
-    // Display storage contents
+    // Apply stat bonuses to the player while inside the house
+    void applyStatBonuses(PlayerEntity& player);
+
+    // Remove stat bonuses when leaving the house
+    void removeStatBonuses(PlayerEntity& player);
+
+    // Display the storage contents
     void displayStorage() const;
+
+    // Display house stats
+    void displayStats() const;
 
     // Draw method override
     void draw(sf::RenderWindow& window) override;
+
+    ObjectType getType() const override;
 };
 
-#endif 
+#endif

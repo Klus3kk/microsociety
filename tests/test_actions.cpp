@@ -4,7 +4,7 @@
 #include "Tile.hpp"
 
 TEST(ActionTest, TreeActionTest) {
-    PlayerEntity player(100, 50, 50, 150.0f, 10, 100);
+    PlayerEntity player("Player1",100, 50, 50, 150.0f, 10, 100);
 
     TreeAction treeAction;
 
@@ -26,7 +26,7 @@ TEST(ActionTest, TreeActionTest) {
 
 // Unit test for StoneAction
 TEST(ActionTest, StoneActionTest) {
-    PlayerEntity player(100, 50, 50, 150.0f, 10, 100);
+    PlayerEntity player("Player1",100, 50, 50, 150.0f, 10, 100);
 
     StoneAction stoneAction;
 
@@ -47,7 +47,7 @@ TEST(ActionTest, StoneActionTest) {
 }
 
 TEST(ActionTest, BushActionTest) {
-    PlayerEntity player(100, 50, 50, 150.0f, 10, 100);
+    PlayerEntity player("Player1",100, 50, 50, 150.0f, 10, 100);
 
     BushAction bushAction;
 

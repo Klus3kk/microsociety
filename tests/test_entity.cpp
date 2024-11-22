@@ -1,9 +1,10 @@
 #include <gtest/gtest.h>
 #include "Player.hpp"
 #include "Configuration.hpp"
+
 // Test entity creation
 TEST(EntityTest, EntityCreation) {
-    PlayerEntity player(100, 50, 100, 2.0f, 10, 100);
+    PlayerEntity player("Player1", 100, 50, 100, 2.0f, 10, 100);
 
     EXPECT_EQ(player.getHealth(), 100);
     EXPECT_EQ(player.getHunger(), 50);
@@ -15,7 +16,7 @@ TEST(EntityTest, EntityCreation) {
 
 // Test entity movement
 TEST(EntityTest, EntityMovement) {
-    PlayerEntity player(100, 50, 100, 2.0f, 10, 100);
+    PlayerEntity player("Player1", 100, 50, 100, 2.0f, 10, 100);
     player.setPosition(0, 0);
 
     float deltaTime = 1.0f;

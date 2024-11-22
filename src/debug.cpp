@@ -24,20 +24,33 @@ void DebugConsole::enable() { enabled = true; }
 void DebugConsole::disable() { enabled = false; }
 bool DebugConsole::isEnabled() const { return enabled; }
 
-void DebugConsole::log(const std::string& message) {
-    logs.push_back(message);
-    if (logs.size() > 50) logs.erase(logs.begin()); // Limit log size
-    std::cerr << message << std::endl;
+void DebugConsole::log(const std::string& category, const std::string& message) {
+    logs.emplace_back(category, message);
+    if (logs.size() > maxLogs) logs.erase(logs.begin()); // Limit log size
+    std::cerr << "[" << category << "] " << message << std::endl;
+}
+
+void DebugConsole::logThrottled(const std::string& category, const std::string& message, int throttleMs) {
+    auto now = std::chrono::high_resolution_clock::now();
+    auto& lastLogTime = throttleTimers[category];
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastLogTime).count();
+
+    if (elapsed > throttleMs) {
+        log(category, message);
+        lastLogTime = now;
+    }
 }
 
 void DebugConsole::render(sf::RenderWindow& window) {
     if (!enabled) return;
+
     window.draw(background);
 
     float yOffset = background.getPosition().y + 10;
     size_t start = logs.size() > maxLogs ? logs.size() - maxLogs : 0;
     for (size_t i = start; i < logs.size(); ++i) {
-        text.setString(logs[i]);
+        const auto& [category, message] = logs[i];
+        text.setString("[" + category + "] " + message);
         text.setPosition(10, yOffset);
         window.draw(text);
         yOffset += 16;
@@ -46,6 +59,11 @@ void DebugConsole::render(sf::RenderWindow& window) {
 
 // void DebugConsole::scrollUp() { return; }
 // void DebugConsole::scrollDown() { return; }
+
+void DebugConsole::clearLogs() {
+    logs.clear();
+    std::cerr << "Debug logs cleared." << std::endl;
+}
 
 // Singleton instance
 DebugConsole& getDebugConsole() {
@@ -95,7 +113,7 @@ void debugTileInfo(int tileX, int tileY, const Game& game) {
         } else {
             oss << "is empty.";
         }
-        getDebugConsole().log(oss.str());
+        getDebugConsole().log("Tile", oss.str());
         lastTileLog = {tileX, tileY};
     }
 }
@@ -111,25 +129,18 @@ void debugMarketPrices(const std::unordered_map<std::string, float>& marketPrice
         for (const auto& [resource, price] : marketPrices) {
             oss << "- " << resource << ": $" << price << "\n";
         }
-        getDebugConsole().log(oss.str());
+        getDebugConsole().log("Market Prices", oss.str());
         lastMarketLogTime = now;
     }
 }
 
 void debugCollisionEvent(const std::string& message, int throttleMs) {
-    static auto lastCollisionLogTime = std::chrono::high_resolution_clock::now();
-    auto now = std::chrono::high_resolution_clock::now();
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastCollisionLogTime).count();
-
-    if (elapsed > throttleMs) { 
-        getDebugConsole().log(message);
-        lastCollisionLogTime = now;
-    }
+    getDebugConsole().logThrottled("Collision", message, throttleMs);
 }
 
 
 void debugActionPerformed(const std::string& actionName, const std::string& objectType) {
     std::ostringstream oss;
-    oss << "Action Performed: " << actionName << " on " << objectType << ".";
-    getDebugConsole().log(oss.str());
+    oss << "Action: " << actionName << " on " << objectType;
+    getDebugConsole().log("Action", oss.str());
 }

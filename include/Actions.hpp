@@ -33,10 +33,10 @@ class TreeAction : public Action {
 public:
     void perform(PlayerEntity& player, Tile& tile) override {
         if (player.addToInventory("wood", 1)) {
-            tile.removeObject();
-            getDebugConsole().log("Tree chopped! Wood added to inventory.");
+            tile.removeObject(); // Remove tree object from the tile
+            getDebugConsole().log("Action", "Tree chopped! Wood added to inventory.");
         } else {
-            getDebugConsole().log("Failed to chop tree. Inventory is full.");
+            getDebugConsole().log("Action", "Failed to chop tree. Inventory is full.");
         }
     }
 
@@ -48,14 +48,14 @@ class StoneAction : public Action {
 public:
     void perform(PlayerEntity& player, Tile& tile) override {
         if (player.addToInventory("stone", 1)) {
-            tile.removeObject();
-            getDebugConsole().log("Rock mined! Stone added to inventory.");
+            tile.removeObject(); // Remove rock object from the tile
+            getDebugConsole().log("Action", "Rock mined! Stone added to inventory.");
         } else {
-            getDebugConsole().log("Failed to mine rock. Inventory is full.");
+            getDebugConsole().log("Action", "Failed to mine rock. Inventory is full.");
         }
     }
 
-    std::string getActionName() const override { return "Mine Stone"; }
+    std::string getActionName() const override { return "Mine Rock"; }
 };
 
 // BushAction for gathering from bushes
@@ -63,21 +63,21 @@ class BushAction : public Action {
 public:
     void perform(PlayerEntity& player, Tile& tile) override {
         if (player.addToInventory("food", 1)) {
-            tile.removeObject();
-            getDebugConsole().log("Food gathered from bush!");
+            tile.removeObject(); // Remove bush object from the tile
+            getDebugConsole().log("Action", "Food gathered from bush!");
         } else {
-            getDebugConsole().log("Failed to gather food. Inventory is full.");
+            getDebugConsole().log("Action", "Failed to gather food. Inventory is full.");
         }
     }
 
-    std::string getActionName() const override { return "Gather from Bush"; }
+    std::string getActionName() const override { return "Gather Bush"; }
 };
 
 // Flexible MoveAction for navigation
 class MoveAction : public Action {
 public:
     void perform(PlayerEntity& player, Tile&) override {
-        getDebugConsole().log("Player moved.");
+        getDebugConsole().log("Action", "Player moved.");
     }
     std::string getActionName() const override { return "Move"; }
 };
@@ -86,23 +86,25 @@ public:
 class TradeAction : public Action {
 public:
     void perform(PlayerEntity& player, Tile&) override {
-        getDebugConsole().log("Trade action performed.");
+        getDebugConsole().log("Action", "Trade action performed.");
     }
     std::string getActionName() const override { return "Trade"; }
 };
+
 
 class RegenerateEnergyAction : public Action {
 public:
     void perform(PlayerEntity& player, Tile& tile) override {
         if (auto house = dynamic_cast<House*>(tile.getObject())) {
             house->regenerateEnergy(player);
-            getDebugConsole().log("Player energy regenerated.");
+            getDebugConsole().log("Action", "Player energy regenerated.");
         } else {
-            getDebugConsole().log("No house found to regenerate energy.");
+            getDebugConsole().log("Action", "No house found to regenerate energy.");
         }
     }
     std::string getActionName() const override { return "Regenerate Energy"; }
 };
+
 
 // UpgradeHouseAction for upgrading the house
 class UpgradeHouseAction : public Action {
@@ -112,16 +114,17 @@ public:
             int playerMoney = player.getMoney();
             if (house->upgrade(playerMoney)) {
                 player.setMoney(playerMoney); 
-                getDebugConsole().log("House upgraded successfully.");
+                getDebugConsole().log("Action", "House upgraded successfully.");
             } else {
-                getDebugConsole().log("Not enough money to upgrade the house.");
+                getDebugConsole().log("Action", "Not enough money to upgrade the house.");
             }
         } else {
-            getDebugConsole().log("No house found to upgrade.");
+            getDebugConsole().log("Action", "No house found to upgrade.");
         }
     }
     std::string getActionName() const override { return "Upgrade House"; }
 };
+
 
 // StoreItemAction for storing items in the house
 class StoreItemAction : public Action {
@@ -136,23 +139,23 @@ public:
     void perform(PlayerEntity& player, Tile& tile) override {
         if (auto house = dynamic_cast<House*>(tile.getObject())) {
             const auto& inventory = player.getInventory();
-            
             if (inventory.empty()) {
-                getDebugConsole().log("No items in inventory to store.");
+                getDebugConsole().log("Action", "No items in inventory to store.");
                 return;
             }
 
-            // Iterate through player's inventory and store items
-            for (const auto& [item, quantity] : inventory) {
+            if (inventory.count(item) > 0 && inventory.at(item) >= quantity) {
                 if (house->storeItem(item, quantity)) {
-                    player.addToInventory(item, -quantity); // Remove stored items from player inventory (that's what's minus for)
-                    getDebugConsole().log("Stored " + std::to_string(quantity) + " " + item + " in the house.");
+                    player.addToInventory(item, -quantity); // Remove stored items from inventory
+                    getDebugConsole().log("Action", "Stored " + std::to_string(quantity) + " " + item + " in the house.");
                 } else {
-                    getDebugConsole().log("House storage is full! Could not store all items.");
+                    getDebugConsole().log("Action", "House storage is full! Could not store all items.");
                 }
+            } else {
+                getDebugConsole().log("Action", "Insufficient " + item + " in inventory.");
             }
         } else {
-            getDebugConsole().log("No house present on this tile.");
+            getDebugConsole().log("Action", "No house present on this tile.");
         }
     }
 

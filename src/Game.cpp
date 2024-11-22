@@ -6,10 +6,20 @@
 #include <random>
 #include <set>
 #include <unordered_map>
-
-Game::Game() : window(sf::VideoMode(GameConfig::windowWidth, GameConfig::windowHeight), "MicroSociety") {
+#include "Market.hpp"
+Game::Game() 
+    : window(sf::VideoMode(GameConfig::windowWidth, GameConfig::windowHeight), "MicroSociety") {
     generateMap();
+    npcs = generateNPCs();
+
+    // Extract NPC names for UI
+    std::vector<std::string> npcNames;
+    for (const auto& npc : npcs) {
+        npcNames.push_back(npc.getName());
+    }
+    ui.updateNPCList(npcNames); // Update UI with NPC names
 }
+
 
 
 const std::vector<std::vector<std::unique_ptr<Tile>>>& Game::getTileMap() const {
@@ -31,7 +41,8 @@ bool Game::detectCollision(const PlayerEntity& npc) {
 
 void Game::run() {
     sf::Clock clock;
-    PlayerEntity player(100, 50, 50, 150.0f, 10, 100);
+    PlayerEntity player("Player", 100, 50, 50, 150.0f, 10, 100);
+
     // player.setSize(1.5f, 1.5f);
     
     // Set up the debug console
@@ -43,13 +54,12 @@ void Game::run() {
     if (icon.loadFromFile("../assets/icon/favicon.png")) {
         window.setIcon(icon.getSize().x, icon.getSize().y, icon.getPixelsPtr());
     } else {
-        debugConsole.log("Error loading icon!");
+        debugConsole.log("Error", "Failed to load icon!");
     }
-
 
     sf::Texture playerTexture;
     if (!playerTexture.loadFromFile("../assets/npc/person1.png")) {
-        std::cerr << "Error loading player's texture\n";
+        std::cerr << "Error loading player texture.\n";
     }
 
     // Generate random color values
@@ -61,7 +71,8 @@ void Game::run() {
 
     // Set texture and color together
     player.setTexture(playerTexture, randomColor);
-    player.setPosition(GameConfig::mapWidth / 2, GameConfig::mapHeight / 2);
+    player.setPosition(GameConfig::mapWidth / 2 * GameConfig::tileSize,
+                       GameConfig::mapHeight / 2 * GameConfig::tileSize);
 
     // Action testing
     std::vector<std::unique_ptr<Action>> actions;
@@ -69,9 +80,6 @@ void Game::run() {
     actions.emplace_back(std::make_unique<TradeAction>());
 
     std::set<std::pair<int, int>> loggedTiles;
-
-    // Generate NPCs
-    std::vector<PlayerEntity> npcs = generateNPCs();
 
     while (window.isOpen()) {
         sf::Event event;
@@ -82,7 +90,11 @@ void Game::run() {
                 debugConsole.toggle();
             }
 
-            ui.handleButtonClicks(window, event);
+            // Handle UI button clicks
+            if (ui.isMouseOver(window)) {
+                ui.handleButtonClicks(window, event);
+                continue; // Avoid player movement/input when interacting with the UI
+            }
         }
 
 
@@ -109,17 +121,16 @@ void Game::run() {
             if (std::make_pair(targetTileX, targetTileY) != lastDebugTile) {
                 lastDebugTile = {targetTileX, targetTileY};
 
-                // Log debug information for the target tile
                 if (auto tree = dynamic_cast<Tree*>(targetTile->getObject())) {
-                    debugConsole.log("Press 'T' to chop tree.");
+                    debugConsole.log("Hint", "Press 'T' to chop tree.");
                 } else if (auto stone = dynamic_cast<Rock*>(targetTile->getObject())) {
-                    debugConsole.log("Press 'M' to mine rock.");
+                    debugConsole.log("Hint", "Press 'M' to mine rock.");
                 } else if (auto bush = dynamic_cast<Bush*>(targetTile->getObject())) {
-                    debugConsole.log("Press 'G' to gather bush resources.");
+                    debugConsole.log("Hint", "Press 'G' to gather bush resources.");
                 } else if (auto house = dynamic_cast<House*>(targetTile->getObject())) {
-                    debugConsole.log("Press 'H' to regenerate energy.");
-                    debugConsole.log("Press 'U' to upgrade the house.");
-                    debugConsole.log("Press 'I' to store items in the house.");
+                    debugConsole.log("Hint", "Press 'H' to regenerate energy, 'U' to upgrade, or 'I' to store items.");
+                } else if (auto market = dynamic_cast<Market*>(targetTile->getObject())) {
+                    debugConsole.log("Hint", "Press 'B' to buy or 'S' to sell items.");
                 }
             }
 
@@ -131,34 +142,34 @@ void Game::run() {
                     if (auto tree = dynamic_cast<Tree*>(targetTile->getObject())) {
                         std::unique_ptr<Action> action = std::make_unique<TreeAction>();
                         action->perform(player, *targetTile);
-                        debugConsole.log("Performed action: " + action->getActionName());
+                        debugConsole.log("Action", "Chopped tree.");
                         keyProcessed = true;
                     }
                 } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::M)) {
                     if (auto stone = dynamic_cast<Rock*>(targetTile->getObject())) {
                         std::unique_ptr<Action> action = std::make_unique<StoneAction>();
                         action->perform(player, *targetTile);
-                        debugConsole.log("Performed action: " + action->getActionName());
+                        debugConsole.log("Action", "Mined rock.");
                         keyProcessed = true;
                     }
                 } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::G)) {
                     if (auto bush = dynamic_cast<Bush*>(targetTile->getObject())) {
                         std::unique_ptr<Action> action = std::make_unique<BushAction>();
                         action->perform(player, *targetTile);
-                        debugConsole.log("Performed action: " + action->getActionName());
+                        debugConsole.log("Action", "Gathered bush resources.");
                         keyProcessed = true;
                     }
                 } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::H)) {
                     if (auto house = dynamic_cast<House*>(targetTile->getObject())) {
                         std::unique_ptr<Action> action = std::make_unique<RegenerateEnergyAction>();
                         action->perform(player, *targetTile);
-                        debugConsole.log("Energy regenerated.");
+                        debugConsole.log("Action", "Regenerated energy.");
                     }
                 } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::U)) {
                     if (auto house = dynamic_cast<House*>(targetTile->getObject())) {
                         std::unique_ptr<Action> action = std::make_unique<UpgradeHouseAction>();
                         action->perform(player, *targetTile);
-                        debugConsole.log("House upgraded.");
+                        debugConsole.log("Action", "Upgraded house.");
                     }
                 } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::I)) {
                     if (auto house = dynamic_cast<House*>(targetTile->getObject())) {
@@ -167,13 +178,24 @@ void Game::run() {
                             auto it = inventory.begin();
                             std::unique_ptr<Action> action = std::make_unique<StoreItemAction>(it->first, it->second);
                             action->perform(player, *targetTile);
-                            debugConsole.log("Stored items in the house.");
+                            debugConsole.log("Action", "Stored items.");
                         } else {
-                            debugConsole.log("Inventory is empty.");
+                            debugConsole.log("Action", "Inventory is empty.");
                         }
                     }
+                } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::B)) {
+                    if (auto market = dynamic_cast<Market*>(targetTile->getObject())) {
+                        market->buyItem(player, "wood", 1); // Example purchase
+                        debugConsole.log("Market", "Bought 1 wood.");
+                        keyProcessed = true;
+                    }
+                } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
+                    if (auto market = dynamic_cast<Market*>(targetTile->getObject())) {
+                        market->sellItem(player, "stone", 1); // Example sale
+                        debugConsole.log("Market", "Sold 1 stone.");
+                        keyProcessed = true;
+                    }
                 }
-
             }
 
             // Reset the keyProcessed flag when no key is pressed
@@ -182,7 +204,9 @@ void Game::run() {
                 !sf::Keyboard::isKeyPressed(sf::Keyboard::G) &&
                 !sf::Keyboard::isKeyPressed(sf::Keyboard::H) &&
                 !sf::Keyboard::isKeyPressed(sf::Keyboard::U) &&
-                !sf::Keyboard::isKeyPressed(sf::Keyboard::I)) {
+                !sf::Keyboard::isKeyPressed(sf::Keyboard::I) &&
+                !sf::Keyboard::isKeyPressed(sf::Keyboard::B) &&
+                !sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
                 keyProcessed = false;
             }
         }
@@ -195,13 +219,13 @@ void Game::run() {
         }
 
         // Collision detection
-        if (targetTile->hasObject()) {
-            auto objectBounds = targetTile->getObjectBounds();
-            if (player.getSprite().getGlobalBounds().intersects(objectBounds)) {
-                player.setPosition(previousPosition.x, previousPosition.y);  // Revert position on collision
-                debugConsole.log("Collision at tile (" + std::to_string(targetTileX) + ", " + std::to_string(targetTileY) + ").");
+        if (targetTile && targetTile->hasObject()) {
+            if (player.getSprite().getGlobalBounds().intersects(targetTile->getObjectBounds())) {
+                player.setPosition(previousPosition.x, previousPosition.y);
+                debugConsole.log("Collision", "Collision detected at tile.");
             }
         }
+
 
         // Aggregate resources from all NPCs
         std::unordered_map<std::string, int> allResources = aggregateResources(npcs);
@@ -254,7 +278,7 @@ std::vector<PlayerEntity> Game::generateNPCs() const {
     std::uniform_int_distribution<> distX(0, tileMap[0].size() - 1);
     std::uniform_int_distribution<> distY(0, tileMap.size() - 1);
 
-    for (int i = 0; i < 1; ++i) { // Number of NPCs to generate
+    for (int i = 0; i < 5; ++i) { // Number of NPCs to generate
         int x, y;
         do {
             x = distX(gen);
@@ -263,7 +287,8 @@ std::vector<PlayerEntity> Game::generateNPCs() const {
 
         occupiedPositions.insert({x, y});
 
-        PlayerEntity npc(100, 50, 50, 150.0f, 10, 100);
+        PlayerEntity npc("NPC" + std::to_string(i + 1), 100, 50, 50, 150.0f, 10, 100);
+
         npc.addToInventory("wood", i + 1);
         npc.addToInventory("stone", 2 * i);
         npc.addToInventory("food", 5 - i);
@@ -356,15 +381,41 @@ void Game::generateMap() {
 
 
 
-    int playerHouseX = GameConfig::mapWidth / 2;
-    int playerHouseY = GameConfig::mapHeight / 2;
-    tileMap[playerHouseY][playerHouseX]->placeObject(std::make_unique<House>(houseTextures[0]));
+    // Place unique houses for each NPC
+    std::set<std::pair<int, int>> occupiedPositions;
+    for (int i = 0; i < 5; ++i) { // Assuming 5 NPCs
+        int houseX, houseY;
+        do {
+            houseX = rand() % GameConfig::mapWidth;
+            houseY = rand() % GameConfig::mapHeight;
+        } while (occupiedPositions.count({houseX, houseY}) || tileMap[houseY][houseX]->hasObject());
 
-    int marketCount = 2 + rand() % 2; // Place 2 or 3 markets
+        occupiedPositions.insert({houseX, houseY});
+
+        sf::Color houseColor(rand() % 256, rand() % 256, rand() % 256); // Random house color
+        auto house = std::make_unique<House>(houseTextures[i % 3]);
+        house->getSprite().setColor(houseColor);
+
+        tileMap[houseY][houseX]->placeObject(std::move(house));
+
+        // Debugging
+        getDebugConsole().log("MapGen", "House for NPC " + std::to_string(i + 1) +
+                                            " placed at (" + std::to_string(houseX) + ", " + std::to_string(houseY) + ")");
+    }
+
+    // Place markets with conflict resolution
+    int marketCount = 2 + rand() % 2; // 2 or 3 markets
     for (int m = 0; m < marketCount; ++m) {
-        int marketX = rand() % GameConfig::mapWidth;
-        int marketY = rand() % GameConfig::mapHeight;
+        int marketX, marketY;
+        do {
+            marketX = rand() % GameConfig::mapWidth;
+            marketY = rand() % GameConfig::mapHeight;
+        } while (occupiedPositions.count({marketX, marketY}) || tileMap[marketY][marketX]->hasObject());
+
+        occupiedPositions.insert({marketX, marketY});
         tileMap[marketY][marketX]->placeObject(std::make_unique<Market>(marketTextures[m % 3]));
+
+        getDebugConsole().log("MapGen", "Market placed at (" + std::to_string(marketX) + ", " + std::to_string(marketY) + ")");
     }
 }
 

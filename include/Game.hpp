@@ -22,6 +22,7 @@ private:
     int mapWidth;
     int mapHeight;
     int tileSize;
+    std::vector<PlayerEntity> npcs; 
 
 public:
     Game();

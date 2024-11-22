@@ -4,7 +4,7 @@
 #include "Actions.hpp"
 
 TEST(ResourceCollectionTest, InventoryFullTest) {
-    PlayerEntity player(100, 50, 50, 150.0f, 10, 100);
+    PlayerEntity player("Player1",100, 50, 50, 150.0f, 10, 100);
 
     // Mock a tile with a tree object
     sf::Texture treeTexture;
@@ -26,7 +26,7 @@ TEST(ResourceCollectionTest, InventoryFullTest) {
 }
 
 TEST(ResourceCollectionTest, ObjectRemovedOnCollection) {
-    PlayerEntity player(100, 50, 50, 150.0f, 10, 100);
+    PlayerEntity player("Player1",100, 50, 50, 150.0f, 10, 100);
 
     // Mock a tile with a bush object
     sf::Texture bushTexture;
