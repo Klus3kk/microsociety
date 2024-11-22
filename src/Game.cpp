@@ -54,12 +54,12 @@ void Game::run() {
     if (icon.loadFromFile("../assets/icon/favicon.png")) {
         window.setIcon(icon.getSize().x, icon.getSize().y, icon.getPixelsPtr());
     } else {
-        debugConsole.log("Error", "Failed to load icon!");
+        debugConsole.logOnce("Error", "Failed to load icon!");
     }
 
     sf::Texture playerTexture;
     if (!playerTexture.loadFromFile("../assets/npc/person1.png")) {
-        std::cerr << "Error loading player texture.\n";
+        debugConsole.logOnce("Error", "Failed to load player texture.");
     }
 
     // Generate random color values
@@ -142,34 +142,34 @@ void Game::run() {
                     if (auto tree = dynamic_cast<Tree*>(targetTile->getObject())) {
                         std::unique_ptr<Action> action = std::make_unique<TreeAction>();
                         action->perform(player, *targetTile);
-                        debugConsole.log("Action", "Chopped tree.");
+                        debugConsole.logOnce("Action", "Chopped tree.");
                         keyProcessed = true;
                     }
                 } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::M)) {
                     if (auto stone = dynamic_cast<Rock*>(targetTile->getObject())) {
                         std::unique_ptr<Action> action = std::make_unique<StoneAction>();
                         action->perform(player, *targetTile);
-                        debugConsole.log("Action", "Mined rock.");
+                        debugConsole.logOnce("Action", "Mined rock.");
                         keyProcessed = true;
                     }
                 } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::G)) {
                     if (auto bush = dynamic_cast<Bush*>(targetTile->getObject())) {
                         std::unique_ptr<Action> action = std::make_unique<BushAction>();
                         action->perform(player, *targetTile);
-                        debugConsole.log("Action", "Gathered bush resources.");
+                        debugConsole.logOnce("Action", "Gathered bush resources.");
                         keyProcessed = true;
                     }
                 } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::H)) {
                     if (auto house = dynamic_cast<House*>(targetTile->getObject())) {
                         std::unique_ptr<Action> action = std::make_unique<RegenerateEnergyAction>();
                         action->perform(player, *targetTile);
-                        debugConsole.log("Action", "Regenerated energy.");
+                        debugConsole.logOnce("Action", "Regenerated energy.");
                     }
                 } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::U)) {
                     if (auto house = dynamic_cast<House*>(targetTile->getObject())) {
                         std::unique_ptr<Action> action = std::make_unique<UpgradeHouseAction>();
                         action->perform(player, *targetTile);
-                        debugConsole.log("Action", "Upgraded house.");
+                        debugConsole.logOnce("Action", "Upgraded house.");
                     }
                 } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::I)) {
                     if (auto house = dynamic_cast<House*>(targetTile->getObject())) {
@@ -178,21 +178,21 @@ void Game::run() {
                             auto it = inventory.begin();
                             std::unique_ptr<Action> action = std::make_unique<StoreItemAction>(it->first, it->second);
                             action->perform(player, *targetTile);
-                            debugConsole.log("Action", "Stored items.");
+                            debugConsole.logOnce("Action", "Stored items.");
                         } else {
-                            debugConsole.log("Action", "Inventory is empty.");
+                            debugConsole.logOnce("Action", "Inventory is empty.");
                         }
                     }
                 } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::B)) {
                     if (auto market = dynamic_cast<Market*>(targetTile->getObject())) {
                         market->buyItem(player, "wood", 1); // Example purchase
-                        debugConsole.log("Market", "Bought 1 wood.");
+                        debugConsole.logOnce("Market", "Bought 1 wood.");
                         keyProcessed = true;
                     }
                 } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
                     if (auto market = dynamic_cast<Market*>(targetTile->getObject())) {
                         market->sellItem(player, "stone", 1); // Example sale
-                        debugConsole.log("Market", "Sold 1 stone.");
+                        debugConsole.logOnce("Market", "Sold 1 stone.");
                         keyProcessed = true;
                     }
                 }
@@ -222,7 +222,7 @@ void Game::run() {
         if (targetTile && targetTile->hasObject()) {
             if (player.getSprite().getGlobalBounds().intersects(targetTile->getObjectBounds())) {
                 player.setPosition(previousPosition.x, previousPosition.y);
-                debugConsole.log("Collision", "Collision detected at tile.");
+                debugConsole.logThrottled("Collision", "Collision detected at tile.", 1000); 
             }
         }
 
@@ -399,7 +399,7 @@ void Game::generateMap() {
         tileMap[houseY][houseX]->placeObject(std::move(house));
 
         // Debugging
-        getDebugConsole().log("MapGen", "House for NPC " + std::to_string(i + 1) +
+        getDebugConsole().logOnce("MapGen", "House for NPC " + std::to_string(i + 1) +
                                             " placed at (" + std::to_string(houseX) + ", " + std::to_string(houseY) + ")");
     }
 
@@ -415,7 +415,7 @@ void Game::generateMap() {
         occupiedPositions.insert({marketX, marketY});
         tileMap[marketY][marketX]->placeObject(std::make_unique<Market>(marketTextures[m % 3]));
 
-        getDebugConsole().log("MapGen", "Market placed at (" + std::to_string(marketX) + ", " + std::to_string(marketY) + ")");
+        getDebugConsole().logOnce("MapGen", "Market placed at (" + std::to_string(marketX) + ", " + std::to_string(marketY) + ")");
     }
 }
 

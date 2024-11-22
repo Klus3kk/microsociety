@@ -9,8 +9,15 @@
 #include <unordered_map>
 #include <chrono>
 
-class Game; // Forward declaration 
+class Game; // Forward declaration
 class PlayerEntity;
+
+// Log severity levels
+enum class LogLevel {
+    Info,
+    Warning,
+    Error
+};
 
 // Debug system for in-game console
 class DebugConsole {
@@ -23,6 +30,7 @@ private:
     const sf::Color backgroundColor = sf::Color(0, 0, 0, 150); // Opaque black background
     bool enabled = false;                                  // Toggle for enabling/disabling debug
     std::unordered_map<std::string, std::chrono::high_resolution_clock::time_point> throttleTimers;
+    std::unordered_map<std::string, bool> logOnceTracker;  // Tracker for `logOnce`
 
 public:
     DebugConsole(float windowWidth, float windowHeight);
@@ -31,22 +39,25 @@ public:
     void disable();
     bool isEnabled() const;
 
-    // Log with category
-    void log(const std::string& category, const std::string& message);
+    // Log with category and severity level
+    void log(const std::string& category, const std::string& message, LogLevel level = LogLevel::Info);
     // Throttled logging
     void logThrottled(const std::string& category, const std::string& message, int throttleMs);
+    // Log once per session
+    void logOnce(const std::string& category, const std::string& message);
 
     void render(sf::RenderWindow& window);
     void clearLogs(); // Clear all logs
 };
-// Singleton 
+
+// Singleton
 DebugConsole& getDebugConsole();
 
 // Debug helper functions
-// void debugPlayerInfo(const PlayerEntity& player);
 void debugTileInfo(int tileX, int tileY, const Game& game);
 void debugMarketPrices(const std::unordered_map<std::string, float>& marketPrices);
 void debugCollisionEvent(const std::string& message, int throttleMs = 500);
 void debugActionPerformed(const std::string& actionName, const std::string& objectType);
+void debugPlayerSpeed(float speed);
 
-#endif 
+#endif

@@ -18,6 +18,7 @@ public:
         : Entity(initHealth, initHunger, initEnergy, initSpeed, initStrength, initMoney), name(playerName) {}
 
     const std::string& getName() const { return name; } // Getter for the name of the NPC
+
     void handleInput(float deltaTime) {
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) move(0, -1, deltaTime);
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) move(0, 1, deltaTime);
@@ -28,19 +29,18 @@ public:
     // Setters for health, strength, and speed
     void setHealth(float newHealth) {
         health = std::clamp(newHealth, 0.0f, 100.0f); // Ensure health stays within 0-100
-        getDebugConsole().log("Player", "Health set to: " + std::to_string(health));
+        getDebugConsole().logOnce("Player", "Health set to: " + std::to_string(health));
     }
 
     void setStrength(float newStrength) {
         strength = std::max(0.0f, newStrength); // Ensure strength is non-negative
-        getDebugConsole().log("Player", "Strength set to: " + std::to_string(strength));
+        getDebugConsole().logOnce("Player", "Strength set to: " + std::to_string(strength));
     }
 
     void setSpeed(float newSpeed) {
         speed = std::max(0.0f, newSpeed); // Ensure speed is non-negative
-        getDebugConsole().log("Player", "Speed set to: " + std::to_string(speed));
+        getDebugConsole().logOnce("Player", "Speed set to: " + std::to_string(speed)); // Throttled log
     }
-
 
     // Inventory management
     bool addToInventory(const std::string& item, int quantity) {
@@ -48,7 +48,7 @@ public:
         for (const auto& [key, count] : inventory) currentTotal += count;
 
         if (currentTotal + quantity > inventoryCapacity) {
-            getDebugConsole().log("Inventory", "Inventory full! Cannot add " + item + ".");
+            getDebugConsole().logOnce("Inventory", "Inventory full! Cannot add " + item + ".");
             return false;
         }
 
@@ -66,7 +66,7 @@ public:
             return true;
         }
 
-        getDebugConsole().log("Inventory", "Failed to remove " + std::to_string(quantity) + " " + item + ".");
+        getDebugConsole().logOnce("Inventory", "Failed to remove " + std::to_string(quantity) + " " + item + ".");
         return false;
     }
 
@@ -96,7 +96,7 @@ public:
 
     void setMoney(float newMoney) {
         money = newMoney;
-        getDebugConsole().log("Player", "Money updated to: " + std::to_string(money));
+        getDebugConsole().logOnce("Player", "Money updated to: " + std::to_string(money)); 
     }
 
     const std::unordered_map<std::string, int>& getInventory() const { return inventory; }

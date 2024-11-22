@@ -4,7 +4,7 @@
 #include <sstream>
 #include <unordered_map>
 #include <chrono>
-#include <algorithm> 
+#include <algorithm>
 
 DebugConsole::DebugConsole(float windowWidth, float windowHeight) {
     if (!consoleFont.loadFromFile("../assets/fonts/font.ttf")) {
@@ -24,20 +24,38 @@ void DebugConsole::enable() { enabled = true; }
 void DebugConsole::disable() { enabled = false; }
 bool DebugConsole::isEnabled() const { return enabled; }
 
-void DebugConsole::log(const std::string& category, const std::string& message) {
-    logs.emplace_back(category, message);
+void DebugConsole::log(const std::string& category, const std::string& message, LogLevel level) {
+    std::ostringstream formattedMessage;
+    switch (level) {
+        case LogLevel::Info: formattedMessage << "[INFO] "; break;
+        case LogLevel::Warning: formattedMessage << "[WARNING] "; break;
+        case LogLevel::Error: formattedMessage << "[ERROR] "; break;
+    }
+    formattedMessage << "[" << category << "] " << message;
+
+    logs.emplace_back(category, formattedMessage.str());
     if (logs.size() > maxLogs) logs.erase(logs.begin()); // Limit log size
-    std::cerr << "[" << category << "] " << message << std::endl;
+
+    // std::cerr << formattedMessage.str() << std::endl; // Debug output to console
 }
 
 void DebugConsole::logThrottled(const std::string& category, const std::string& message, int throttleMs) {
     auto now = std::chrono::high_resolution_clock::now();
-    auto& lastLogTime = throttleTimers[category];
+    std::string key = category + ":" + message;
+    auto& lastLogTime = throttleTimers[key];
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastLogTime).count();
 
     if (elapsed > throttleMs) {
         log(category, message);
         lastLogTime = now;
+    }
+}
+
+void DebugConsole::logOnce(const std::string& category, const std::string& message) {
+    std::string key = category + ":" + message;
+    if (!logOnceTracker[key]) {
+        log(category, message);
+        logOnceTracker[key] = true;
     }
 }
 
@@ -50,15 +68,12 @@ void DebugConsole::render(sf::RenderWindow& window) {
     size_t start = logs.size() > maxLogs ? logs.size() - maxLogs : 0;
     for (size_t i = start; i < logs.size(); ++i) {
         const auto& [category, message] = logs[i];
-        text.setString("[" + category + "] " + message);
+        text.setString(message);
         text.setPosition(10, yOffset);
         window.draw(text);
         yOffset += 16;
     }
 }
-
-// void DebugConsole::scrollUp() { return; }
-// void DebugConsole::scrollDown() { return; }
 
 void DebugConsole::clearLogs() {
     logs.clear();
@@ -71,37 +86,7 @@ DebugConsole& getDebugConsole() {
     return instance;
 }
 
-// Helper functions to throttle logs (chrono is great here)
-bool shouldThrottleLog(std::chrono::high_resolution_clock::time_point& lastLogTime, int ms) {
-    auto now = std::chrono::high_resolution_clock::now();
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastLogTime).count();
-    if (elapsed > ms) {
-        lastLogTime = now;
-        return false;
-    }
-    return true;
-}
-
-// void debugPlayerInfo(const PlayerEntity& player) {
-//     static sf::Vector2f lastPosition(-1, -1);
-//     if (player.getPosition() != lastPosition) {
-//         std::ostringstream oss;
-//         oss << "Player Stats:\n";
-//         oss << "- Position: (" << player.getPosition().x << ", " << player.getPosition().y << ")\n";
-//         oss << "- Speed: " << player.getSpeed() << "\n";
-//         oss << "- Health: " << player.getHealth() << "\n";
-//         oss << "- Hunger: " << player.getHunger() << "\n";
-//         oss << "- Energy: " << player.getEnergy() << "\n";
-//         oss << "- Money: $" << player.getMoney() << "\n";
-//         oss << "Inventory: ";
-//         for (const auto& [item, qty] : player.getInventory()) {
-//             oss << item << " (" << qty << ") ";
-//         }
-//         getDebugConsole().log(oss.str());
-//         lastPosition = player.getPosition();
-//     }
-// }
-
+// Debug helper functions
 void debugTileInfo(int tileX, int tileY, const Game& game) {
     static auto lastTileLog = std::make_pair(-1, -1);
     if (lastTileLog != std::make_pair(tileX, tileY)) {
@@ -123,13 +108,13 @@ void debugMarketPrices(const std::unordered_map<std::string, float>& marketPrice
     auto now = std::chrono::high_resolution_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastMarketLogTime).count();
 
-    if (elapsed > 1000) { // 1 second throttle
+    if (elapsed > 1000) { // 1-second throttle
         std::ostringstream oss;
         oss << "Market Prices:\n";
         for (const auto& [resource, price] : marketPrices) {
             oss << "- " << resource << ": $" << price << "\n";
         }
-        getDebugConsole().log("Market Prices", oss.str());
+        getDebugConsole().log("Market", oss.str());
         lastMarketLogTime = now;
     }
 }
@@ -138,9 +123,16 @@ void debugCollisionEvent(const std::string& message, int throttleMs) {
     getDebugConsole().logThrottled("Collision", message, throttleMs);
 }
 
-
 void debugActionPerformed(const std::string& actionName, const std::string& objectType) {
     std::ostringstream oss;
     oss << "Action: " << actionName << " on " << objectType;
     getDebugConsole().log("Action", oss.str());
+}
+
+void debugPlayerSpeed(float speed) {
+    static float lastLoggedSpeed = -1.0f;
+    if (speed != lastLoggedSpeed) {
+        getDebugConsole().log("Player", "Speed set to: " + std::to_string(speed));
+        lastLoggedSpeed = speed;
+    }
 }
