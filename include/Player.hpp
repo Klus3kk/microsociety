@@ -57,6 +57,7 @@ public:
         return true;
     }
 
+
     bool removeFromInventory(const std::string& item, int quantity) {
         auto it = inventory.find(item);
         if (it != inventory.end() && it->second >= quantity) {

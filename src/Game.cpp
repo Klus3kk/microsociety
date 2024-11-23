@@ -36,12 +36,14 @@ bool Game::detectCollision(const PlayerEntity& npc) {
 
     if (tileX >= 0 && tileX < tileMap[0].size() && tileY >= 0 && tileY < tileMap.size()) {
         auto& tile = tileMap[tileY][tileX];
-        if (tile->hasObject()) {
-            return npc.getSprite().getGlobalBounds().intersects(tile->getObjectBounds());
+        if (tile->hasObject() && npc.getSprite().getGlobalBounds().intersects(tile->getObjectBounds())) {
+            return true;
         }
     }
     return false;
 }
+
+
 
 void Game::run() {
     sf::Clock clock;
