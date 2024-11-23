@@ -6,7 +6,7 @@
 #include <vector>
 #include <string>
 #include "UIButton.hpp"
-
+#include "Market.hpp"
 class UI {
 private:
     sf::Font font;
@@ -33,6 +33,8 @@ private:
     // Buttons
     UIButton statsButton;
     UIButton optionsButton;
+    UIButton marketButton; 
+
 
     // Selected NPC
     int selectedNPCIndex = -1;
@@ -50,7 +52,10 @@ public:
     void handleButtonClicks(sf::RenderWindow& window, sf::Event& event);
     void handleHover(sf::RenderWindow& window);
 
-    void render(sf::RenderWindow& window);
+    void render(sf::RenderWindow& window, const Market& market);
+
+
+    void drawPriceTrends(sf::RenderWindow& window, const Market& market);
 
     // Tooltip interaction
     bool isMouseOver(sf::RenderWindow& window) const;

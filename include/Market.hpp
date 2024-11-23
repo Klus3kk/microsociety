@@ -3,6 +3,9 @@
 
 #include <unordered_map>
 #include <string>
+#include <algorithm>
+#include <cmath>
+#include <vector>
 #include "Player.hpp"
 #include "Object.hpp"
 #include "debug.hpp" // Include your debug console header
@@ -10,14 +13,12 @@
 class Market : public Object {
 private:
     std::unordered_map<std::string, float> prices;      // Current item prices
-    std::unordered_map<std::string, int> supplyDemand;  // Supply/Demand tracking
+    std::unordered_map<std::string, int> demand;        // Demand for each item
+    std::unordered_map<std::string, int> supply;        // Supply for each item
+    std::unordered_map<std::string, std::vector<float>> priceHistory;
 
-    // Adjust prices dynamically based on supply/demand
-    void adjustPrice(const std::string& item) {
-        int demand = supplyDemand[item];
-        prices[item] += 0.1f * demand;
-        prices[item] = std::max(1.0f, prices[item]); // Enforce minimum price of 1.0
-    }
+    const float priceAdjustmentFactor = 0.1f; // Scaling factor for price updates
+    const float minimumPrice = 1.0f;          // Minimum price for any item
 
 public:
     Market() {
@@ -32,19 +33,11 @@ public:
         sprite.setTexture(texture);
     }
 
-    // Implement pure virtual methods from Object
-    void draw(sf::RenderWindow& window) override {
-        window.draw(sprite);
-    }
-
-    ObjectType getType() const override {
-        return ObjectType::Market; // Returns the type as Market
-    }
-
-    // Set initial prices and supply/demand
+    // Initialize prices and supply-demand values for items
     void setPrice(const std::string& item, float price) {
         prices[item] = price;
-        supplyDemand[item] = 0;
+        demand[item] = 0;
+        supply[item] = 100; // Default supply
     }
 
     float getPrice(const std::string& item) const {
@@ -60,13 +53,12 @@ public:
         }
 
         float cost = getPrice(item) * quantity;
-
         if (player.getMoney() >= cost) {
             player.setMoney(player.getMoney() - cost);
             player.addToInventory(item, quantity);
 
-            supplyDemand[item] += quantity; // Increase demand
-            adjustPrice(item);              // Adjust price
+            demand[item] += quantity;
+            updatePrice(item);
 
             getDebugConsole().log("Market", "Bought " + std::to_string(quantity) + " " + item + 
                                   "(s) for $" + std::to_string(cost));
@@ -90,8 +82,8 @@ public:
             player.removeFromInventory(item, quantity);
             player.setMoney(player.getMoney() + revenue);
 
-            supplyDemand[item] -= quantity; // Reduce demand
-            adjustPrice(item);              // Adjust price
+            supply[item] += quantity;
+            updatePrice(item);
 
             getDebugConsole().log("Market", "Sold " + std::to_string(quantity) + " " + item + 
                                   "(s) for $" + std::to_string(revenue));
@@ -102,13 +94,54 @@ public:
         return false;
     }
 
-    // Display current market prices (for debugging or shop interface)
+
+    void trackPriceHistory(const std::string& item) {
+        priceHistory[item].push_back(prices[item]);
+        if (priceHistory[item].size() > 10) { // Limit trend size
+            priceHistory[item].erase(priceHistory[item].begin());
+        }
+    }
+
+    const std::unordered_map<std::string, std::vector<float>>& getPriceTrendMap() const {
+        return priceHistory; // Assuming `priceHistory` tracks the trends
+    }
+    
+    // Update price dynamically based on supply and demand
+    void updatePrice(const std::string& item) {
+        int itemDemand = demand[item];
+        int itemSupply = supply[item];
+        float demandSupplyRatio = (itemSupply == 0) ? 2.0f : static_cast<float>(itemDemand) / itemSupply;
+        float adjustment = priceAdjustmentFactor * (demandSupplyRatio - 1.0f);
+        prices[item] = std::max(minimumPrice, prices[item] * (1.0f + adjustment));
+        trackPriceHistory(item); // Track price history for visualization
+    }
+
+
+    // Display current market prices for debugging or shop interface
     void displayPrices() const {
         getDebugConsole().log("Market", "Current Market Prices:");
         for (const auto& [item, price] : prices) {
             getDebugConsole().log("Market", "- " + item + ": $" + std::to_string(price));
         }
     }
+
+    std::vector<float> getPriceTrend(const std::string& item) const {
+        auto it = priceHistory.find(item);
+        if (it != priceHistory.end()) {
+            return it->second;
+        }
+        return {};
+    }
+
+
+    // Implement pure virtual methods from Object
+    void draw(sf::RenderWindow& window) override {
+        window.draw(sprite);
+    }
+
+    ObjectType getType() const override {
+        return ObjectType::Market; // Returns the type as Market
+    }
 };
 
-#endif
+#endif // MARKET_HPP

@@ -12,6 +12,10 @@ Game::Game()
     generateMap();
     npcs = generateNPCs();
 
+    // Initialize Market
+    market.setPrice("wood", 10.0f);
+    market.setPrice("stone", 15.0f);
+
     // Extract NPC names for UI
     std::vector<std::string> npcNames;
     for (const auto& npc : npcs) {
@@ -236,7 +240,7 @@ void Game::run() {
         // debugPlayerInfo(player);
         window.clear();
         render();          // Render the map
-        ui.render(window); 
+        ui.render(window, market);
         player.draw(window);   // Draw player's entity
         debugConsole.render(window);
         window.display();
@@ -356,13 +360,13 @@ void Game::generateMap() {
             int objChance = rand() % 100; // object chances for creation
             if (auto grassTile = dynamic_cast<GrassTile*>(tileMap[i][j].get())) {
                 if (objChance < 20) {
-                    tileMap[i][j]->placeObject(std::make_unique<Tree>(treeTextures[rand() % 3]));  // random tree texture
+                    grassTile->placeObject(std::make_unique<Tree>(treeTextures[rand() % 3]));
                 } else if (objChance < 30) {
-                    tileMap[i][j]->placeObject(std::make_unique<Bush>(bushTextures[rand() % 2]));  // random bush texture
+                    grassTile->placeObject(std::make_unique<Bush>(bushTextures[rand() % 2]));
                 }
             } else if (auto stoneTile = dynamic_cast<StoneTile*>(tileMap[i][j].get())) {
                 if (objChance < 20) {
-                    tileMap[i][j]->placeObject(std::make_unique<Rock>(rockTextures[rand() % 3]));  // random rock texture
+                    stoneTile->placeObject(std::make_unique<Rock>(rockTextures[rand() % 3]));
                 }
             }
         }

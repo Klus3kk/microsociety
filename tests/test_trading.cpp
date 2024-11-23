@@ -38,14 +38,25 @@ TEST(TradingTest, SellItem) {
 
 TEST(TradingTest, DynamicPricing) {
     Market market;
-    PlayerEntity player("Player1",100, 50, 50, 150.0f, 10, 100);
+    market.setPrice("wood", 10.0f);
 
-    market.setPrice("wood", 10);
-    player.addToInventory("wood", 5);
-    EXPECT_TRUE(market.sellItem(player, "wood", 5)); // Increase supply
+    // Player setup
+    PlayerEntity player("TestPlayer", 100, 50, 50, 150.0f, 10, 100);
+    player.setMoney(500); // Give player enough money
 
+    // Buy items to increase demand
+    market.buyItem(player, "wood", 5);
     float updatedPrice = market.getPrice("wood");
-    EXPECT_GT(updatedPrice, 10) << "Price for wood did not increase as expected!";
+
+    EXPECT_GT(updatedPrice, 10.0f) << "Price for wood did not increase as expected!";
+
+    // Sell items to increase supply
+    market.sellItem(player, "wood", 3);
+    updatedPrice = market.getPrice("wood");
+
+    EXPECT_LT(updatedPrice, 10.0f) << "Price for wood did not decrease as expected!";
 }
+
+
 
 

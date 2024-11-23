@@ -72,7 +72,7 @@ UI::UI() {
     // Buttons
     statsButton.setProperties(20, 620, 100, 50, "STATS", font);
     optionsButton.setProperties(140, 620, 100, 50, "OPTIONS", font);
-
+    marketButton.setProperties(260, 620, 100, 50, "MARKET", font); 
     // Updated to pass the fourth "border" argument
     statsButton.setColors(
         sf::Color(70, 70, 150), 
@@ -81,6 +81,12 @@ UI::UI() {
         sf::Color::White // Border color
     );
     optionsButton.setColors(
+        sf::Color(70, 70, 150), 
+        sf::Color(100, 100, 200), 
+        sf::Color(50, 50, 120), 
+        sf::Color::White // Border color
+    );
+    marketButton.setColors(
         sf::Color(70, 70, 150), 
         sf::Color(100, 100, 200), 
         sf::Color(50, 50, 120), 
@@ -151,6 +157,9 @@ void UI::handleButtonClicks(sf::RenderWindow& window, sf::Event& event) {
     } else if (optionsButton.isClicked(window, event)) {
         tooltipPanel.setPosition(20, 100);
         setTooltipContent("Options Menu:\n- Toggle Debug\n- Exit");
+    } else if (marketButton.isClicked(window, event)) {
+        tooltipPanel.setPosition(20, 100);
+        setTooltipContent("Market:\nView price trends and trade items.");
     }
 }
 
@@ -164,7 +173,52 @@ void UI::handleHover(sf::RenderWindow& window) {
     updateTooltipPosition(window);
 }
 
-void UI::render(sf::RenderWindow& window) {
+void UI::drawPriceTrends(sf::RenderWindow& window, const Market& market) {
+    float startX = marketPanel.getPosition().x + 20.0f;
+    float startY = marketPanel.getPosition().y + 80.0f;
+    float graphWidth = 260.0f;
+    float graphHeight = 100.0f;
+
+    sf::RectangleShape graphBackground(sf::Vector2f(graphWidth, graphHeight));
+    graphBackground.setPosition(startX, startY);
+    graphBackground.setFillColor(sf::Color(20, 20, 20, 180));
+    window.draw(graphBackground);
+
+    float maxPrice = 1.0f;
+    for (const auto& [item, prices] : market.getPriceTrendMap()) {
+        if (!prices.empty()) {
+            maxPrice = *std::max_element(prices.begin(), prices.end());
+        }
+    }
+    if (maxPrice == 0.0f) maxPrice = 1.0f; // Prevent division by zero
+
+    int colorIndex = 0;
+    std::vector<sf::Color> lineColors = {sf::Color::Red, sf::Color::Green, sf::Color::Blue};
+
+    for (const auto& [item, prices] : market.getPriceTrendMap()) {
+        if (prices.empty()) continue;
+
+        sf::VertexArray line(sf::LineStrip, prices.size());
+        for (size_t i = 0; i < prices.size(); ++i) {
+            float x = startX + (static_cast<float>(i) / (prices.size() - 1)) * graphWidth;
+            float y = startY + graphHeight - (prices[i] / maxPrice) * graphHeight;
+            line[i].position = sf::Vector2f(x, y);
+            line[i].color = lineColors[colorIndex % lineColors.size()];
+        }
+        window.draw(line);
+
+        // Add labels
+        sf::Text label(item, font, 12);
+        label.setPosition(startX, startY + graphHeight + 5 + (15 * colorIndex));
+        label.setFillColor(lineColors[colorIndex % lineColors.size()]);
+        window.draw(label);
+
+        colorIndex++;
+    }
+}
+
+
+void UI::render(sf::RenderWindow& window, const Market& market) {
     window.draw(statusPanel);
     window.draw(statusText);
 
@@ -183,11 +237,14 @@ void UI::render(sf::RenderWindow& window) {
 
     window.draw(marketPanel);
     window.draw(marketText);
+    drawPriceTrends(window, market);  // Pass the market object to the trend drawer
+    marketButton.draw(window);
 
     window.draw(tooltipPanel);
     statsButton.draw(window);
     optionsButton.draw(window);
 }
+
 
 void UI::setTooltipContent(const std::string& content) {
     tooltipText.setString(content);
@@ -210,3 +267,5 @@ bool UI::isMouseOver(sf::RenderWindow& window) const {
            statsButton.isMouseOver(window) ||
            optionsButton.isMouseOver(window);
 }
+
+
