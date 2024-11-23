@@ -1,5 +1,6 @@
 #include "UI.hpp"
 #include <sstream>
+#include <cmath>
 #include <stdexcept>
 #include <iostream>
 
@@ -11,9 +12,8 @@ UI::UI() {
     // Status Panel
     statusPanel.setSize({300, 100});
     statusPanel.setPosition(20, 20);
-    statusPanel.setFillColor(sf::Color(50, 50, 50, 200));
-    statusPanel.setOutlineThickness(2);
-    statusPanel.setOutlineColor(sf::Color::White);
+    statusPanel.setFillColor(sf::Color(30, 30, 30, 230));
+    applyShadow(statusPanel);
 
     statusText.setFont(font);
     statusText.setCharacterSize(16);
@@ -22,10 +22,9 @@ UI::UI() {
 
     // Inventory Panel
     inventoryPanel.setSize({300, 150});
-    inventoryPanel.setPosition(20, 130); // Below the status panel
-    inventoryPanel.setFillColor(sf::Color(50, 50, 50, 200));
-    inventoryPanel.setOutlineThickness(2);
-    inventoryPanel.setOutlineColor(sf::Color::White);
+    inventoryPanel.setPosition(20, 130);
+    inventoryPanel.setFillColor(sf::Color(30, 30, 30, 230));
+    applyShadow(inventoryPanel);
 
     inventoryText.setFont(font);
     inventoryText.setCharacterSize(16);
@@ -34,29 +33,64 @@ UI::UI() {
 
     // NPC List Panel
     npcListPanel.setSize({300, 300});
-    npcListPanel.setPosition(20, 300); // Below inventory
-    npcListPanel.setFillColor(sf::Color(50, 50, 50, 200));
-    npcListPanel.setOutlineThickness(2);
-    npcListPanel.setOutlineColor(sf::Color::White);
+    npcListPanel.setPosition(20, 300);
+    npcListPanel.setFillColor(sf::Color(30, 30, 30, 230));
+    applyShadow(npcListPanel);
 
     // NPC Details Panel
     npcDetailPanel.setSize({400, 300});
-    npcDetailPanel.setPosition(340, 300); // To the right of the NPC list
-    npcDetailPanel.setFillColor(sf::Color(50, 50, 50, 200));
-    npcDetailPanel.setOutlineThickness(2);
-    npcDetailPanel.setOutlineColor(sf::Color::White);
+    npcDetailPanel.setPosition(340, 300);
+    npcDetailPanel.setFillColor(sf::Color(30, 30, 30, 230));
+    applyShadow(npcDetailPanel);
 
     npcDetailText.setFont(font);
     npcDetailText.setCharacterSize(16);
     npcDetailText.setFillColor(sf::Color::White);
     npcDetailText.setPosition(350, 310);
 
+    // Market Panel
+    marketPanel.setSize({300, 200});
+    marketPanel.setPosition(800, 20);
+    marketPanel.setFillColor(sf::Color(30, 30, 30, 230));
+    applyShadow(marketPanel);
+
+    marketText.setFont(font);
+    marketText.setCharacterSize(16);
+    marketText.setFillColor(sf::Color::White);
+    marketText.setPosition(810, 30);
+
+    // Tooltip Panel
+    tooltipPanel.setSize({250, 100});
+    tooltipPanel.setFillColor(sf::Color(50, 50, 50, 200));
+    tooltipPanel.setOutlineThickness(2);
+    tooltipPanel.setOutlineColor(sf::Color::White);
+
+    tooltipText.setFont(font);
+    tooltipText.setCharacterSize(14);
+    tooltipText.setFillColor(sf::Color::White);
+
     // Buttons
     statsButton.setProperties(20, 620, 100, 50, "STATS", font);
     optionsButton.setProperties(140, 620, 100, 50, "OPTIONS", font);
 
-    statsButton.setColors(sf::Color(70, 70, 70, 255), sf::Color(100, 100, 100, 255));
-    optionsButton.setColors(sf::Color(70, 70, 70, 255), sf::Color(100, 100, 100, 255));
+    // Updated to pass the fourth "border" argument
+    statsButton.setColors(
+        sf::Color(70, 70, 150), 
+        sf::Color(100, 100, 200), 
+        sf::Color(50, 50, 120), 
+        sf::Color::White // Border color
+    );
+    optionsButton.setColors(
+        sf::Color(70, 70, 150), 
+        sf::Color(100, 100, 200), 
+        sf::Color(50, 50, 120), 
+        sf::Color::White // Border color
+    );
+}
+
+void UI::applyShadow(sf::RectangleShape& shape, float offset) {
+    shape.setOutlineThickness(offset);
+    shape.setOutlineColor(sf::Color(0, 0, 0, 100));
 }
 
 void UI::updateStatus(int day, const std::string& time, int npcCount, int totalMoney, const std::unordered_map<std::string, int>& allResources) {
@@ -65,7 +99,7 @@ void UI::updateStatus(int day, const std::string& time, int npcCount, int totalM
     statusText.setString(status.str());
 
     std::ostringstream inventoryStream;
-    inventoryStream << "Resources:\n";
+    inventoryStream << "Inventory:\n";
     for (const auto& [item, quantity] : allResources) {
         inventoryStream << "- " << item << ": " << quantity << "\n";
     }
@@ -73,16 +107,30 @@ void UI::updateStatus(int day, const std::string& time, int npcCount, int totalM
 }
 
 void UI::updateNPCList(const std::vector<std::string>& npcNames) {
-    npcButtons.clear(); // Clear old buttons
-    float yOffset = 310; // Start position for the first button
+    npcButtons.clear();
+    float yOffset = 310;
 
     for (size_t i = 0; i < npcNames.size(); ++i) {
         UIButton npcButton;
         npcButton.setProperties(30, yOffset, 260, 40, npcNames[i], font);
-        npcButton.setColors(sf::Color(70, 70, 70, 255), sf::Color(100, 100, 100, 255));
+        npcButton.setColors(
+            sf::Color(80, 80, 150), 
+            sf::Color(100, 100, 200), 
+            sf::Color(60, 60, 120), 
+            sf::Color::White // Border color
+        );
         npcButtons.emplace_back(npcNames[i], npcButton);
-        yOffset += 50; // Space between buttons
+        yOffset += 50;
     }
+}
+
+void UI::updateMarket(const std::unordered_map<std::string, float>& prices) {
+    std::ostringstream marketStream;
+    marketStream << "Market Prices:\n";
+    for (const auto& [item, price] : prices) {
+        marketStream << "- " << item << ": $" << price << "\n";
+    }
+    marketText.setString(marketStream.str());
 }
 
 void UI::showNPCDetails(const std::string& npcDetails) {
@@ -112,6 +160,8 @@ void UI::handleHover(sf::RenderWindow& window) {
     }
     statsButton.handleHover(window);
     optionsButton.handleHover(window);
+
+    updateTooltipPosition(window);
 }
 
 void UI::render(sf::RenderWindow& window) {
@@ -131,19 +181,28 @@ void UI::render(sf::RenderWindow& window) {
         window.draw(npcDetailText);
     }
 
+    window.draw(marketPanel);
+    window.draw(marketText);
+
+    window.draw(tooltipPanel);
     statsButton.draw(window);
     optionsButton.draw(window);
 }
 
 void UI::setTooltipContent(const std::string& content) {
     tooltipText.setString(content);
+    tooltipPanel.setSize(sf::Vector2f(tooltipText.getLocalBounds().width + 20, tooltipText.getLocalBounds().height + 20));
+}
+
+void UI::updateTooltipPosition(const sf::RenderWindow& window) {
+    sf::Vector2i mousePos = sf::Mouse::getPosition(window);
+    tooltipPanel.setPosition(static_cast<float>(mousePos.x + 10), static_cast<float>(mousePos.y + 10));
 }
 
 bool UI::isMouseOver(sf::RenderWindow& window) const {
     sf::Vector2i mousePos = sf::Mouse::getPosition(window);
     sf::Vector2f mouseFloatPos(static_cast<float>(mousePos.x), static_cast<float>(mousePos.y));
 
-    // Check if the mouse is over any UI element
     return statusPanel.getGlobalBounds().contains(mouseFloatPos) ||
            inventoryPanel.getGlobalBounds().contains(mouseFloatPos) ||
            npcListPanel.getGlobalBounds().contains(mouseFloatPos) ||

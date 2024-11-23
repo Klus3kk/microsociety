@@ -6,7 +6,6 @@
 #include <vector>
 #include <string>
 #include "UIButton.hpp"
-#include "Entity.hpp"
 
 class UI {
 private:
@@ -19,11 +18,14 @@ private:
     sf::RectangleShape inventoryPanel;
     sf::Text inventoryText;
 
-    sf::RectangleShape npcListPanel;  // List of NPCs
-    std::vector<std::pair<std::string, UIButton>> npcButtons; // NPC names and buttons
+    sf::RectangleShape npcListPanel;
+    std::vector<std::pair<std::string, UIButton>> npcButtons;
 
-    sf::RectangleShape npcDetailPanel;  // Detailed NPC stats
+    sf::RectangleShape npcDetailPanel;
     sf::Text npcDetailText;
+
+    sf::RectangleShape marketPanel;
+    sf::Text marketText;
 
     sf::RectangleShape tooltipPanel;
     sf::Text tooltipText;
@@ -33,24 +35,27 @@ private:
     UIButton optionsButton;
 
     // Selected NPC
-    int selectedNPCIndex = -1; // -1 means no NPC is selected
+    int selectedNPCIndex = -1;
+
+    // Animation helpers
+    void applyShadow(sf::RectangleShape& shape, float offset = 3.0f);
 
 public:
     UI();
     void updateStatus(int day, const std::string& time, int npcCount, int totalMoney, const std::unordered_map<std::string, int>& allResources);
-    void updateNPCList(const std::vector<std::string>& npcNames); // Update NPC list
-    void showNPCDetails(const std::string& npcDetails); // Show selected NPC details
+    void updateNPCList(const std::vector<std::string>& npcNames);
+    void showNPCDetails(const std::string& npcDetails);
+    void updateMarket(const std::unordered_map<std::string, float>& prices);
 
     void handleButtonClicks(sf::RenderWindow& window, sf::Event& event);
     void handleHover(sf::RenderWindow& window);
 
     void render(sf::RenderWindow& window);
-    
-    // Check if the mouse is over the UI
-    bool isMouseOver(sf::RenderWindow& window) const;
 
-    // Set tooltip text content
+    // Tooltip interaction
+    bool isMouseOver(sf::RenderWindow& window) const;
     void setTooltipContent(const std::string& content);
+    void updateTooltipPosition(const sf::RenderWindow& window);
 };
 
 #endif
