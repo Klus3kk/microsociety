@@ -38,8 +38,6 @@ public:
     std::vector<PlayerEntity> generateNPCs() const;  // For generating npcs
     // Might remove later
     const std::vector<std::vector<std::unique_ptr<Tile>>>& getTileMap() const;
-
-
 };
 
 #endif 

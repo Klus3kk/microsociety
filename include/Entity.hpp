@@ -93,9 +93,7 @@ public:
         sprite.setPosition(position);
     }
 
-
-
-    // function for cheching collision
+    // function for cheching the collision
     bool checkCollision(const Entity& other) const {
         return sprite.getGlobalBounds().intersects(other.getSprite().getGlobalBounds());
     }

@@ -33,14 +33,12 @@ private:
     }
 public:
     AIController(const std::string& modelPath) {
-        // Initialize TensorFlow components and load model
         status = TF_NewStatus();
         graph = TF_NewGraph();
         loadModel(modelPath);
     }
 
     ~AIController() {
-        // Clean up TensorFlow components
         TF_DeleteSession(session, status);
         TF_DeleteGraph(graph);
         TF_DeleteStatus(status);
@@ -73,7 +71,6 @@ public:
                 getDebugConsole().log("Error", "Failed to run TensorFlow session: " + std::string(TF_Message(status)));
             }
 
-            // Clean up tensors
             TF_DeleteTensor(inputTensor);
             TF_DeleteTensor(outputTensor);
         } else {
@@ -106,12 +103,11 @@ public:
     }
 
     std::vector<float> prepareInputState(const PlayerEntity& npc, const Tile& tile) {
-        // Prepare input tensor values based on NPC and tile state (example implementation)
+        // Prepare input tensor values based on NPC and tile state (TO BE CHANGED)
         std::vector<float> inputState;
         inputState.push_back(static_cast<float>(npc.getHealth()));
         inputState.push_back(static_cast<float>(npc.getEnergy()));
         inputState.push_back(static_cast<float>(tile.hasObject() ? 1.0f : 0.0f));
-        // Add more state information as needed
         return inputState;
     }
 

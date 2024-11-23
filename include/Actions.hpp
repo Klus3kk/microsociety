@@ -33,7 +33,7 @@ class TreeAction : public Action {
 public:
     void perform(PlayerEntity& player, Tile& tile) override {
         if (tile.hasObject() && player.addToInventory("wood", 1)) {
-            tile.removeObject(); // Remove the tree from the tile
+            tile.removeObject(); 
             getDebugConsole().log("Action", "Tree chopped! Wood added to inventory.");
         } else if (!tile.hasObject()) {
             getDebugConsole().logOnce("Action", "No tree to chop on this tile.");
@@ -44,13 +44,11 @@ public:
     std::string getActionName() const override { return "Chop Tree"; }
 };
 
-
-// StoneAction
 class StoneAction : public Action {
 public:
     void perform(PlayerEntity& player, Tile& tile) override {
         if (tile.hasObject() && player.addToInventory("stone", 1)) {
-            tile.removeObject(); // Remove rock object
+            tile.removeObject(); 
             getDebugConsole().log("Action", "Rock mined! Stone added to inventory.");
         } else if (!tile.hasObject()) {
             getDebugConsole().logOnce("Action", "No rock to mine on this tile.");
@@ -61,13 +59,11 @@ public:
     std::string getActionName() const override { return "Mine Rock"; }
 };
 
-
-// BushAction
 class BushAction : public Action {
 public:
     void perform(PlayerEntity& player, Tile& tile) override {
         if (tile.hasObject() && player.addToInventory("food", 1)) {
-            tile.removeObject(); // Remove bush object
+            tile.removeObject(); 
             getDebugConsole().log("Action", "Food gathered from bush!");
         } else if (!tile.hasObject()) {
             getDebugConsole().logOnce("Action", "No bush to gather food from on this tile.");
@@ -78,8 +74,6 @@ public:
     std::string getActionName() const override { return "Gather Bush"; }
 };
 
-
-// MoveAction
 class MoveAction : public Action {
 public:
     void perform(PlayerEntity& player, Tile&) override {
@@ -88,8 +82,6 @@ public:
     std::string getActionName() const override { return "Move"; }
 };
 
-
-// TradeAction
 class TradeAction : public Action {
 public:
     void perform(PlayerEntity& player, Tile&) override {
@@ -98,8 +90,6 @@ public:
     std::string getActionName() const override { return "Trade"; }
 };
 
-
-// RegenerateEnergyAction
 class RegenerateEnergyAction : public Action {
 public:
     void perform(PlayerEntity& player, Tile& tile) override {
@@ -113,7 +103,6 @@ public:
     std::string getActionName() const override { return "Regenerate Energy"; }
 };
 
-// UpgradeHouseAction
 class UpgradeHouseAction : public Action {
 public:
     void perform(PlayerEntity& player, Tile& tile) override {
@@ -132,8 +121,6 @@ public:
     std::string getActionName() const override { return "Upgrade House"; }
 };
 
-
-// StoreItemAction
 class StoreItemAction : public Action {
 private:
     std::string item;  // Item to store

@@ -9,7 +9,7 @@
 #include <unordered_map>
 #include <chrono>
 
-class Game; // Forward declaration
+class Game; 
 class PlayerEntity;
 
 // Log severity levels
