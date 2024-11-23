@@ -93,3 +93,7 @@ gtest_discover_tests(TestNPCBehavior)
 add_executable(TestTrading tests/test_trading.cpp ${SOURCES})
 target_link_libraries(TestTrading PRIVATE sfml-graphics sfml-audio sfml-system sfml-window nlohmann_json::nlohmann_json gtest_main)
 gtest_discover_tests(TestTrading)
+
+add_executable(TestMarket tests/test_market.cpp ${SOURCES})
+target_link_libraries(TestMarket PRIVATE sfml-graphics sfml-audio sfml-system sfml-window nlohmann_json::nlohmann_json gtest_main)
+gtest_discover_tests(TestMarket)

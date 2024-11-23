@@ -17,7 +17,7 @@ private:
     std::unordered_map<std::string, int> supply;        // Supply for each item
     std::unordered_map<std::string, std::vector<float>> priceHistory;
 
-    const float priceAdjustmentFactor = 0.1f; // Scaling factor for price updates
+    const float priceAdjustmentFactor = 0.2f; // Scaling factor for price updates
     const float minimumPrice = 1.0f;          // Minimum price for any item
 
 public:
@@ -36,7 +36,7 @@ public:
     // Initialize prices and supply-demand values for items
     void setPrice(const std::string& item, float price) {
         prices[item] = price;
-        demand[item] = 0;
+        demand[item] = 50;
         supply[item] = 100; // Default supply
     }
 
@@ -93,28 +93,62 @@ public:
         getDebugConsole().log("Market", "Not enough " + item + " to sell.");
         return false;
     }
-
-
-    void trackPriceHistory(const std::string& item) {
-        priceHistory[item].push_back(prices[item]);
-        if (priceHistory[item].size() > 10) { // Limit trend size
-            priceHistory[item].erase(priceHistory[item].begin());
-        }
-    }
-
     const std::unordered_map<std::string, std::vector<float>>& getPriceTrendMap() const {
         return priceHistory; // Assuming `priceHistory` tracks the trends
     }
-    
+
+    float adjustPrice(float currentPrice, int demand, int supply, float elasticity, float momentum) {
+        if (supply == 0) supply = 1; // Prevent division by zero
+        float demandSupplyRatio = static_cast<float>(demand) / supply;
+
+        // Base adjustment using demand-supply ratio
+        float baseAdjustment = elasticity * (demandSupplyRatio - 1.0f);
+
+        // Apply momentum to smooth changes
+        float finalAdjustment = currentPrice * (1.0f + momentum * baseAdjustment);
+
+        // Cap adjustments for stability
+        finalAdjustment = std::clamp(finalAdjustment, currentPrice * 0.5f, currentPrice * 1.5f);
+
+        // Ensure price never falls below minimum
+        return std::max(minimumPrice, finalAdjustment);
+    }
+
     // Update price dynamically based on supply and demand
     void updatePrice(const std::string& item) {
         int itemDemand = demand[item];
         int itemSupply = supply[item];
-        float demandSupplyRatio = (itemSupply == 0) ? 2.0f : static_cast<float>(itemDemand) / itemSupply;
-        float adjustment = priceAdjustmentFactor * (demandSupplyRatio - 1.0f);
-        prices[item] = std::max(minimumPrice, prices[item] * (1.0f + adjustment));
-        trackPriceHistory(item); // Track price history for visualization
+
+        // Update price using the greatness formula
+        float elasticity = 0.2f;  // Adjust for faster/slower changes
+        float momentum = 0.5f;    // Add inertia to pricing
+        prices[item] = adjustPrice(prices[item], itemDemand, itemSupply, elasticity, momentum);
+
+        // Track history for visualization
+        trackPriceHistory(item);
+
+        // Debug log
+        getDebugConsole().log("Market", "Updated price for " + item +
+                            " | New Price: " + std::to_string(prices[item]) +
+                            " | Demand: " + std::to_string(itemDemand) +
+                            " | Supply: " + std::to_string(itemSupply));
     }
+
+
+
+    void trackPriceHistory(const std::string& item) {
+        priceHistory[item].push_back(prices[item]);
+        if (priceHistory[item].size() > 10) {
+            priceHistory[item].erase(priceHistory[item].begin());
+        }
+
+        // Debug log for trend tracking
+        getDebugConsole().log("Market", "TrackPriceHistory: " + item +
+                            " | Current Price: " + std::to_string(prices[item]) +
+                            " | History Size: " + std::to_string(priceHistory[item].size()));
+    }
+
+
 
 
     // Display current market prices for debugging or shop interface
