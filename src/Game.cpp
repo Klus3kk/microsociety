@@ -91,6 +91,7 @@ void Game::run() {
         sf::Event event;
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed) window.close();
+            if (event.type == sf::Event::Resized) ui.adjustLayout(window);
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) window.close();
             if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::F1) {
                 debugConsole.toggle();

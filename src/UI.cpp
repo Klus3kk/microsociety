@@ -10,42 +10,44 @@ UI::UI() {
     }
 
     // Money Panel (Top Left)
-    moneyPanel.setSize({120, 40});
+    moneyPanel.setSize({100, 50});
     moneyPanel.setPosition(20, 20);
-    moneyPanel.setFillColor(sf::Color(200, 200, 200)); // Light gray
+    moneyPanel.setFillColor(sf::Color(230, 230, 230));
     applyShadow(moneyPanel);
 
     moneyText.setFont(font);
     moneyText.setCharacterSize(20);
     moneyText.setFillColor(sf::Color::Black);
-    moneyText.setPosition(30, 25);
+    moneyText.setPosition(moneyPanel.getPosition().x + 10, moneyPanel.getPosition().y + 10);
 
     // Status Panel (Top Center)
     statusPanel.setSize({200, 80});
     statusPanel.setPosition(300, 20); // Centered horizontally
-    statusPanel.setFillColor(sf::Color(240, 240, 240));
+    statusPanel.setFillColor(sf::Color(255, 255, 255));
     applyShadow(statusPanel);
 
     statusText.setFont(font);
     statusText.setCharacterSize(16);
     statusText.setFillColor(sf::Color::Black);
-    statusText.setPosition(310, 35);
+    statusText.setPosition(statusPanel.getPosition().x + 10, statusPanel.getPosition().y + 10);
+
 
     // Clock Panel (Top Right)
     clockPanel.setRadius(30);
-    clockPanel.setPosition(600, 20);
-    clockPanel.setFillColor(sf::Color(200, 200, 200)); // Light gray
+    clockPanel.setPosition(650, 20); // Top-right
+    clockPanel.setFillColor(sf::Color(200, 200, 200));
     clockPanel.setOutlineThickness(2);
     clockPanel.setOutlineColor(sf::Color::Black);
 
     clockText.setFont(font);
     clockText.setCharacterSize(16);
     clockText.setFillColor(sf::Color::Black);
-    clockText.setPosition(610, 35);
+    clockText.setString("Clock");
+    clockText.setPosition(clockPanel.getPosition().x + 10, clockPanel.getPosition().y + 10);
 
     // Buttons (Bottom: NPC, Stats, Market, Options)
-    float buttonWidth = 150.0f;
-    float buttonHeight = 50.0f;
+    float buttonWidth = 120.0f;
+    float buttonHeight = 40.0f;
     float spacing = 20.0f;
     float startX = 50.0f; // Left margin
     float startY = 500.0f; // Bottom
@@ -199,17 +201,17 @@ void UI::drawPriceTrends(sf::RenderWindow& window, const Market& market) {
 
 
 void UI::render(sf::RenderWindow& window, const Market& market) {
-    // Money Panel
+    // Top Panels
     window.draw(moneyPanel);
     window.draw(moneyText);
-
-    // Status Panel
     window.draw(statusPanel);
     window.draw(statusText);
-
-    // Clock Panel
     window.draw(clockPanel);
     window.draw(clockText);
+
+    // Central Panel (Dynamic Content)
+    window.draw(centralPanel);
+    window.draw(centralText);
 
     // Bottom Buttons
     npcButton.draw(window);
@@ -245,27 +247,34 @@ bool UI::isMouseOver(sf::RenderWindow& window) const {
 void UI::adjustLayout(sf::RenderWindow& window) {
     sf::Vector2u size = window.getSize();
 
-    // Money Panel (Top Left)
+    // Money Panel
     moneyPanel.setPosition(size.x * 0.02f, size.y * 0.02f);
     moneyText.setPosition(moneyPanel.getPosition().x + 10, moneyPanel.getPosition().y + 5);
 
-    // Status Panel (Top Center)
+    // Status Panel
     statusPanel.setPosition((size.x - statusPanel.getSize().x) / 2, size.y * 0.02f);
     statusText.setPosition(statusPanel.getPosition().x + 10, statusPanel.getPosition().y + 5);
 
-    // Clock Panel (Top Right)
+    // Clock Panel
     clockPanel.setPosition(size.x - clockPanel.getRadius() * 2.5f, size.y * 0.02f);
-    clockText.setPosition(clockPanel.getPosition().x + 10, clockPanel.getPosition().y + 5);
+    clockText.setPosition(clockPanel.getPosition().x + 15, clockPanel.getPosition().y + 15);
 
-    // Buttons (Bottom)
+    // Central Panel (Dynamic Content)
+    centralPanel.setSize({size.x * 0.6f, size.y * 0.5f});
+    centralPanel.setPosition((size.x - centralPanel.getSize().x) / 2, size.y * 0.3f);
+    centralText.setPosition(centralPanel.getPosition().x + 10, centralPanel.getPosition().y + 10);
+
+    // Bottom Buttons
     float buttonWidth = size.x * 0.2f;
     float buttonHeight = size.y * 0.08f;
     float spacing = size.x * 0.02f;
     float startY = size.y - buttonHeight - 20;
 
-    npcButton.setProperties(20, startY, buttonWidth, buttonHeight, "NPC", font);
-    statsButton.setProperties(20 + buttonWidth + spacing, startY, buttonWidth, buttonHeight, "STATS", font);
-    marketButton.setProperties(20 + 2 * (buttonWidth + spacing), startY, buttonWidth, buttonHeight, "MARKET", font);
-    optionsButton.setProperties(20 + 3 * (buttonWidth + spacing), startY, buttonWidth, buttonHeight, "OPTIONS", font);
+    npcButton.setProperties(size.x * 0.1f, startY, buttonWidth, buttonHeight, "NPC", font);
+    statsButton.setProperties(size.x * 0.3f, startY, buttonWidth, buttonHeight, "STATS", font);
+    marketButton.setProperties(size.x * 0.5f, startY, buttonWidth, buttonHeight, "MARKET", font);
+    optionsButton.setProperties(size.x * 0.7f, startY, buttonWidth, buttonHeight, "OPTIONS", font);
 }
+
+
 

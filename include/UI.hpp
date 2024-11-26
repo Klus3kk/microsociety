@@ -37,6 +37,9 @@ private:
     sf::CircleShape clockPanel;
     sf::Text clockText;
 
+    sf::RectangleShape centralPanel;
+    sf::Text centralText;
+
     // Buttons
     UIButton statsButton;
     UIButton optionsButton;
