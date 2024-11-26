@@ -29,6 +29,7 @@ FetchContent_Declare(googletest
     GIT_TAG release-1.11.0
     GIT_SHALLOW ON
     EXCLUDE_FROM_ALL)
+set(gtest_force_shared_crt ON CACHE BOOL "Use shared CRT" FORCE)
 FetchContent_MakeAvailable(SFML nlohmann_json googletest)
 
 enable_testing()
