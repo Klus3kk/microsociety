@@ -7,6 +7,7 @@
 #include <string>
 #include "UIButton.hpp"
 #include "Market.hpp"
+
 class UI {
 private:
     sf::Font font;
@@ -30,11 +31,17 @@ private:
     sf::RectangleShape tooltipPanel;
     sf::Text tooltipText;
 
+    sf::RectangleShape moneyPanel;
+    sf::Text moneyText;
+
+    sf::CircleShape clockPanel;
+    sf::Text clockText;
+
     // Buttons
     UIButton statsButton;
     UIButton optionsButton;
-    UIButton marketButton; 
-
+    UIButton marketButton;
+    UIButton npcButton;
 
     // Selected NPC
     int selectedNPCIndex = -1;
@@ -44,23 +51,29 @@ private:
 
 public:
     UI();
+
+    // Updates
     void updateStatus(int day, const std::string& time, int npcCount, int totalMoney, const std::unordered_map<std::string, int>& allResources);
     void updateNPCList(const std::vector<std::string>& npcNames);
     void showNPCDetails(const std::string& npcDetails);
     void updateMarket(const std::unordered_map<std::string, float>& prices);
 
+    void updateMoney(int amount);
+    void updateClock(float timeElapsed);
+
+    // Interaction and Rendering
     void handleButtonClicks(sf::RenderWindow& window, sf::Event& event);
     void handleHover(sf::RenderWindow& window);
-
     void render(sf::RenderWindow& window, const Market& market);
-
-
     void drawPriceTrends(sf::RenderWindow& window, const Market& market);
 
     // Tooltip interaction
     bool isMouseOver(sf::RenderWindow& window) const;
     void setTooltipContent(const std::string& content);
     void updateTooltipPosition(const sf::RenderWindow& window);
+
+    // Responsive Layout
+    void adjustLayout(sf::RenderWindow& window);
 };
 
 #endif

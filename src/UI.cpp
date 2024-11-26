@@ -9,95 +9,75 @@ UI::UI() {
         throw std::runtime_error("Failed to load font!");
     }
 
-    // Status Panel
-    statusPanel.setSize({300, 100});
-    statusPanel.setPosition(20, 20);
-    statusPanel.setFillColor(sf::Color(30, 30, 30, 230));
+    // Money Panel (Top Left)
+    moneyPanel.setSize({120, 40});
+    moneyPanel.setPosition(20, 20);
+    moneyPanel.setFillColor(sf::Color(200, 200, 200)); // Light gray
+    applyShadow(moneyPanel);
+
+    moneyText.setFont(font);
+    moneyText.setCharacterSize(20);
+    moneyText.setFillColor(sf::Color::Black);
+    moneyText.setPosition(30, 25);
+
+    // Status Panel (Top Center)
+    statusPanel.setSize({200, 80});
+    statusPanel.setPosition(300, 20); // Centered horizontally
+    statusPanel.setFillColor(sf::Color(240, 240, 240));
     applyShadow(statusPanel);
 
     statusText.setFont(font);
     statusText.setCharacterSize(16);
-    statusText.setFillColor(sf::Color::White);
-    statusText.setPosition(30, 30);
+    statusText.setFillColor(sf::Color::Black);
+    statusText.setPosition(310, 35);
 
-    // Inventory Panel
-    inventoryPanel.setSize({300, 150});
-    inventoryPanel.setPosition(20, 130);
-    inventoryPanel.setFillColor(sf::Color(30, 30, 30, 230));
-    applyShadow(inventoryPanel);
+    // Clock Panel (Top Right)
+    clockPanel.setRadius(30);
+    clockPanel.setPosition(600, 20);
+    clockPanel.setFillColor(sf::Color(200, 200, 200)); // Light gray
+    clockPanel.setOutlineThickness(2);
+    clockPanel.setOutlineColor(sf::Color::Black);
 
-    inventoryText.setFont(font);
-    inventoryText.setCharacterSize(16);
-    inventoryText.setFillColor(sf::Color::White);
-    inventoryText.setPosition(30, 140);
+    clockText.setFont(font);
+    clockText.setCharacterSize(16);
+    clockText.setFillColor(sf::Color::Black);
+    clockText.setPosition(610, 35);
 
-    // NPC List Panel
-    npcListPanel.setSize({300, 300});
-    npcListPanel.setPosition(20, 300);
-    npcListPanel.setFillColor(sf::Color(30, 30, 30, 230));
-    applyShadow(npcListPanel);
+    // Buttons (Bottom: NPC, Stats, Market, Options)
+    float buttonWidth = 150.0f;
+    float buttonHeight = 50.0f;
+    float spacing = 20.0f;
+    float startX = 50.0f; // Left margin
+    float startY = 500.0f; // Bottom
 
-    // NPC Details Panel
-    npcDetailPanel.setSize({400, 300});
-    npcDetailPanel.setPosition(340, 300);
-    npcDetailPanel.setFillColor(sf::Color(30, 30, 30, 230));
-    applyShadow(npcDetailPanel);
+    npcButton.setProperties(startX, startY, buttonWidth, buttonHeight, "NPC", font);
+    statsButton.setProperties(startX + buttonWidth + spacing, startY, buttonWidth, buttonHeight, "STATS", font);
+    marketButton.setProperties(startX + 2 * (buttonWidth + spacing), startY, buttonWidth, buttonHeight, "MARKET", font);
+    optionsButton.setProperties(startX + 3 * (buttonWidth + spacing), startY, buttonWidth, buttonHeight, "OPTIONS", font);
 
-    npcDetailText.setFont(font);
-    npcDetailText.setCharacterSize(16);
-    npcDetailText.setFillColor(sf::Color::White);
-    npcDetailText.setPosition(350, 310);
-
-    // Market Panel
-    marketPanel.setSize({300, 200});
-    marketPanel.setPosition(800, 20);
-    marketPanel.setFillColor(sf::Color(30, 30, 30, 230));
-    applyShadow(marketPanel);
-
-    marketText.setFont(font);
-    marketText.setCharacterSize(16);
-    marketText.setFillColor(sf::Color::White);
-    marketText.setPosition(810, 30);
-
-    // Tooltip Panel
-    tooltipPanel.setSize({250, 100});
-    tooltipPanel.setFillColor(sf::Color(50, 50, 50, 200));
-    tooltipPanel.setOutlineThickness(2);
-    tooltipPanel.setOutlineColor(sf::Color::White);
-
-    tooltipText.setFont(font);
-    tooltipText.setCharacterSize(14);
-    tooltipText.setFillColor(sf::Color::White);
-
-    // Buttons
-    statsButton.setProperties(20, 620, 100, 50, "STATS", font);
-    optionsButton.setProperties(140, 620, 100, 50, "OPTIONS", font);
-    marketButton.setProperties(260, 620, 100, 50, "MARKET", font); 
-    // Updated to pass the fourth "border" argument
-    statsButton.setColors(
-        sf::Color(70, 70, 150), 
-        sf::Color(100, 100, 200), 
-        sf::Color(50, 50, 120), 
-        sf::Color::White // Border color
-    );
-    optionsButton.setColors(
-        sf::Color(70, 70, 150), 
-        sf::Color(100, 100, 200), 
-        sf::Color(50, 50, 120), 
-        sf::Color::White // Border color
-    );
-    marketButton.setColors(
-        sf::Color(70, 70, 150), 
-        sf::Color(100, 100, 200), 
-        sf::Color(50, 50, 120), 
-        sf::Color::White // Border color
-    );
+    // Set Button Colors
+    npcButton.setColors(sf::Color(180, 180, 180), sf::Color(220, 220, 220), sf::Color(140, 140, 140), sf::Color::Black);
+    statsButton.setColors(sf::Color(180, 180, 180), sf::Color(220, 220, 220), sf::Color(140, 140, 140), sf::Color::Black);
+    marketButton.setColors(sf::Color(180, 180, 180), sf::Color(220, 220, 220), sf::Color(140, 140, 140), sf::Color::Black);
+    optionsButton.setColors(sf::Color(180, 180, 180), sf::Color(220, 220, 220), sf::Color(140, 140, 140), sf::Color::Black);
 }
+
 
 void UI::applyShadow(sf::RectangleShape& shape, float offset) {
     shape.setOutlineThickness(offset);
     shape.setOutlineColor(sf::Color(0, 0, 0, 100));
 }
+
+// Update Money
+void UI::updateMoney(int amount) {
+    moneyText.setString("$ " + std::to_string(amount));
+}
+
+// Update Clock
+void UI::updateClock(float timeElapsed) {
+    clockText.setString("Clock\n" + std::to_string(static_cast<int>(timeElapsed)) + "s");
+}
+
 
 void UI::updateStatus(int day, const std::string& time, int npcCount, int totalMoney, const std::unordered_map<std::string, int>& allResources) {
     std::ostringstream status;
@@ -219,31 +199,25 @@ void UI::drawPriceTrends(sf::RenderWindow& window, const Market& market) {
 
 
 void UI::render(sf::RenderWindow& window, const Market& market) {
+    // Money Panel
+    window.draw(moneyPanel);
+    window.draw(moneyText);
+
+    // Status Panel
     window.draw(statusPanel);
     window.draw(statusText);
 
-    window.draw(inventoryPanel);
-    window.draw(inventoryText);
+    // Clock Panel
+    window.draw(clockPanel);
+    window.draw(clockText);
 
-    window.draw(npcListPanel);
-    for (auto& [name, button] : npcButtons) {
-        button.draw(window);
-    }
-
-    if (selectedNPCIndex != -1) {
-        window.draw(npcDetailPanel);
-        window.draw(npcDetailText);
-    }
-
-    window.draw(marketPanel);
-    window.draw(marketText);
-    drawPriceTrends(window, market);  // Pass the market object to the trend drawer
-    marketButton.draw(window);
-
-    window.draw(tooltipPanel);
+    // Bottom Buttons
+    npcButton.draw(window);
     statsButton.draw(window);
+    marketButton.draw(window);
     optionsButton.draw(window);
 }
+
 
 
 void UI::setTooltipContent(const std::string& content) {
@@ -268,4 +242,30 @@ bool UI::isMouseOver(sf::RenderWindow& window) const {
            optionsButton.isMouseOver(window);
 }
 
+void UI::adjustLayout(sf::RenderWindow& window) {
+    sf::Vector2u size = window.getSize();
+
+    // Money Panel (Top Left)
+    moneyPanel.setPosition(size.x * 0.02f, size.y * 0.02f);
+    moneyText.setPosition(moneyPanel.getPosition().x + 10, moneyPanel.getPosition().y + 5);
+
+    // Status Panel (Top Center)
+    statusPanel.setPosition((size.x - statusPanel.getSize().x) / 2, size.y * 0.02f);
+    statusText.setPosition(statusPanel.getPosition().x + 10, statusPanel.getPosition().y + 5);
+
+    // Clock Panel (Top Right)
+    clockPanel.setPosition(size.x - clockPanel.getRadius() * 2.5f, size.y * 0.02f);
+    clockText.setPosition(clockPanel.getPosition().x + 10, clockPanel.getPosition().y + 5);
+
+    // Buttons (Bottom)
+    float buttonWidth = size.x * 0.2f;
+    float buttonHeight = size.y * 0.08f;
+    float spacing = size.x * 0.02f;
+    float startY = size.y - buttonHeight - 20;
+
+    npcButton.setProperties(20, startY, buttonWidth, buttonHeight, "NPC", font);
+    statsButton.setProperties(20 + buttonWidth + spacing, startY, buttonWidth, buttonHeight, "STATS", font);
+    marketButton.setProperties(20 + 2 * (buttonWidth + spacing), startY, buttonWidth, buttonHeight, "MARKET", font);
+    optionsButton.setProperties(20 + 3 * (buttonWidth + spacing), startY, buttonWidth, buttonHeight, "OPTIONS", font);
+}
 
