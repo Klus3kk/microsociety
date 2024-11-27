@@ -4,7 +4,8 @@
 #include <stdexcept>
 #include <iostream>
 
-UI::UI() {
+UI::UI() 
+    : npcListPanel(400, 600, "NPC List"), npcDetailPanel(400, 600, "NPC Details") {
     if (!font.loadFromFile("../assets/fonts/font.ttf")) {
         throw std::runtime_error("Failed to load font!");
     }
@@ -79,22 +80,24 @@ void UI::updateStatus(int day, const std::string& time, int iteration) {
 
 
 void UI::updateNPCList(const std::vector<std::string>& npcNames) {
-    npcButtons.clear();
-    float yOffset = 310;
+    npcButtons.clear(); // Clear existing buttons
+    float yOffset = 50.0f; // Initial Y position for the list
 
-    for (size_t i = 0; i < npcNames.size(); ++i) {
-        UIButton npcButton;
-        npcButton.setProperties(30, yOffset, 260, 40, npcNames[i], font);
-        npcButton.setColors(
+    for (const auto& name : npcNames) {
+        UIButton button;
+        button.setProperties(30, yOffset, 340, 40, name, font);
+        button.setColors(
             sf::Color(80, 80, 150), 
             sf::Color(100, 100, 200), 
             sf::Color(60, 60, 120), 
             sf::Color::White // Border color
         );
-        npcButtons.emplace_back(npcNames[i], npcButton);
-        yOffset += 50;
+        npcButtons.emplace_back(name, button); // Add to vector as pair
+        yOffset += 50.0f; // Increment for the next button
     }
 }
+
+
 
 void UI::updateMarket(const std::unordered_map<std::string, float>& prices) {
     std::ostringstream marketStream;
@@ -106,37 +109,77 @@ void UI::updateMarket(const std::unordered_map<std::string, float>& prices) {
 }
 
 void UI::showNPCDetails(const std::string& npcDetails) {
+    npcDetailPanel.setPosition(100, 100); // Example position, adjust as needed
+    npcDetailPanel.setSize(400, 600);
+    npcDetailPanel.setTitle("NPC Details");
+    npcDetailText.setFont(font);
+    npcDetailText.setCharacterSize(16);
+    npcDetailText.setFillColor(sf::Color::White);
+    npcDetailText.setPosition(npcDetailPanel.getBounds().left + 20, npcDetailPanel.getBounds().top + 20);
     npcDetailText.setString(npcDetails);
 }
+
+
 void UI::handleButtonClicks(sf::RenderWindow& window, sf::Event& event) {
-    for (size_t i = 0; i < npcButtons.size(); ++i) {
-        if (npcButtons[i].second.isClicked(window, event)) {
-            selectedNPCIndex = static_cast<int>(i);
-            showNPCDetails("NPC Details:\nName: " + npcButtons[i].first);
-            getDebugConsole().log("UI", "Selected NPC: " + npcButtons[i].first);
-        }
+    if (npcButton.isClicked(window, event)) {
+        showNPCList = !showNPCList;
     }
 
     if (statsButton.isClicked(window, event)) {
-        getDebugConsole().log("UI", "Stats button clicked.");
+        std::cout << "Stats button clicked!\n";
+        // TODO: Implement Stats functionality
     }
+
     if (marketButton.isClicked(window, event)) {
-        getDebugConsole().log("UI", "Market button clicked.");
+        std::cout << "Market button clicked!\n";
+        // TODO: Implement Market functionality
     }
+
     if (optionsButton.isClicked(window, event)) {
-        getDebugConsole().log("UI", "Options button clicked.");
+        std::cout << "Options button clicked!\n";
+        // TODO: Implement Options functionality
+    }
+
+    if (showNPCList) {
+        npcListPanel.handleEvent(window, event);
+
+        for (size_t i = 0; i < npcButtons.size(); ++i) {
+            if (npcButtons[i].second.isClicked(window, event)) {
+                selectedNPCIndex = i;
+                showNPCDetail = true;
+
+                // Populate NPC detail text
+                // const PlayerEntity& npc = npcs[i];
+                // std::ostringstream details;
+                // details << "Name: " << npc.getName() << "\n"
+                //         << "Health: " << npc.getHealth() << "\n"
+                //         << "Hunger: " << npc.getHunger() << "\n"
+                //         << "Energy: " << npc.getEnergy() << "\n"
+                //         << "Speed: " << npc.getSpeed() << "\n"
+                //         << "Strength: " << npc.getStrength() << "\n"
+                //         << "Money: $" << npc.getMoney() << "\n";
+
+                // npcDetailText.setString(details.str());
+            }
+        }
+    }
+
+    if (showNPCDetail) {
+        npcDetailPanel.handleEvent(window, event);
     }
 }
 
-
 void UI::handleHover(sf::RenderWindow& window) {
-    for (auto& [name, button] : npcButtons) {
-        button.handleHover(window);
-    }
+    npcButton.handleHover(window);
     statsButton.handleHover(window);
+    marketButton.handleHover(window);
     optionsButton.handleHover(window);
 
-    updateTooltipPosition(window);
+    if (showNPCList) {
+        for (auto& [name, button] : npcButtons) {
+            button.handleHover(window);
+        }
+    }
 }
 
 void UI::drawPriceTrends(sf::RenderWindow& window, const Market& market) {
@@ -191,11 +234,7 @@ void UI::render(sf::RenderWindow& window, const Market& market) {
     window.draw(statusPanel);
     window.draw(statusText);
 
-    // Dynamic Panels
-    if (selectedNPCIndex != -1) {
-        window.draw(npcDetailPanel);
-        window.draw(npcDetailText);
-    }
+
 
     // Bottom Buttons
     npcButton.draw(window);
@@ -229,8 +268,6 @@ bool UI::isMouseOver(sf::RenderWindow& window) const {
 
     return statusPanel.getGlobalBounds().contains(mouseFloatPos) ||
            inventoryPanel.getGlobalBounds().contains(mouseFloatPos) ||
-           npcListPanel.getGlobalBounds().contains(mouseFloatPos) ||
-           npcDetailPanel.getGlobalBounds().contains(mouseFloatPos) ||
            statsButton.isMouseOver(window) ||
            optionsButton.isMouseOver(window);
 }

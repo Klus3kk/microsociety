@@ -7,6 +7,7 @@
 #include <string>
 #include "UIButton.hpp"
 #include "Market.hpp"
+#include "MovablePanel.hpp"
 
 class UI {
 private:
@@ -18,12 +19,6 @@ private:
 
     sf::RectangleShape inventoryPanel;
     sf::Text inventoryText;
-
-    sf::RectangleShape npcListPanel;
-    std::vector<std::pair<std::string, UIButton>> npcButtons;
-
-    sf::RectangleShape npcDetailPanel;
-    sf::Text npcDetailText;
 
     sf::RectangleShape marketPanel;
     sf::Text marketText;
@@ -40,11 +35,27 @@ private:
     sf::RectangleShape centralPanel;
     sf::Text centralText;
 
+    MovablePanel npcListPanel;
+    MovablePanel npcDetailPanel;
+    sf::Text npcDetailText; // Declare this for NPC details
+
     // Buttons
     UIButton statsButton;
     UIButton optionsButton;
     UIButton marketButton;
     UIButton npcButton;
+
+    std::vector<std::pair<std::string, UIButton>> npcButtons;
+
+    bool showNPCList = false;  // Toggles the NPC list panel
+    bool showNPCDetail = false; // Toggles the NPC detail panel
+
+    // Scroll for large NPC lists
+    float npcListScrollOffset = 0.0f;
+    const float scrollSpeed = 20.0f;
+
+    // Helper to display NPC details
+    void displayNPCDetails(const std::string& npcDetails);
 
     // Selected NPC
     int selectedNPCIndex = -1;

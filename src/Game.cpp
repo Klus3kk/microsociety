@@ -240,6 +240,7 @@ void Game::run() {
         ui.updateMoney(MoneyManager::calculateTotalMoney(npcs));
         // Update day and iteration logic
         timeManager.update(deltaTime);
+        clockGUI.update(timeManager.getElapsedTime());
 
 
         ui.updateStatus(

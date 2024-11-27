@@ -12,6 +12,8 @@ ClockGUI::ClockGUI(float x, float y) {
     setupClockFace();
     setupHands();
 
+    y -= 30.0f;
+    x += 20.0f;
     // Position the clock
     clockCircle.setPosition(x, y);
     for (auto& number : clockNumbers) {
