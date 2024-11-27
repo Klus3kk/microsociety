@@ -7,8 +7,9 @@
 #include <set>
 #include <unordered_map>
 #include "Market.hpp"
+
 Game::Game() 
-    : window(sf::VideoMode(GameConfig::windowWidth, GameConfig::windowHeight), "MicroSociety") {
+    : window(sf::VideoMode(GameConfig::windowWidth, GameConfig::windowHeight), "MicroSociety"), clockGUI(700, 100) {
     generateMap();
     npcs = generateNPCs();
 
@@ -48,7 +49,6 @@ bool Game::detectCollision(const PlayerEntity& npc) {
 void Game::run() {
     sf::Clock clock;
     PlayerEntity player("Player", 100, 50, 50, 150.0f, 10, 100);
-
     // player.setSize(1.5f, 1.5f);
     
     // Set up the debug console
@@ -237,12 +237,20 @@ void Game::run() {
         // Aggregate resources from all NPCs
         std::unordered_map<std::string, int> allResources = aggregateResources(npcs);
 
-        // Update UI
-        ui.updateStatus(1, "12:00", npcs.size(), 1000, allResources);  // Example values for now
+        ui.updateMoney(MoneyManager::calculateTotalMoney(npcs));
+        // Update day and iteration logic
+        timeManager.update(deltaTime);
 
+
+        ui.updateStatus(
+            timeManager.getCurrentDay(),
+            timeManager.getFormattedTime(),
+            timeManager.getSocietyIteration()
+        );
         // debugPlayerInfo(player);
         window.clear();
         render();          // Render the map
+        clockGUI.render(window);
         ui.render(window, market);
         player.draw(window);   // Draw player's entity
         debugConsole.render(window);
@@ -285,7 +293,7 @@ std::vector<PlayerEntity> Game::generateNPCs() const {
     std::uniform_int_distribution<> distX(0, tileMap[0].size() - 1);
     std::uniform_int_distribution<> distY(0, tileMap.size() - 1);
 
-    for (int i = 0; i < 5; ++i) { // Number of NPCs to generate
+    for (int i = 0; i < 2; ++i) { // Number of NPCs to generate
         int x, y;
         do {
             x = distX(gen);
@@ -390,7 +398,7 @@ void Game::generateMap() {
 
     // Place unique houses for each NPC
     std::set<std::pair<int, int>> occupiedPositions;
-    for (int i = 0; i < 5; ++i) { // Assuming 5 NPCs
+    for (int i = 0; i < 1; ++i) { // Assuming 5 NPCs
         int houseX, houseY;
         do {
             houseX = rand() % GameConfig::mapWidth;

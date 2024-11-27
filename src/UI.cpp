@@ -31,20 +31,6 @@ UI::UI() {
     statusText.setFillColor(sf::Color::Black);
     statusText.setPosition(statusPanel.getPosition().x + 10, statusPanel.getPosition().y + 10);
 
-
-    // Clock Panel (Top Right)
-    clockPanel.setRadius(30);
-    clockPanel.setPosition(650, 20); // Top-right
-    clockPanel.setFillColor(sf::Color(200, 200, 200));
-    clockPanel.setOutlineThickness(2);
-    clockPanel.setOutlineColor(sf::Color::Black);
-
-    clockText.setFont(font);
-    clockText.setCharacterSize(16);
-    clockText.setFillColor(sf::Color::Black);
-    clockText.setString("Clock");
-    clockText.setPosition(clockPanel.getPosition().x + 10, clockPanel.getPosition().y + 10);
-
     // Buttons (Bottom: NPC, Stats, Market, Options)
     float buttonWidth = 120.0f;
     float buttonHeight = 40.0f;
@@ -81,18 +67,16 @@ void UI::updateClock(float timeElapsed) {
 }
 
 
-void UI::updateStatus(int day, const std::string& time, int npcCount, int totalMoney, const std::unordered_map<std::string, int>& allResources) {
+void UI::updateStatus(int day, const std::string& time, int iteration) {
     std::ostringstream status;
-    status << "Day: " << day << "\nTime: " << time << "\nNPCs: " << npcCount << "\nTotal Money: $" << totalMoney;
-    statusText.setString(status.str());
+    status << "Day: " << day << "\n"
+           << "Time: " << time << "\n"
+           << "Iteration: " << iteration;
 
-    std::ostringstream inventoryStream;
-    inventoryStream << "Inventory:\n";
-    for (const auto& [item, quantity] : allResources) {
-        inventoryStream << "- " << item << ": " << quantity << "\n";
-    }
-    inventoryText.setString(inventoryStream.str());
+    statusText.setString(status.str());
 }
+
+
 
 void UI::updateNPCList(const std::vector<std::string>& npcNames) {
     npcButtons.clear();
@@ -124,26 +108,26 @@ void UI::updateMarket(const std::unordered_map<std::string, float>& prices) {
 void UI::showNPCDetails(const std::string& npcDetails) {
     npcDetailText.setString(npcDetails);
 }
-
 void UI::handleButtonClicks(sf::RenderWindow& window, sf::Event& event) {
     for (size_t i = 0; i < npcButtons.size(); ++i) {
         if (npcButtons[i].second.isClicked(window, event)) {
             selectedNPCIndex = static_cast<int>(i);
-            showNPCDetails("NPC Details:\nName: " + npcButtons[i].first + "\nHealth: 100\nEnergy: 50\nHunger: 30");
+            showNPCDetails("NPC Details:\nName: " + npcButtons[i].first);
+            getDebugConsole().log("UI", "Selected NPC: " + npcButtons[i].first);
         }
     }
 
     if (statsButton.isClicked(window, event)) {
-        tooltipPanel.setPosition(20, 100);
-        setTooltipContent("Simulation Stats:\nSummary info!");
-    } else if (optionsButton.isClicked(window, event)) {
-        tooltipPanel.setPosition(20, 100);
-        setTooltipContent("Options Menu:\n- Toggle Debug\n- Exit");
-    } else if (marketButton.isClicked(window, event)) {
-        tooltipPanel.setPosition(20, 100);
-        setTooltipContent("Market:\nView price trends and trade items.");
+        getDebugConsole().log("UI", "Stats button clicked.");
+    }
+    if (marketButton.isClicked(window, event)) {
+        getDebugConsole().log("UI", "Market button clicked.");
+    }
+    if (optionsButton.isClicked(window, event)) {
+        getDebugConsole().log("UI", "Options button clicked.");
     }
 }
+
 
 void UI::handleHover(sf::RenderWindow& window) {
     for (auto& [name, button] : npcButtons) {
@@ -206,19 +190,26 @@ void UI::render(sf::RenderWindow& window, const Market& market) {
     window.draw(moneyText);
     window.draw(statusPanel);
     window.draw(statusText);
-    window.draw(clockPanel);
-    window.draw(clockText);
 
-    // Central Panel (Dynamic Content)
-    window.draw(centralPanel);
-    window.draw(centralText);
+    // Dynamic Panels
+    if (selectedNPCIndex != -1) {
+        window.draw(npcDetailPanel);
+        window.draw(npcDetailText);
+    }
 
     // Bottom Buttons
     npcButton.draw(window);
     statsButton.draw(window);
     marketButton.draw(window);
     optionsButton.draw(window);
+
+    // Draw tooltip if applicable
+    if (isMouseOver(window)) {
+        window.draw(tooltipPanel);
+        window.draw(tooltipText);
+    }
 }
+
 
 
 

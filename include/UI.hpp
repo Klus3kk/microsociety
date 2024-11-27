@@ -56,7 +56,7 @@ public:
     UI();
 
     // Updates
-    void updateStatus(int day, const std::string& time, int npcCount, int totalMoney, const std::unordered_map<std::string, int>& allResources);
+    void updateStatus(int day, const std::string& time, int iteration);
     void updateNPCList(const std::vector<std::string>& npcNames);
     void showNPCDetails(const std::string& npcDetails);
     void updateMarket(const std::unordered_map<std::string, float>& prices);

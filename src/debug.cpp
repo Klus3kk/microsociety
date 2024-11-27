@@ -4,6 +4,7 @@
 #include <sstream>
 #include <unordered_map>
 #include <chrono>
+#include <iomanip>
 #include <algorithm>
 
 DebugConsole::DebugConsole(float windowWidth, float windowHeight) {
@@ -24,7 +25,14 @@ void DebugConsole::enable() { enabled = true; }
 void DebugConsole::disable() { enabled = false; }
 bool DebugConsole::isEnabled() const { return enabled; }
 
+
+void DebugConsole::setLogLevel(LogLevel level) {
+    filterLevel = level;
+}
+
 void DebugConsole::log(const std::string& category, const std::string& message, LogLevel level) {
+    if (level < filterLevel) return; // Filter out lower-severity logs
+
     std::ostringstream formattedMessage;
     switch (level) {
         case LogLevel::Info: formattedMessage << "[INFO] "; break;
@@ -34,9 +42,7 @@ void DebugConsole::log(const std::string& category, const std::string& message, 
     formattedMessage << "[" << category << "] " << message;
 
     logs.emplace_back(category, formattedMessage.str());
-    if (logs.size() > maxLogs) logs.erase(logs.begin()); // Limit log size
-
-    // std::cerr << formattedMessage.str() << std::endl; // Debug output to console
+    if (logs.size() > maxLogs) logs.erase(logs.begin());
 }
 
 void DebugConsole::logThrottled(const std::string& category, const std::string& message, int throttleMs) {
@@ -46,7 +52,7 @@ void DebugConsole::logThrottled(const std::string& category, const std::string& 
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastLogTime).count();
 
     if (elapsed > throttleMs) {
-        log(category, message);
+        log(category, message, LogLevel::Info);
         lastLogTime = now;
     }
 }
@@ -54,9 +60,28 @@ void DebugConsole::logThrottled(const std::string& category, const std::string& 
 void DebugConsole::logOnce(const std::string& category, const std::string& message) {
     std::string key = category + ":" + message;
     if (!logOnceTracker[key]) {
-        log(category, message);
+        log(category, message, LogLevel::Info);
         logOnceTracker[key] = true;
     }
+}
+
+void DebugConsole::logSystemStats(float fps, size_t memoryUsage) {
+    std::ostringstream oss;
+    oss << "FPS: " << std::fixed << std::setprecision(2) << fps
+        << ", Memory Usage: " << memoryUsage << " KB";
+    log("System", oss.str(), LogLevel::Info);
+}
+
+void DebugConsole::saveLogsToFile(const std::string& filename) const {
+    std::ofstream outFile(filename);
+    if (!outFile.is_open()) {
+        std::cerr << "Failed to save logs to " << filename << std::endl;
+        return;
+    }
+    for (const auto& [category, message] : logs) {
+        outFile << message << "\n";
+    }
+    std::cout << "Logs saved to " << filename << std::endl;
 }
 
 void DebugConsole::render(sf::RenderWindow& window) {
@@ -77,7 +102,7 @@ void DebugConsole::render(sf::RenderWindow& window) {
 
 void DebugConsole::clearLogs() {
     logs.clear();
-    std::cerr << "Debug logs cleared." << std::endl;
+    // std::cerr << "Debug logs cleared." << std::endl;
 }
 
 // Singleton instance

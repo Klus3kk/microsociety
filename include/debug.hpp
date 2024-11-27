@@ -8,6 +8,7 @@
 #include <SFML/Graphics.hpp>
 #include <unordered_map>
 #include <chrono>
+#include <fstream>
 
 class Game; 
 class PlayerEntity;
@@ -29,6 +30,7 @@ private:
     const int maxLogs = 50;                                // Maximum number of logs shown
     const sf::Color backgroundColor = sf::Color(0, 0, 0, 150); // Opaque black background
     bool enabled = false;                                  // Toggle for enabling/disabling debug
+    LogLevel filterLevel = LogLevel::Info;
     std::unordered_map<std::string, std::chrono::high_resolution_clock::time_point> throttleTimers;
     std::unordered_map<std::string, bool> logOnceTracker;  // Tracker for `logOnce`
 
@@ -39,12 +41,16 @@ public:
     void disable();
     bool isEnabled() const;
 
+    void setLogLevel(LogLevel level);
     // Log with category and severity level
     void log(const std::string& category, const std::string& message, LogLevel level = LogLevel::Info);
     // Throttled logging
     void logThrottled(const std::string& category, const std::string& message, int throttleMs);
     // Log once per session
     void logOnce(const std::string& category, const std::string& message);
+
+    void logSystemStats(float fps, size_t memoryUsage);
+    void saveLogsToFile(const std::string& filename) const;
 
     void render(sf::RenderWindow& window);
     void clearLogs(); // Clear all logs

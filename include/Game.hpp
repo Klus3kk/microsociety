@@ -12,12 +12,18 @@
 #include "House.hpp"
 #include "UI.hpp"
 #include "Market.hpp"
+#include "TimeManager.hpp"
+#include "MoneyManager.hpp"
+#include "ClockGUI.hpp"
 
 class Game {
 private:
     UI ui;
     Market market;
     sf::RenderWindow window;
+    TimeManager timeManager; 
+    MoneyManager moneyManager;
+    ClockGUI clockGUI;
     float deltaTime;
     std::vector<std::vector<std::unique_ptr<Tile>>> tileMap;
 

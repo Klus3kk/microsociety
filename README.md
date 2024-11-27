@@ -73,3 +73,17 @@ MicroSociety offers two setup options:
    ```bash
    MicroSociety.exe
    ```
+
+### Memory Leak/Performance Profiling
+
+If you want to check memory leaks or performance profiling, use Valgrind:
+
+```bash
+valgrind --leak-check=full --track-origins=yes ./MicroSociety
+```
+
+
+```bash
+valgrind --tool=callgrind ./MicroSociety
+kcachegrind callgrind.out.<pid>
+```
