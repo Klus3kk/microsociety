@@ -1,5 +1,5 @@
 #include "UIButton.hpp"
-
+#include <iostream>
 UIButton::UIButton()
     : cornerRadius(8.0f), borderThickness(2.0f) {
     normalColor = sf::Color(50, 50, 50, 255);
@@ -59,40 +59,56 @@ void UIButton::setStyle(float radius, float thickness) {
 void UIButton::handleHover(sf::RenderWindow& window) {
     if (isMouseOver(window)) {
         isHovered = true;
-        buttonShape.setFillColor(hoverColor);
+        if (!isClickedState) { // Tylko jeśli nie kliknięto
+            buttonShape.setFillColor(hoverColor);
+        }
         applyGlow();
     } else {
         isHovered = false;
-        buttonShape.setFillColor(normalColor);
+        if (!isClickedState) { // Tylko jeśli nie kliknięto
+            buttonShape.setFillColor(normalColor);
+        }
     }
 }
+
 
 void UIButton::handleClickAnimation() {
     if (isClickedState) {
         float elapsedTime = clickAnimationClock.getElapsedTime().asSeconds();
-        if (elapsedTime > 0.15f) { // Reset after 0.15 seconds
+        if (elapsedTime > 0.15f) { // Reset po 0.15 sekundy
             isClickedState = false;
             buttonShape.setFillColor(isHovered ? hoverColor : normalColor);
         }
     }
 }
 
+
 bool UIButton::isClicked(sf::RenderWindow& window, sf::Event& event) {
     if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
         if (isMouseOver(window)) {
+            std::cout << "Mouse clicked over button\n"; // Debugowanie
             isClickedState = true;
             buttonShape.setFillColor(clickColor);
             clickAnimationClock.restart();
+            return true;
+        }
+    } else if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left) {
+        if (isMouseOver(window) && isClickedState) {
+            isClickedState = false; // Reset stanu po zwolnieniu
+            buttonShape.setFillColor(hoverColor);
             return true;
         }
     }
     return false;
 }
 
+
 bool UIButton::isMouseOver(sf::RenderWindow& window) const {
     sf::Vector2i mousePos = sf::Mouse::getPosition(window);
-    return buttonShape.getGlobalBounds().contains(static_cast<sf::Vector2f>(mousePos));
+    sf::Vector2f mouseWorldPos = window.mapPixelToCoords(mousePos); // Konwersja do współrzędnych okna
+    return buttonShape.getGlobalBounds().contains(mouseWorldPos);
 }
+
 
 void UIButton::applyGradient() {
     // Use shaders or blend colors for a gradient effect (requires SFML shaders)

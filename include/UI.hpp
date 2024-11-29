@@ -63,20 +63,23 @@ private:
     // Animation helpers
     void applyShadow(sf::RectangleShape& shape, float offset = 3.0f);
 
+    void populateNPCList(const std::vector<PlayerEntity>& npcs);
+    void populateNPCDetails(const PlayerEntity& npc);
+
 public:
     UI();
 
     // Updates
     void updateStatus(int day, const std::string& time, int iteration);
-    void updateNPCList(const std::vector<std::string>& npcNames);
     void showNPCDetails(const std::string& npcDetails);
     void updateMarket(const std::unordered_map<std::string, float>& prices);
+    void updateNPCList(const std::vector<PlayerEntity>& npcs);
 
     void updateMoney(int amount);
     void updateClock(float timeElapsed);
 
     // Interaction and Rendering
-    void handleButtonClicks(sf::RenderWindow& window, sf::Event& event);
+    void handleButtonClicks(sf::RenderWindow& window, sf::Event& event, std::vector<PlayerEntity>& npcs);
     void handleHover(sf::RenderWindow& window);
     void render(sf::RenderWindow& window, const Market& market);
     void drawPriceTrends(sf::RenderWindow& window, const Market& market);

@@ -22,7 +22,7 @@ Game::Game()
     for (const auto& npc : npcs) {
         npcNames.push_back(npc.getName());
     }
-    ui.updateNPCList(npcNames); // Update UI with NPC names
+    ui.updateNPCList(npcs); // Update UI with NPC names
 }
 
 
@@ -99,7 +99,7 @@ void Game::run() {
 
             // Handle UI button clicks
             if (ui.isMouseOver(window)) {
-                ui.handleButtonClicks(window, event);
+                ui.handleButtonClicks(window, event, npcs);
                 continue; // Avoid player movement/input when interacting with the UI
             }
         }
