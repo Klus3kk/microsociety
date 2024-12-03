@@ -9,11 +9,14 @@ TEST(MarketTest, PriceAdjustment) {
 
     ASSERT_EQ(market.getPrice("wood"), 10.0f);
 
+    // Perform buying and log changes
     market.buyItem(player, "wood", 5);
-    ASSERT_GT(market.getPrice("wood"), 10.0f); // Price should increase
+    float updatedPrice = market.getPrice("wood");
+    ASSERT_GT(updatedPrice, 10.0f) << "Updated Price: " << updatedPrice;
 
     market.sellItem(player, "wood", 10);
-    ASSERT_LT(market.getPrice("wood"), 10.0f); // Price should decrease
+    updatedPrice = market.getPrice("wood");
+    ASSERT_LT(updatedPrice, 10.0f) << "Updated Price after sell: " << updatedPrice;
 }
 
 TEST(MarketTest, PriceTrendTracking) {
@@ -22,10 +25,13 @@ TEST(MarketTest, PriceTrendTracking) {
     market.setPrice("stone", 15.0f);
 
     for (int i = 0; i < 12; ++i) {
-        market.buyItem(player, "stone", 1);
+        ASSERT_TRUE(market.buyItem(player, "stone", 1)) << "Buy failed at iteration " << i;
     }
 
     auto trend = market.getPriceTrend("stone");
-    ASSERT_EQ(trend.size(), 10); // Ensure trend is limited to 10 points
-    ASSERT_GT(trend.back(), trend.front()); // Price should increase over time
+    ASSERT_EQ(trend.size(), 10) << "Trend Size: " << trend.size();
+
+    float startPrice = trend.front();
+    float endPrice = trend.back();
+    ASSERT_GT(endPrice, startPrice) << "Start Price: " << startPrice << ", End Price: " << endPrice;
 }

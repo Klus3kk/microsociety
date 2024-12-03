@@ -58,10 +58,12 @@ public:
             player.addToInventory(item, quantity);
 
             demand[item] += quantity;
+            supply[item] = std::max(0, supply[item] - quantity); // Decrease supply
+
             updatePrice(item);
 
-            getDebugConsole().log("Market", "Bought " + std::to_string(quantity) + " " + item + 
-                                  "(s) for $" + std::to_string(cost));
+            getDebugConsole().log("Market", "Bought " + std::to_string(quantity) + " " + item +
+                                "(s) for $" + std::to_string(cost));
             return true;
         }
 
@@ -101,17 +103,17 @@ public:
         if (supply == 0) supply = 1; // Prevent division by zero
         float demandSupplyRatio = static_cast<float>(demand) / supply;
 
-        // Base adjustment using demand-supply ratio
-        float baseAdjustment = elasticity * (demandSupplyRatio - 1.0f);
+        // Amplify the base adjustment to prioritize demand's effect
+        float baseAdjustment = momentum * (demandSupplyRatio - 1.0f);
 
-        // Apply momentum to smooth changes
-        float finalAdjustment = currentPrice * (1.0f + momentum * baseAdjustment);
+        // Adjust the price using a stronger demand influence
+        float adjustedPrice = currentPrice * (1.0f + elasticity * baseAdjustment);
 
         // Cap adjustments for stability
-        finalAdjustment = std::clamp(finalAdjustment, currentPrice * 0.5f, currentPrice * 1.5f);
+        adjustedPrice = std::clamp(adjustedPrice, currentPrice * 0.7f, currentPrice * 1.7f);
 
-        // Ensure price never falls below minimum
-        return std::max(minimumPrice, finalAdjustment);
+        // Ensure price never falls below the minimum
+        return std::max(minimumPrice, adjustedPrice);
     }
 
     // Update price dynamically based on supply and demand
@@ -132,6 +134,7 @@ public:
                             " | New Price: " + std::to_string(prices[item]) +
                             " | Demand: " + std::to_string(itemDemand) +
                             " | Supply: " + std::to_string(itemSupply));
+        trackPriceHistory(item);
     }
 
 
