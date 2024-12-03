@@ -12,6 +12,8 @@ private:
     std::unordered_map<std::string, int> inventory; // Item, quantity
     int inventoryCapacity = 10;
     std::string name;
+    float baseSpeed = 150.0f; // Default base speed
+    float currentSpeed = baseSpeed;
 
 public:
     PlayerEntity(const std::string& playerName, float initHealth, float initHunger, float initEnergy, float initSpeed, float initStrength, float initMoney)
@@ -37,10 +39,7 @@ public:
         getDebugConsole().logOnce("Player", "Strength set to: " + std::to_string(strength));
     }
 
-    void setSpeed(float newSpeed) {
-        speed = std::max(0.0f, newSpeed); // Ensure speed is non-negative
-        getDebugConsole().logOnce("Player", "Speed set to: " + std::to_string(speed)); // Throttled log
-    }
+    void setSpeed(float newSpeed) { currentSpeed = std::max(0.0f, newSpeed); }
 
     // Inventory management
     bool addToInventory(const std::string& item, int quantity) {
@@ -99,6 +98,29 @@ public:
         money = newMoney;
         getDebugConsole().logOnce("Player", "Money updated to: " + std::to_string(money)); 
     }
+
+    void consumeEnergy(float amount) {
+        energy = std::max(0.0f, energy - amount);
+        if (energy == 0.0f) {
+            getDebugConsole().logOnce("Player", "Player has no energy and must rest!");
+        }
+    }
+
+    void regenerateEnergy(float rate) {
+        if (energy < 100.0f) {
+            energy = std::min(100.0f, energy + rate);
+            getDebugConsole().logOnce("Player", "Player's energy regenerated to " + std::to_string(energy));
+        }
+    }
+
+    float getEnergyPercentage() const {
+        return energy / getMaxEnergy(); // Energy as a fraction of maximum
+    }
+
+    float getMaxEnergy() const { return 100.0f; }
+    float getBaseSpeed() const { return speed; } // Returns the NPC's base speed
+
+
 
     const std::unordered_map<std::string, int>& getInventory() const { return inventory; }
 };

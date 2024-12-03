@@ -111,6 +111,9 @@ void Game::run() {
         sf::Vector2f previousPosition = player.getPosition();
         player.handleInput(deltaTime);
 
+
+
+
         // Calculate target tile based on the tile size and player position
         int targetTileX = static_cast<int>(std::round(player.getPosition().x / GameConfig::tileSize));
         int targetTileY = static_cast<int>(std::round(player.getPosition().y / GameConfig::tileSize));
@@ -135,7 +138,7 @@ void Game::run() {
                 } else if (auto bush = dynamic_cast<Bush*>(targetTile->getObject())) {
                     debugConsole.log("Hint", "Press 'G' to gather bush resources.");
                 } else if (auto house = dynamic_cast<House*>(targetTile->getObject())) {
-                    debugConsole.log("Hint", "Press 'H' to regenerate energy, 'U' to upgrade, or 'I' to store items.");
+                    debugConsole.log("Hint", "Press 'H' to regenerate energy, 'U' to upgrade, or 'I' to store items or 'O' to see storage or 'P' for taking wood for now");
                 } else if (auto market = dynamic_cast<Market*>(targetTile->getObject())) {
                     debugConsole.log("Hint", "Press 'B' to buy or 'S' to sell items.");
                 }
@@ -202,6 +205,21 @@ void Game::run() {
                         debugConsole.logOnce("Market", "Sold 1 stone.");
                         keyProcessed = true;
                     }
+                } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::O)) {
+                    if (auto house = dynamic_cast<House*>(targetTile->getObject())) {
+                        house->displayStorage(); // Log storage contents to the debug console
+                        debugConsole.logOnce("Action", "Displayed house storage.");
+                        keyProcessed = true;
+                    }
+                } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::P)) {
+                    if (auto house = dynamic_cast<House*>(targetTile->getObject())) {
+                        if (!house->takeFromStorage("wood", 1, player)) { // Attempt to take 5 wood
+                            debugConsole.log("Action", "Failed to take items from house storage.");
+                        } else {
+                            debugConsole.log("Action", "Took items from house storage.");
+                        }
+                        keyProcessed = true;
+                    }
                 }
             }
 
@@ -213,18 +231,34 @@ void Game::run() {
                 !sf::Keyboard::isKeyPressed(sf::Keyboard::U) &&
                 !sf::Keyboard::isKeyPressed(sf::Keyboard::I) &&
                 !sf::Keyboard::isKeyPressed(sf::Keyboard::B) &&
-                !sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
+                !sf::Keyboard::isKeyPressed(sf::Keyboard::S) &&
+                !sf::Keyboard::isKeyPressed(sf::Keyboard::O) && // Added O
+                !sf::Keyboard::isKeyPressed(sf::Keyboard::P)) { // Added P
                 keyProcessed = false;
             }
         }
 
         // Slow down on StoneTile
-        if (auto stoneTile = dynamic_cast<StoneTile*>(targetTile)) { // Use targetTile directly, no .get()
-            player.setSpeed(75.0f);  // Slow speed on stone tiles
+        if (player.getEnergy() > 0) {
+            float energyFactor = player.getEnergyPercentage();
+
+            if (targetTile) {
+                if (auto stoneTile = dynamic_cast<StoneTile*>(targetTile)) {
+                    player.setSpeed(player.getBaseSpeed() * 0.2f * energyFactor); // Slower on stone tiles
+                } else {
+                    player.setSpeed(player.getBaseSpeed() * energyFactor); // Normal speed elsewhere
+                }
+            } else {
+                player.setSpeed(player.getBaseSpeed() * energyFactor); // Fallback if no tile detected
+            }
+
+            player.consumeEnergy(deltaTime * 0.5f); // Energy drains over time
         } else {
-            player.setSpeed(150.0f); // Normal speed on other tiles
+            player.setSpeed(0.0f); // Prevent movement if out of energy
+            // No additional regeneration logic here; it's handled by your H keybind action.
         }
 
+ 
         // Collision detection
         if (targetTile && targetTile->hasObject()) {
             if (player.getSprite().getGlobalBounds().intersects(targetTile->getObjectBounds())) {
@@ -236,6 +270,7 @@ void Game::run() {
 
         // Aggregate resources from all NPCs
         std::unordered_map<std::string, int> allResources = aggregateResources(npcs);
+        // debugConsole.logThrottled("Energy", "Energy: " + std::to_string(player.getEnergy()), 500);
 
         ui.updateMoney(MoneyManager::calculateTotalMoney(npcs));
         // Update day and iteration logic

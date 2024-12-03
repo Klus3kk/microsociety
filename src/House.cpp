@@ -13,11 +13,26 @@ House::House(const sf::Texture& tex, int initialLevel)
 
 // Regenerate energy for the player
 void House::regenerateEnergy(PlayerEntity& player) {
-    float oldEnergy = player.getEnergy();
-    player.setEnergy(std::min(player.getEnergy() + energyRegenRate, 100.0f));
-    getDebugConsole().log("House", "Energy regenerated from " + std::to_string(oldEnergy) +
-                                     " to " + std::to_string(player.getEnergy()));
+    if (player.getEnergy() < player.getMaxEnergy()) {
+        float oldEnergy = player.getEnergy();
+        player.regenerateEnergy(energyRegenRate);
+
+        // Cap energy at max
+        if (player.getEnergy() > player.getMaxEnergy()) {
+            player.setEnergy(player.getMaxEnergy());
+        }
+
+        float newEnergy = player.getEnergy();
+        if (newEnergy > oldEnergy) { // Log only if energy actually increased
+            getDebugConsole().log("House", player.getName() + " regenerated energy from " +
+                                 std::to_string(oldEnergy) + " to " + std::to_string(newEnergy));
+        }
+    } else {
+        getDebugConsole().logOnce("House", player.getName() + " already has full energy.");
+    }
 }
+
+
 
 // Store an item in the house
 bool House::storeItem(const std::string& item, int quantity) {
@@ -34,6 +49,25 @@ bool House::storeItem(const std::string& item, int quantity) {
                                      "(s) in the house.");
     return true;
 }
+
+bool House::takeFromStorage(const std::string& item, int quantity, PlayerEntity& npc) {
+    auto it = storage.find(item);
+    if (it != storage.end() && it->second >= quantity) {
+        if (npc.getInventorySize() + quantity > npc.getMaxInventorySize()) {
+            getDebugConsole().log("House", npc.getName() + " does not have enough inventory space.");
+            return false;
+        }
+        npc.addToInventory(item, quantity);
+        it->second -= quantity;
+        if (it->second == 0) storage.erase(it); // Remove the item if quantity reaches zero
+        getDebugConsole().log("House", npc.getName() + " took " + std::to_string(quantity) + " " + item + "(s).");
+        return true;
+    } else {
+        getDebugConsole().log("House", "Not enough " + item + " in storage.");
+        return false;
+    }
+}
+
 
 // Upgrade the house
 bool House::upgrade(int& playerMoney) {

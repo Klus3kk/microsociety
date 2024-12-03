@@ -27,7 +27,7 @@ private:
     sf::Font consoleFont;                                  // Font for console
     sf::RectangleShape background;                         // Background for console UI
     sf::Text text;                                         // Text object for rendering logs
-    const int maxLogs = 50;                                // Maximum number of logs shown
+    const int maxLogs = 10;                                // Maximum number of logs shown
     const sf::Color backgroundColor = sf::Color(0, 0, 0, 150); // Opaque black background
     bool enabled = false;                                  // Toggle for enabling/disabling debug
     LogLevel filterLevel = LogLevel::Info;

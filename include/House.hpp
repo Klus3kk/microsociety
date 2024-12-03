@@ -39,6 +39,10 @@ public:
     // Display the storage contents
     void displayStorage() const;
 
+    // Taking from storage 
+    bool takeFromStorage(const std::string& item, int quantity, PlayerEntity& npc);
+
+
     // Display house stats
     void displayStats() const;
 
