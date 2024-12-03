@@ -48,7 +48,7 @@ bool Game::detectCollision(const PlayerEntity& npc) {
 
 void Game::run() {
     sf::Clock clock;
-    PlayerEntity player("Player", 100, 50, 50, 150.0f, 10, 100);
+    PlayerEntity player("Player", 100, 50, 50, 150.0f, 10, 10000);
     // player.setSize(1.5f, 1.5f);
     
     // Set up the debug console
@@ -177,9 +177,14 @@ void Game::run() {
                     }
                 } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::U)) {
                     if (auto house = dynamic_cast<House*>(targetTile->getObject())) {
-                        std::unique_ptr<Action> action = std::make_unique<UpgradeHouseAction>();
-                        action->perform(player, *targetTile);
-                        debugConsole.logOnce("Action", "Upgraded house.");
+                        float playerMoney = player.getMoney(); // Copy the money
+                        if (house->upgrade(playerMoney, player)) { // Pass the player to apply bonuses
+                            player.setMoney(playerMoney); // Update player's money after upgrade
+                            debugConsole.log("Action", "House upgraded successfully!");
+                        } else {
+                            debugConsole.log("Action", "Not enough money to upgrade the house.");
+                        }
+                        keyProcessed = true;
                     }
                 } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::I)) {
                     if (auto house = dynamic_cast<House*>(targetTile->getObject())) {
@@ -213,10 +218,11 @@ void Game::run() {
                     }
                 } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::P)) {
                     if (auto house = dynamic_cast<House*>(targetTile->getObject())) {
-                        if (!house->takeFromStorage("wood", 1, player)) { // Attempt to take 5 wood
+                        // Attempt to take a specific resource, e.g., 1 wood
+                        if (!house->takeFromStorage("wood", 1, player)) {
                             debugConsole.log("Action", "Failed to take items from house storage.");
                         } else {
-                            debugConsole.log("Action", "Took items from house storage.");
+                            debugConsole.log("Action", "Took 1 wood from house storage.");
                         }
                         keyProcessed = true;
                     }
@@ -329,7 +335,7 @@ std::vector<PlayerEntity> Game::generateNPCs() const {
     std::uniform_int_distribution<> distX(0, tileMap[0].size() - 1);
     std::uniform_int_distribution<> distY(0, tileMap.size() - 1);
 
-    for (int i = 0; i < 2; ++i) { // Number of NPCs to generate
+    for (int i = 0; i < 1; ++i) { // Number of NPCs to generate
         int x, y;
         do {
             x = distX(gen);

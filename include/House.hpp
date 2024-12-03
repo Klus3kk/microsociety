@@ -28,7 +28,7 @@ public:
     bool storeItem(const std::string& item, int quantity);
 
     // Upgrade house
-    bool upgrade(int& playerMoney);
+    bool upgrade(float& playerMoney, PlayerEntity& player);
 
     // Apply stat bonuses to the player while inside the house
     void applyStatBonuses(PlayerEntity& player);

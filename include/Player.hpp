@@ -80,6 +80,8 @@ public:
         return inventoryCapacity;
     }
 
+    
+
     int getInventoryItemCount(const std::string& item) const {
         auto it = inventory.find(item);
         return it != inventory.end() ? it->second : 0;

@@ -107,9 +107,9 @@ class UpgradeHouseAction : public Action {
 public:
     void perform(PlayerEntity& player, Tile& tile) override {
         if (auto house = dynamic_cast<House*>(tile.getObject())) {
-            int playerMoney = player.getMoney();
-            if (house->upgrade(playerMoney)) {
-                player.setMoney(playerMoney);
+            float playerMoney = player.getMoney(); // Get the player's money
+            if (house->upgrade(playerMoney, player)) { // Pass player reference
+                player.setMoney(playerMoney); // Update player's money after upgrade
                 getDebugConsole().log("Action", "House upgraded successfully.");
             } else {
                 getDebugConsole().logOnce("Action", "Not enough money to upgrade the house.");
@@ -120,6 +120,7 @@ public:
     }
     std::string getActionName() const override { return "Upgrade House"; }
 };
+
 
 class StoreItemAction : public Action {
 private:

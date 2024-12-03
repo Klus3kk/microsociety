@@ -68,6 +68,7 @@ public:
     float getStrength() const { return strength; }
     float getMoney() const { return money; }
 
+
     // setters
     void setSpeed(float newSpeed) { speed = newSpeed; }
     void setEnergy(float newEnergy) { energy = newEnergy; } 
