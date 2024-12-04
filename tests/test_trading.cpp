@@ -10,7 +10,7 @@ TEST(TradingTest, BuyItem) {
 
     EXPECT_TRUE(market.buyItem(player, "wood", 1));
     EXPECT_EQ(player.getInventoryItemCount("wood"), 1);
-    EXPECT_EQ(player.getMoney(), 190); // 200 - 10
+    EXPECT_EQ(player.getMoney(), 189); // 200 - 11 (buyMargin applied)
 }
 
 TEST(TradingTest, InsufficientFunds) {
@@ -33,5 +33,6 @@ TEST(TradingTest, SellItem) {
 
     EXPECT_TRUE(market.sellItem(player, "food", 1));
     EXPECT_EQ(player.getInventoryItemCount("food"), 1); // One removed
-    EXPECT_EQ(player.getMoney(), 5);                   // Earned 5 from sale
+    EXPECT_EQ(player.getMoney(), 4.5);                 // Earned 4.5 (sellMargin applied)
 }
+

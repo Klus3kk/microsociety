@@ -50,34 +50,32 @@ public:
     }
 
     float calculateBuyPrice(const std::string& item) const {
-        return getPrice(item) * buyMargin;
+        return std::round(getPrice(item) * buyMargin * 10) / 10.0f; // Ensure consistent rounding
     }
 
     float calculateSellPrice(const std::string& item) const {
-        return getPrice(item) * sellMargin;
+        return std::round(getPrice(item) * sellMargin * 10) / 10.0f; // Ensure consistent rounding
     }
+
 
     bool buyItem(PlayerEntity& player, const std::string& item, int quantity) {
         if (prices.find(item) == prices.end()) setPrice(item, 10.0f);
 
         float cost = calculateBuyPrice(item) * quantity;
+        getDebugConsole().log("Market", "Buying " + item + ": cost=" + std::to_string(cost) + 
+                            ", playerMoney=" + std::to_string(player.getMoney()));
+
         if (player.getMoney() >= cost) {
             player.setMoney(player.getMoney() - cost);
             player.addToInventory(item, quantity);
 
-            // Update demand and supply
             demand[item] += quantity;
             supply[item] = std::max(0, supply[item] - quantity);
 
-            // Adjust price based on buying logic
             prices[item] = adjustPriceOnBuy(prices[item], demand[item], supply[item], 0.3f);
-
-            getDebugConsole().log("Market", "Bought " + std::to_string(quantity) + " " + item +
-                                    "(s) for $" + std::to_string(cost));
             return true;
         }
 
-        getDebugConsole().log("Market", "Not enough money to buy " + item);
         return false;
     }
 
@@ -88,25 +86,23 @@ public:
 
         if (player.getInventoryItemCount(item) >= quantity) {
             float revenue = calculateSellPrice(item) * quantity;
+            getDebugConsole().log("Market", "Selling " + item + ": revenue=" + std::to_string(revenue) + 
+                                ", playerMoney=" + std::to_string(player.getMoney()));
 
             player.removeFromInventory(item, quantity);
             player.setMoney(player.getMoney() + revenue);
 
-            // Update supply and demand
             supply[item] += quantity;
             demand[item] = std::max(0, demand[item] - quantity);
 
-            // Adjust price based on selling logic
             prices[item] = adjustPriceOnSell(prices[item], demand[item], supply[item], 0.2f);
-
-            getDebugConsole().log("Market", "Sold " + std::to_string(quantity) + " " + item +
-                                    "(s) for $" + std::to_string(revenue));
             return true;
         }
 
-        getDebugConsole().log("Market", "Not enough " + item + " to sell.");
         return false;
     }
+
+
 
 
 
@@ -125,29 +121,29 @@ public:
     float adjustPriceOnBuy(float currentPrice, int demand, int supply, float buyFactor) {
         if (supply == 0) supply = 1;  // Avoid division by zero
 
-        // Calculate the price increase factor
         float adjustmentFactor = buyFactor * (static_cast<float>(demand) / supply);
-
-        // Adjust the price
         float adjustedPrice = currentPrice * (1.0f + adjustmentFactor);
 
-        // Clamp price to realistic bounds
+        getDebugConsole().log("Market", "Buy Adjustment: currentPrice=" + std::to_string(currentPrice) +
+                            ", demand=" + std::to_string(demand) + ", supply=" + std::to_string(supply) +
+                            ", adjustedPrice=" + std::to_string(adjustedPrice));
+
         return std::clamp(adjustedPrice, minimumPrice, currentPrice * 2.0f);
     }
-
 
     float adjustPriceOnSell(float currentPrice, int demand, int supply, float sellFactor) {
         if (demand == 0) demand = 1;  // Avoid division by zero
 
-        // Calculate the price decrease factor
         float adjustmentFactor = -sellFactor * (static_cast<float>(supply) / demand);
-
-        // Adjust the price
         float adjustedPrice = currentPrice * (1.0f + adjustmentFactor);
 
-        // Clamp price to realistic bounds
+        getDebugConsole().log("Market", "Sell Adjustment: currentPrice=" + std::to_string(currentPrice) +
+                            ", demand=" + std::to_string(demand) + ", supply=" + std::to_string(supply) +
+                            ", adjustedPrice=" + std::to_string(adjustedPrice));
+
         return std::clamp(adjustedPrice, minimumPrice, currentPrice * 2.0f);
     }
+
 
 
 
