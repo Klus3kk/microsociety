@@ -198,16 +198,30 @@ void Game::run() {
                             debugConsole.logOnce("Action", "Inventory is empty.");
                         }
                     }
-                } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::B)) {
-                    if (auto market = dynamic_cast<Market*>(targetTile->getObject())) {
-                        market->buyItem(player, "wood", 1); // Example purchase
-                        debugConsole.logOnce("Market", "Bought 1 wood.");
+                } else if (auto market = dynamic_cast<Market*>(targetTile->getObject())) {
+                    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num1)) {
+                        market->buyItem(player, "wood", 1);
+                        debugConsole.log("Market", "Bought 1 wood.");
                         keyProcessed = true;
-                    }
-                } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
-                    if (auto market = dynamic_cast<Market*>(targetTile->getObject())) {
-                        market->sellItem(player, "stone", 1); // Example sale
-                        debugConsole.logOnce("Market", "Sold 1 stone.");
+                    } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num2)) {
+                        market->buyItem(player, "stone", 1);
+                        debugConsole.log("Market", "Bought 1 stone.");
+                        keyProcessed = true;
+                    } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num3)) {
+                        market->buyItem(player, "bushes", 1);
+                        debugConsole.log("Market", "Bought 1 bush.");
+                        keyProcessed = true;
+                    } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num4)) {
+                        market->sellItem(player, "wood", 1);
+                        debugConsole.log("Market", "Sold 1 wood.");
+                        keyProcessed = true;
+                    } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num5)) {
+                        market->sellItem(player, "stone", 1);
+                        debugConsole.log("Market", "Sold 1 stone.");
+                        keyProcessed = true;
+                    } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num6)) {
+                        market->sellItem(player, "bushes", 1);
+                        debugConsole.log("Market", "Sold 1 bush.");
                         keyProcessed = true;
                     }
                 } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::O)) {
@@ -218,7 +232,6 @@ void Game::run() {
                     }
                 } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::P)) {
                     if (auto house = dynamic_cast<House*>(targetTile->getObject())) {
-                        // Attempt to take a specific resource, e.g., 1 wood
                         if (!house->takeFromStorage("wood", 1, player)) {
                             debugConsole.log("Action", "Failed to take items from house storage.");
                         } else {
@@ -236,13 +249,17 @@ void Game::run() {
                 !sf::Keyboard::isKeyPressed(sf::Keyboard::H) &&
                 !sf::Keyboard::isKeyPressed(sf::Keyboard::U) &&
                 !sf::Keyboard::isKeyPressed(sf::Keyboard::I) &&
-                !sf::Keyboard::isKeyPressed(sf::Keyboard::B) &&
-                !sf::Keyboard::isKeyPressed(sf::Keyboard::S) &&
-                !sf::Keyboard::isKeyPressed(sf::Keyboard::O) && // Added O
-                !sf::Keyboard::isKeyPressed(sf::Keyboard::P)) { // Added P
+                !sf::Keyboard::isKeyPressed(sf::Keyboard::Num1) &&
+                !sf::Keyboard::isKeyPressed(sf::Keyboard::Num2) &&
+                !sf::Keyboard::isKeyPressed(sf::Keyboard::Num3) &&
+                !sf::Keyboard::isKeyPressed(sf::Keyboard::Num4) &&
+                !sf::Keyboard::isKeyPressed(sf::Keyboard::Num5) &&
+                !sf::Keyboard::isKeyPressed(sf::Keyboard::Num6) &&
+                !sf::Keyboard::isKeyPressed(sf::Keyboard::O) &&
+                !sf::Keyboard::isKeyPressed(sf::Keyboard::P)) {
                 keyProcessed = false;
             }
-        }
+            }
 
         // Slow down on StoneTile
         if (player.getEnergy() > 0) {
@@ -261,7 +278,7 @@ void Game::run() {
             player.consumeEnergy(deltaTime * 0.5f); // Energy drains over time
         } else {
             player.setSpeed(0.0f); // Prevent movement if out of energy
-            // No additional regeneration logic here; it's handled by your H keybind action.
+            // No additional regeneration logic here; it's handled by H action.
         }
 
  
@@ -292,6 +309,7 @@ void Game::run() {
         // debugPlayerInfo(player);
         window.clear();
         render();          // Render the map
+        // market.renderPriceGraph(window, "wood", {50, 50}, {200, 100});
         clockGUI.render(window);
         ui.render(window, market);
         player.draw(window);   // Draw player's entity
@@ -335,24 +353,26 @@ std::vector<PlayerEntity> Game::generateNPCs() const {
     std::uniform_int_distribution<> distX(0, tileMap[0].size() - 1);
     std::uniform_int_distribution<> distY(0, tileMap.size() - 1);
 
-    for (int i = 0; i < 1; ++i) { // Number of NPCs to generate
+    for (int i = 0; i < 1; ++i) { // Number of NPCs
         int x, y;
         do {
             x = distX(gen);
             y = distY(gen);
-        } while (occupiedPositions.count({x, y}) > 0 || tileMap[y][x]->hasObject()); // Ensure position is unique and not blocked
+        } while (occupiedPositions.count({x, y}) > 0 || tileMap[y][x]->hasObject()); // Ensure unique position
 
         occupiedPositions.insert({x, y});
 
         PlayerEntity npc("NPC" + std::to_string(i + 1), 100, 50, 50, 150.0f, 10, 100);
 
-        npc.addToInventory("wood", i + 1);
-        npc.addToInventory("stone", 2 * i);
-        npc.addToInventory("food", 5 - i);
+        // Populate inventory with random items
+        npc.addToInventory("wood", rand() % 10 + 1);
+        npc.addToInventory("stone", rand() % 10 + 1);
+        npc.addToInventory("bushes", rand() % 5 + 1);
 
-        npc.setPosition(x * GameConfig::tileSize, y * GameConfig::tileSize); // Place NPC on the map
+        npc.setPosition(x * GameConfig::tileSize, y * GameConfig::tileSize);
         npcs.push_back(npc);
     }
+
 
     return npcs;
 }
