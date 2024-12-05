@@ -98,6 +98,7 @@ void Game::run() {
             }
 
             ui.handleButtonClicks(window, event, npcs);
+            ui.handleNPCPanel(window, event);
         }
 
 
@@ -305,10 +306,11 @@ void Game::run() {
         // debugPlayerInfo(player);
         window.clear();
         render();          // Render the map
+
+        player.draw(window);   // Draw player's entity
         // market.renderPriceGraph(window, "wood", {50, 50}, {200, 100});
         clockGUI.render(window);
         ui.render(window, market);
-        player.draw(window);   // Draw player's entity
         debugConsole.render(window);
         window.display();
     }

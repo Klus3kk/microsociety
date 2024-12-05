@@ -50,17 +50,10 @@ UI::UI()
     optionsButton.setProperties(startX + 3 * (buttonWidth + spacing), startY, buttonWidth, buttonHeight, "OPTIONS", font);
 
     // Set Button Colors
-    npcButton.setColors(
-        sf::Color(200, 200, 200, 204), // Normal (light gray with transparency)
-        sf::Color(220, 220, 220, 204), // Hover (brighter gray with transparency)
-        sf::Color(160, 160, 160, 204), // Click (dark gray with transparency)
-        sf::Color(120, 120, 120)       // Border (medium gray)
-    );
-
-
-    statsButton.setColors(sf::Color(180, 180, 180), sf::Color(220, 220, 220), sf::Color(140, 140, 140), sf::Color::Black);
-    marketButton.setColors(sf::Color(180, 180, 180), sf::Color(220, 220, 220), sf::Color(140, 140, 140), sf::Color::Black);
-    optionsButton.setColors(sf::Color(180, 180, 180), sf::Color(220, 220, 220), sf::Color(140, 140, 140), sf::Color::Black);
+    npcButton.setColors(sf::Color(200, 200, 200, 204), sf::Color(220, 220, 220, 204), sf::Color(160, 160, 160, 204), sf::Color(120, 120, 120));
+    statsButton.setColors(sf::Color(200, 200, 200, 204), sf::Color(220, 220, 220, 204), sf::Color(160, 160, 160, 204), sf::Color(120, 120, 120));
+    marketButton.setColors(sf::Color(200, 200, 200, 204), sf::Color(220, 220, 220, 204), sf::Color(160, 160, 160, 204), sf::Color(120, 120, 120));
+    optionsButton.setColors(sf::Color(200, 200, 200, 204), sf::Color(220, 220, 220, 204), sf::Color(160, 160, 160, 204), sf::Color(120, 120, 120));
 }
 
 
@@ -120,25 +113,26 @@ void UI::updateMarket(const std::unordered_map<std::string, float>& prices) {
 
 
 void UI::populateNPCDetails(const PlayerEntity& npc) {
-    npcDetailPanel.setSize(400, 600);
-    npcDetailPanel.setTitle(npc.getName());
-
+    // Update the text content for NPC details
     std::ostringstream details;
     details << "Name: " << npc.getName() << "\n"
-            << "Health: " << npc.getHealth() << "\n"
+            << "Health: " << npc.getHealth() << " / 100\n"
             << "Hunger: " << npc.getHunger() << "\n"
-            << "Energy: " << npc.getEnergy() << "\n"
-            << "Speed: " << npc.getSpeed() << "\n"
+            << "Energy: " << static_cast<int>(npc.getEnergyPercentage() * 100) << "%\n"
+            << "Speed: " << npc.getBaseSpeed() << "\n"
             << "Strength: " << npc.getStrength() << "\n"
-            << "Resources:\n";
+            << "Money: $" << npc.getMoney() << "\n"
+            << "Inventory:\n";
 
-    for (const auto& [item, count] : npc.getInventory()) {
-        details << "  " << item << ": " << count << "\n";
+    for (const auto& [item, quantity] : npc.getInventory()) {
+        details << "  - " << item << ": " << quantity << "\n";
     }
 
-    details << "Money: $" << npc.getMoney();
+    // Update the detail text for the panel
     npcDetailText.setString(details.str());
 }
+
+
 
 
 void UI::showNPCDetails(const std::string& npcDetails) {
@@ -254,6 +248,11 @@ void UI::populateNPCList(const std::vector<PlayerEntity>& npcs) {
     npcListPanel.setTitle("NPC List");
     updateNPCList(npcs);
 }
+
+void UI::handleNPCPanel(sf::RenderWindow& window, sf::Event& event) {
+    npcDetailPanel.handleEvent(window, event);
+}
+
 
 void UI::render(sf::RenderWindow& window, const Market& market) {
     // Top Panels

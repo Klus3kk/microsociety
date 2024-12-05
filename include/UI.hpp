@@ -36,8 +36,9 @@ private:
     sf::Text centralText;
 
     MovablePanel npcListPanel;
+    
     MovablePanel npcDetailPanel;
-    sf::Text npcDetailText; // Declare this for NPC details
+    sf::Text npcDetailText; 
 
     // Buttons
     UIButton statsButton;
@@ -47,13 +48,13 @@ private:
 
     std::vector<std::pair<std::string, UIButton>> npcButtons;
 
-    bool showNPCList = false;  // Toggles the NPC list panel
-    bool showNPCDetail = false; // Toggles the NPC detail panel
+    bool showNPCList = false;  
+    bool showNPCDetail = false; 
 
     // Scroll for large NPC lists
     float npcListScrollOffset = 0.0f;
     const float scrollSpeed = 20.0f;
-    
+
     // Selected NPC
     int selectedNPCIndex = -1;
 
@@ -78,6 +79,7 @@ public:
     // Interaction and Rendering
     void handleButtonClicks(sf::RenderWindow& window, sf::Event& event, std::vector<PlayerEntity>& npcs);
     void handleHover(sf::RenderWindow& window);
+    void handleNPCPanel(sf::RenderWindow& window, sf::Event& event);
     void render(sf::RenderWindow& window, const Market& market);
     void drawPriceTrends(sf::RenderWindow& window, const Market& market);
 
