@@ -3,11 +3,17 @@
 
 #include "Player.hpp"
 #include <vector>
+#include <numeric>
 
 class MoneyManager {
 public:
-    // Calculate the total money among all NPCs
-    static int calculateTotalMoney(const std::vector<PlayerEntity>& npcs);
+    // Calculate the total money held by all NPCs
+    static int calculateTotalMoney(const std::vector<PlayerEntity>& npcs) {
+        return std::accumulate(npcs.begin(), npcs.end(), 0,
+                               [](int total, const PlayerEntity& npc) {
+                                   return total + npc.getMoney();
+                               });
+    }
 };
 
 #endif

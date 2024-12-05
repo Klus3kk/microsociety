@@ -14,12 +14,11 @@ private:
 
 public:
     MovablePanel(float width, float height, const std::string& title);
-    
+
     // Event handling for dragging
     void handleEvent(const sf::RenderWindow& window, sf::Event& event);
     void setPosition(float x, float y);
-
-    void setSize(float width, float height); 
+    void setSize(float width, float height);
     void setTitle(const std::string& title);
 
     // Rendering

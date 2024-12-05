@@ -3,61 +3,44 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include "Configuration.hpp"
+
+enum class AnimationState { Idle, Walking, Interacting };
+
 class Entity {
 protected:
-    float health;
-    float hunger;
-    float energy;
-    float speed;
-    float strength;
-    float money;
-
-    sf::Vector2f position;  // position on the map
-    sf::Sprite sprite;      // for rendering the NPC
-    sf::Texture texture;    // Entity's texture
+    float health, hunger, energy, speed, strength, money;
+    sf::Vector2f position;
+    sf::Sprite sprite;
+    sf::Texture texture;
+    AnimationState state = AnimationState::Idle;
 
 public:
-    // constructor to initialize attributes
     Entity(float initHealth, float initHunger, float initEnergy, float initSpeed, float initStrength, float initMoney)
-        : health(initHealth), hunger(initHunger), energy(initEnergy), speed(initSpeed),
-          strength(initStrength), money(initMoney) {
-    }
+        : health(initHealth), hunger(initHunger), energy(initEnergy), speed(initSpeed), strength(initStrength), money(initMoney) {}
 
-    // destructor
     virtual ~Entity() = default;
 
-    // function to set texture for the entity
     void setTexture(const sf::Texture& tex, const sf::Color& color = sf::Color::White) {
         texture = tex;
         sprite.setTexture(texture);
-        sprite.setColor(color); // Set the color directly
+        sprite.setColor(color);
     }
 
-
-    // function to set position of the entity
     void setPosition(float x, float y) {
         position = {x, y};
         sprite.setPosition(position);
     }
 
-    // function to set the size of the entity
     void setSize(float scaleX, float scaleY) {
         sprite.setScale(scaleX, scaleY);  
     }
 
-    // function to get the current position of the entity
     sf::Vector2f getPosition() const {
         return position;
     }
-    // function for getting the current sprite of the entity
+
     const sf::Sprite& getSprite() const {
         return sprite;
-    }
-
-
-    // function to draw the entity
-    void draw(sf::RenderWindow &window) {
-        window.draw(sprite);
     }
 
     // accessors
@@ -97,6 +80,11 @@ public:
     // function for cheching the collision
     bool checkCollision(const Entity& other) const {
         return sprite.getGlobalBounds().intersects(other.getSprite().getGlobalBounds());
+    }
+
+        
+    void draw(sf::RenderWindow &window) {
+        window.draw(sprite);
     }
 
 };

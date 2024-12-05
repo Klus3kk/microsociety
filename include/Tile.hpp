@@ -3,6 +3,7 @@
 
 #include <SFML/Graphics.hpp>
 #include "Object.hpp"
+
 class Tile {
 protected:
     sf::Sprite sprite;
@@ -25,7 +26,7 @@ public:
         }
     }
 
-    virtual void draw(sf::RenderWindow &window) const {
+    virtual void draw(sf::RenderWindow& window) const {
         window.draw(sprite);
         if (object) {
             object->draw(window);
@@ -48,7 +49,7 @@ public:
     }
 
     sf::FloatRect getObjectBounds() const {
-        return object ? object->getSprite().getGlobalBounds() : sf::FloatRect();
+        return object ? object->getObjectBounds() : sf::FloatRect();
     }
 
     void removeObject() {
@@ -58,26 +59,23 @@ public:
 
 class StoneTile : public Tile {
 public:
-    StoneTile(const sf::Texture &texture) {
-        this->setTexture(texture);  
+    explicit StoneTile(const sf::Texture& texture) {
+        setTexture(texture);
     }
-    virtual ~StoneTile() {}
 };
 
 class GrassTile : public Tile {
 public:
-    GrassTile(const sf::Texture& texture) {
-        setTexture(texture);  
+    explicit GrassTile(const sf::Texture& texture) {
+        setTexture(texture);
     }
 };
 
 class FlowerTile : public Tile {
 public:
-    FlowerTile(const sf::Texture &texture) {
-        this->setTexture(texture);  
+    explicit FlowerTile(const sf::Texture& texture) {
+        setTexture(texture);
     }
-    virtual ~FlowerTile() {}
 };
-
 
 #endif

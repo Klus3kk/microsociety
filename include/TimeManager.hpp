@@ -2,32 +2,48 @@
 #define TIMEMANAGER_HPP
 
 #include <string>
+#include <sstream>
+#include <iomanip>
 
 class TimeManager {
 private:
-    float elapsedTime;  // Elapsed time in seconds
-    int currentDay;     // Current day in the simulation
-    int societyIteration; // Iteration or "generation" of the society
-    static constexpr float SECONDS_IN_A_DAY = 86400.0f; // 24 hours in seconds
-    static constexpr float TIME_SCALE = 480.0f;         // Scaled to 3 minutes (180 seconds) = 1 day
+    float elapsedTime = 0.0f;         // Elapsed time in seconds
+    int currentDay = 1;               // Current simulation day
+    int societyIteration = 0;         // Society generation or iteration
+    static constexpr float SECONDS_IN_A_DAY = 86400.0f;
+    static constexpr float TIME_SCALE = 480.0f; // 1 day = 3 minutes
 
 public:
-    TimeManager();  // Constructor to initialize values
+    TimeManager() = default;
 
-    // Update elapsed time
-    void update(float deltaTime);
+    void update(float deltaTime) {
+        elapsedTime += deltaTime * TIME_SCALE;
+        if (elapsedTime >= SECONDS_IN_A_DAY) {
+            elapsedTime -= SECONDS_IN_A_DAY;
+            currentDay++;
+        }
+    }
 
-    // Getters
-    int getCurrentDay() const;
-    int getSocietyIteration() const;
-    std::string getFormattedTime() const;
-    float getElapsedTime() const;
+    int getCurrentDay() const { return currentDay; }
+    int getSocietyIteration() const { return societyIteration; }
+    float getElapsedTime() const { return elapsedTime; }
 
-    // Increment society iteration manually
-    void incrementSocietyIteration();
+    void incrementSocietyIteration() { societyIteration++; }
 
-    // Reset (optional, for restarting simulation)
-    void reset();
+    std::string getFormattedTime() const {
+        int hours = static_cast<int>((elapsedTime / 3600.0f)) % 24;
+        int minutes = static_cast<int>((elapsedTime / 60.0f)) % 60;
+        std::ostringstream oss;
+        oss << std::setw(2) << std::setfill('0') << hours << ":"
+            << std::setw(2) << std::setfill('0') << minutes;
+        return oss.str();
+    }
+
+    void reset() {
+        elapsedTime = 0.0f;
+        currentDay = 1;
+        societyIteration = 0;
+    }
 };
 
 #endif

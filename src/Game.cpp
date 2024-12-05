@@ -140,7 +140,7 @@ void Game::run() {
                 } else if (auto house = dynamic_cast<House*>(targetTile->getObject())) {
                     debugConsole.log("Hint", "Press 'H' to regenerate energy, 'U' to upgrade, or 'I' to store items or 'O' to see storage or 'P' for taking wood for now");
                 } else if (auto market = dynamic_cast<Market*>(targetTile->getObject())) {
-                    debugConsole.log("Hint", "Press 'B' to buy or 'S' to sell items.");
+                    debugConsole.log("Hint", "Press '1,2,3' to buy or '4,5,6' to sell items.");
                 }
             }
 
