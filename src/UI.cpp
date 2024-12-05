@@ -51,11 +51,13 @@ UI::UI()
 
     // Set Button Colors
     npcButton.setColors(
-        sf::Color(100, 100, 200), 
-        sf::Color(150, 150, 255), 
-        sf::Color(80, 80, 150), 
-        sf::Color::White
+        sf::Color(200, 200, 200, 204), // Normal (light gray with transparency)
+        sf::Color(220, 220, 220, 204), // Hover (brighter gray with transparency)
+        sf::Color(160, 160, 160, 204), // Click (dark gray with transparency)
+        sf::Color(120, 120, 120)       // Border (medium gray)
     );
+
+
     statsButton.setColors(sf::Color(180, 180, 180), sf::Color(220, 220, 220), sf::Color(140, 140, 140), sf::Color::Black);
     marketButton.setColors(sf::Color(180, 180, 180), sf::Color(220, 220, 220), sf::Color(140, 140, 140), sf::Color::Black);
     optionsButton.setColors(sf::Color(180, 180, 180), sf::Color(220, 220, 220), sf::Color(140, 140, 140), sf::Color::Black);
@@ -90,17 +92,17 @@ void UI::updateStatus(int day, const std::string& time, int iteration) {
 
 
 void UI::updateNPCList(const std::vector<PlayerEntity>& npcs) {
-    npcButtons.clear();
-    for (const auto& npc : npcs) {
+    npcButtons.clear(); 
+    for (size_t i = 0; i < npcs.size(); ++i) {
         UIButton button;
-        button.setProperties(20, 20 + 50 * npcButtons.size(), 360, 40, npc.getName(), font);
+        button.setProperties(20, 20 + 50 * i, 360, 40, npcs[i].getName(), font);
         button.setColors(
             sf::Color(80, 80, 150), 
             sf::Color(100, 100, 200), 
             sf::Color(60, 60, 120), 
             sf::Color::White
         );
-        npcButtons.emplace_back(npc.getName(), button);
+        npcButtons.emplace_back(npcs[i].getName(), button);
     }
 }
 
@@ -153,42 +155,42 @@ void UI::showNPCDetails(const std::string& npcDetails) {
 
 
 
-void UI::handleButtonClicks(sf::RenderWindow& window, sf::Event& event, std::vector<PlayerEntity>& npcs)  {
+void UI::handleButtonClicks(sf::RenderWindow& window, sf::Event& event, std::vector<PlayerEntity>& npcs) {
     if (npcButton.isClicked(window, event)) {
-        showNPCList = !showNPCList;
-        showNPCDetail = false; 
-        std::cout << "NPC button clicked!\n";
+        showNPCList = !showNPCList; // Toggle NPC list visibility
+        showNPCDetail = false;     // Hide details when list is toggled
+        std::cout << "NPC button clicked.\n";
     }
 
     if (statsButton.isClicked(window, event)) {
-        std::cout << "Stats button clicked!\n";
+        std::cout << "Stats button clicked.\n";
     }
 
     if (marketButton.isClicked(window, event)) {
-        std::cout << "Market button clicked!\n";
+        std::cout << "Market button clicked.\n";
     }
 
     if (optionsButton.isClicked(window, event)) {
-        std::cout << "Options button clicked!\n";
+        std::cout << "Options button clicked.\n";
     }
 
-    // Debugowanie dynamicznych przycisków
+    // Handle NPC list clicks
     if (showNPCList) {
         for (size_t i = 0; i < npcButtons.size(); ++i) {
             if (npcButtons[i].second.isClicked(window, event)) {
-                std::cout << "Dynamic NPC button clicked: " << npcButtons[i].first << "\n";
                 selectedNPCIndex = static_cast<int>(i);
                 populateNPCDetails(npcs[selectedNPCIndex]);
                 showNPCDetail = true;
-                showNPCList = false;
+                showNPCList = false; // Hide list when details are shown
+                std::cout << "NPC detail shown for: " << npcButtons[i].first << "\n";
+                break;
             }
         }
     }
-
-    if (showNPCDetail) {
-        npcDetailPanel.handleEvent(window, event);
-    }
 }
+
+
+
 
 void UI::handleHover(sf::RenderWindow& window) {
     npcButton.handleHover(window);
@@ -260,8 +262,6 @@ void UI::render(sf::RenderWindow& window, const Market& market) {
     window.draw(statusPanel);
     window.draw(statusText);
 
-
-    
     // Bottom Buttons
     npcButton.draw(window);
     statsButton.draw(window);
@@ -284,6 +284,7 @@ void UI::render(sf::RenderWindow& window, const Market& market) {
 
     if (showNPCDetail) {
         npcDetailPanel.render(window);
+        window.draw(npcDetailText);
     }
 }
 

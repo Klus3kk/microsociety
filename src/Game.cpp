@@ -97,11 +97,7 @@ void Game::run() {
                 debugConsole.toggle();
             }
 
-            // Handle UI button clicks
-            if (ui.isMouseOver(window)) {
-                ui.handleButtonClicks(window, event, npcs);
-                continue; // Avoid player movement/input when interacting with the UI
-            }
+            ui.handleButtonClicks(window, event, npcs);
         }
 
 

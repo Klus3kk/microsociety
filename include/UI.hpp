@@ -53,10 +53,7 @@ private:
     // Scroll for large NPC lists
     float npcListScrollOffset = 0.0f;
     const float scrollSpeed = 20.0f;
-
-    // Helper to display NPC details
-    void displayNPCDetails(const std::string& npcDetails);
-
+    
     // Selected NPC
     int selectedNPCIndex = -1;
 

@@ -20,15 +20,12 @@ private:
     float cornerRadius;
     float borderThickness;
 
-    bool isHovered = false;
-    bool isClickedState = false;
+    bool isHovered;
+    bool isClickedState;
 
     // Animation and timing helpers
     sf::Clock clickAnimationClock;
 
-    // Helpers for advanced appearance
-    void applyGradient();
-    void applyGlow();
 
 public:
     UIButton();
