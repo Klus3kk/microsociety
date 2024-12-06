@@ -118,7 +118,7 @@ class Environment:
 
 
 class DQLAgent:
-    def __init__(self, state_size, action_size, model_path='models/prototype/saved_model.keras'):
+    def __init__(self, state_size, action_size, model_path='saved_model.keras'):
         self.state_size = state_size
         self.action_size = action_size
         self.model_path = model_path
