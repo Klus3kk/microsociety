@@ -3,7 +3,6 @@ import tensorflow as tf
 import random
 import os
 import matplotlib.pyplot as plt
-import csv
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -20,33 +19,56 @@ class Environment:
             "food": random.sample([(x, y) for x in range(40, 50) for y in range(40, 50)], 5),
         }
         self.inventory = {"wood": 0, "stone": 0, "food": 0}
+        self.house = (random.randint(0, self.grid_size[0] - 1), random.randint(0, self.grid_size[1] - 1))
+        self.markets = [(random.randint(0, self.grid_size[0] - 1), random.randint(0, self.grid_size[1] - 1)) for _ in range(2)]
+        self.energy = 100
+        self.money = 100
         self.done = False
         return self.get_state()
     
     def get_state(self):
-        state = {
-            "player_position": np.array(self.player_position) / np.array(self.grid_size),
-            "inventory": np.array(list(self.inventory.values())),
-        }
+        # Encode the state
+        state = np.array(
+            [self.player_position[0] / self.grid_size[0], self.player_position[1] / self.grid_size[1]]
+            + list(self.inventory.values())
+            + [self.energy / 100, self.money / 100]
+        )
         return state
     
     def step(self, action):
+        reward = -1  # Default reward for step
         if action == 0:
-            self.move_player()
+            self.move_player("up")
         elif action == 1:
-            self.gather_resource("wood")
+            self.move_player("down")
         elif action == 2:
-            self.gather_resource("stone")
+            self.move_player("left")
         elif action == 3:
-            self.gather_resource("food")
+            self.move_player("right")
+        elif action == 4:
+            reward += self.gather_resource("wood")
+        elif action == 5:
+            reward += self.gather_resource("stone")
+        elif action == 6:
+            reward += self.gather_resource("food")
+        elif action == 7:
+            reward += self.regenerate_energy()
+        elif action == 8:
+            reward += self.upgrade_house()
+        elif action == 9:
+            reward += self.trade_at_market("wood", "buy")
+        elif action == 10:
+            reward += self.trade_at_market("wood", "sell")
+        elif action == 11:
+            reward += self.trade_at_market("stone", "buy")
+        elif action == 12:
+            reward += self.trade_at_market("stone", "sell")
         
-        reward = self.calculate_reward(action)
+        reward += self.calculate_reward()
         self.done = self.check_done()
-        
         return self.get_state(), reward, self.done
     
-    def move_player(self):
-        direction = random.choice(["up", "down", "left", "right"])
+    def move_player(self, direction):
         if direction == "up" and self.player_position[1] > 0:
             self.player_position[1] -= 1
         elif direction == "down" and self.player_position[1] < self.grid_size[1] - 1:
@@ -61,115 +83,124 @@ class Environment:
         if pos in self.resources[resource_type]:
             self.inventory[resource_type] += 1
             self.resources[resource_type].remove(pos)
+            return 10  # Positive reward
+        return -1  # Penalty for invalid action
     
-    def calculate_reward(self, action):
-        if action in [1, 2, 3]:  
-            return 10
-        return -1  
+    def regenerate_energy(self):
+        if tuple(self.player_position) == self.house:
+            self.energy = min(100, self.energy + 20)
+            return 10  # Reward for regenerating energy
+        return -5  # Penalty for trying to regenerate at the wrong location
+    
+    def upgrade_house(self):
+        if tuple(self.player_position) == self.house and self.money >= 50:
+            self.money -= 50
+            return 20  # Reward for upgrading house
+        return -10  # Penalty for insufficient funds or wrong location
+    
+    def trade_at_market(self, resource, action):
+        if tuple(self.player_position) in self.markets:
+            if action == "buy" and self.money >= 10:
+                self.inventory[resource] += 1
+                self.money -= 10
+                return 15  # Reward for successful trade
+            elif action == "sell" and self.inventory[resource] > 0:
+                self.inventory[resource] -= 1
+                self.money += 10
+                return 15  # Reward for successful sale
+        return -5  # Penalty for invalid trade
+    
+    def calculate_reward(self):
+        return sum(self.inventory.values())  # Reward for collecting resources
     
     def check_done(self):
         return sum(self.inventory.values()) >= 10
+
 
 class DQLAgent:
     def __init__(self, state_size, action_size, model_path='models/prototype/saved_model.keras'):
         self.state_size = state_size
         self.action_size = action_size
         self.model_path = model_path
-        self.epsilon = 1.0  # Exploration rate
+        self.epsilon = 1.0
         self.epsilon_min = 0.1
         self.epsilon_decay = 0.995
+        self.gamma = 0.95
+        self.batch_size = 32
+        self.memory = []
         self.model = self.load_or_build_model()
     
     def load_or_build_model(self):
         if os.path.exists(self.model_path):
-            print("Loading saved model...")
             return tf.keras.models.load_model(self.model_path)
-        else:
-            print("Building new model...")
-            return self._build_model()
-
+        return self._build_model()
+    
     def _build_model(self):
         model = tf.keras.Sequential([
-            tf.keras.layers.Dense(24, input_dim=self.state_size, activation="relu"),
-            tf.keras.layers.Dense(24, activation="relu"),
+            tf.keras.layers.Dense(128, input_dim=self.state_size, activation="relu"),
+            tf.keras.layers.Dense(128, activation="relu"),
             tf.keras.layers.Dense(self.action_size, activation="linear")
         ])
-        model.compile(optimizer="adam", loss="mse")
+        model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.001), loss="mse")
         return model
     
-    def save_model(self):
-        os.makedirs(os.path.dirname(self.model_path), exist_ok=True)
-        self.model.save(self.model_path, save_format='keras')
+    def remember(self, state, action, reward, next_state, done):
+        self.memory.append((state, action, reward, next_state, done))
     
     def act(self, state):
         if np.random.rand() <= self.epsilon:
             return random.randrange(self.action_size)
-        state_input = np.array([state["player_position"].tolist() + state["inventory"].tolist()])
-        act_values = self.model.predict(state_input)
+        act_values = self.model.predict(np.array([state]))
         return np.argmax(act_values[0])
+    
+    def replay(self):
+        if len(self.memory) < self.batch_size:
+            return
+        minibatch = random.sample(self.memory, self.batch_size)
+        for state, action, reward, next_state, done in minibatch:
+            target = reward
+            if not done:
+                target += self.gamma * np.amax(self.model.predict(np.array([next_state]))[0])
+            target_f = self.model.predict(np.array([state]))
+            target_f[0][action] = target
+            self.model.fit(np.array([state]), target_f, epochs=1, verbose=0)
+        if self.epsilon > self.epsilon_min:
+            self.epsilon *= self.epsilon_decay
+    
+    def save_model(self):
+        os.makedirs(os.path.dirname(self.model_path), exist_ok=True)
+        self.model.save(self.model_path, save_format='keras')
 
-# Main loop for training with logging and visualization as before
+
+# Training loop
 if __name__ == "__main__":
     env = Environment()
-    agent = DQLAgent(state_size=5, action_size=4)
-    
-    episodes = 10
+    agent = DQLAgent(state_size=7, action_size=13)  # Update state size and action count
+    episodes = 50
     rewards = []
-    successes = []
-    epsilons = []
-    
+
     for episode in range(episodes):
         state = env.reset()
-        done = False
         cumulative_reward = 0
-        success = 0
-        step = 0
-        
-        while not done:
+        for _ in range(200):
             action = agent.act(state)
             next_state, reward, done = env.step(action)
+            agent.remember(state, action, reward, next_state, done)
+            state = next_state
             cumulative_reward += reward
             if done:
-                success = 1
-            state = next_state
-            step += 1
-        
+                break
+        agent.replay()
         rewards.append(cumulative_reward)
-        successes.append(success)
-        epsilons.append(agent.epsilon)
-        
-        print(f"Episode {episode + 1}/{episodes} - Reward: {cumulative_reward}, Success: {success}, Epsilon: {agent.epsilon}")
-        
-        if agent.epsilon > agent.epsilon_min:
-            agent.epsilon *= agent.epsilon_decay
-            
-        agent.save_model()
+        print(f"Episode {episode + 1}/{episodes}, Reward: {cumulative_reward}")
+        if (episode + 1) % 50 == 0:
+            agent.save_model()
 
-    # Visualization (same as before)
-    plt.figure(figsize=(12, 8))
-    # Plot cumulative reward
-    plt.subplot(3, 1, 1)
-    plt.plot(rewards, label="Cumulative Reward")
+    agent.save_model()
+
+    # Visualize rewards
+    plt.plot(rewards)
     plt.xlabel("Episode")
-    plt.ylabel("Cumulative Reward")
-    plt.legend()
-    
-    # Plot success rate
-    plt.subplot(3, 1, 2)
-    plt.plot(successes, label="Success (1=Success, 0=Failure)")
-    plt.xlabel("Episode")
-    plt.ylabel("Success")
-    plt.legend()
-    
-    # Plot epsilon decay
-    plt.subplot(3, 1, 3)
-    plt.plot(epsilons, label="Epsilon (Exploration Rate)")
-    plt.xlabel("Episode")
-    plt.ylabel("Epsilon")
-    plt.legend()
-    
-    plt.tight_layout()
+    plt.ylabel("Reward")
+    plt.title("Training Progress")
     plt.show()
-
-
-
