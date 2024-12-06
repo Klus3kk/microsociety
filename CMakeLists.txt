@@ -63,43 +63,10 @@ elseif(UNIX)
     target_link_libraries(MicroSociety PRIVATE sfml-graphics sfml-audio sfml-system sfml-window nlohmann_json::nlohmann_json pthread)
 endif()
 
-# Separate unit test files to avoid duplicate main definitions
-add_executable(TestTerrain tests/test_terrain.cpp ${SOURCES})
-target_link_libraries(TestTerrain PRIVATE sfml-graphics sfml-audio sfml-system sfml-window nlohmann_json::nlohmann_json gtest_main)
-gtest_discover_tests(TestTerrain)
+# GTest
+file(GLOB TEST_SOURCES "tests/*.cpp")
+add_executable(all_tests ${TEST_SOURCES} ${SOURCES})
+target_link_libraries(all_tests PRIVATE sfml-graphics sfml-audio sfml-system sfml-window nlohmann_json::nlohmann_json gtest_main)
 
-add_executable(TestEntity tests/test_entity.cpp ${SOURCES})
-target_link_libraries(TestEntity PRIVATE sfml-graphics sfml-audio sfml-system sfml-window nlohmann_json::nlohmann_json gtest_main)
-gtest_discover_tests(TestEntity)
-
-add_executable(TestCollision tests/test_collision.cpp ${SOURCES})
-target_link_libraries(TestCollision PRIVATE sfml-graphics sfml-audio sfml-system sfml-window nlohmann_json::nlohmann_json gtest_main)
-gtest_discover_tests(TestCollision)
-
-add_executable(TestActions tests/test_actions.cpp ${SOURCES})
-target_link_libraries(TestActions PRIVATE sfml-graphics sfml-audio sfml-system sfml-window nlohmann_json::nlohmann_json gtest_main)
-gtest_discover_tests(TestActions)
-
-add_executable(TestInventory tests/test_inventory.cpp ${SOURCES})
-target_link_libraries(TestInventory PRIVATE sfml-graphics sfml-audio sfml-system sfml-window nlohmann_json::nlohmann_json gtest_main)
-gtest_discover_tests(TestInventory)
-
-add_executable(TestResourceCollection tests/test_resource_collection.cpp ${SOURCES})
-target_link_libraries(TestResourceCollection PRIVATE sfml-graphics sfml-audio sfml-system sfml-window nlohmann_json::nlohmann_json gtest_main)
-gtest_discover_tests(TestResourceCollection)
-
-add_executable(TestMapGeneration tests/test_map_generation.cpp ${SOURCES})
-target_link_libraries(TestMapGeneration PRIVATE sfml-graphics sfml-audio sfml-system sfml-window nlohmann_json::nlohmann_json gtest_main)
-gtest_discover_tests(TestMapGeneration)
-
-add_executable(TestNPCBehavior tests/test_npc_behavior.cpp ${SOURCES})
-target_link_libraries(TestNPCBehavior PRIVATE sfml-graphics sfml-audio sfml-system sfml-window nlohmann_json::nlohmann_json gtest_main)
-gtest_discover_tests(TestNPCBehavior)
-
-add_executable(TestTrading tests/test_trading.cpp ${SOURCES})
-target_link_libraries(TestTrading PRIVATE sfml-graphics sfml-audio sfml-system sfml-window nlohmann_json::nlohmann_json gtest_main)
-gtest_discover_tests(TestTrading)
-
-add_executable(TestMarket tests/test_market.cpp ${SOURCES})
-target_link_libraries(TestMarket PRIVATE sfml-graphics sfml-audio sfml-system sfml-window nlohmann_json::nlohmann_json gtest_main)
-gtest_discover_tests(TestMarket)
+# Discover all tests
+gtest_discover_tests(all_tests)

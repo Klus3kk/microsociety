@@ -99,6 +99,7 @@ void Game::run() {
 
             ui.handleButtonClicks(window, event, npcs);
             ui.handleNPCPanel(window, event);
+            ui.handleStatsPanel(window, event);
         }
 
 

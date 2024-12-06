@@ -102,17 +102,9 @@ public:
         return false;
     }
 
-
-
-
-
-
-
-
-
-
-
-
+    const std::unordered_map<std::string, float>& getPrices() const {
+        return prices;
+    }
 
     const std::unordered_map<std::string, std::vector<float>>& getPriceTrendMap() const {
         return priceHistory; // Assuming `priceHistory` tracks the trends

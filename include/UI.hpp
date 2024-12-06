@@ -8,7 +8,7 @@
 #include "UIButton.hpp"
 #include "Market.hpp"
 #include "MovablePanel.hpp"
-
+#include "MarketPanel.hpp"
 class UI {
 private:
     sf::Font font;
@@ -36,20 +36,22 @@ private:
     sf::Text centralText;
 
     MovablePanel npcListPanel;
-    
+    MovablePanel statsPanel; 
     MovablePanel npcDetailPanel;
     sf::Text npcDetailText; 
-
+    sf::Text statsText;
     // Buttons
     UIButton statsButton;
     UIButton optionsButton;
     UIButton marketButton;
     UIButton npcButton;
-
+    // MarketPanel marketPanel; 
     std::vector<std::pair<std::string, UIButton>> npcButtons;
 
     bool showNPCList = false;  
     bool showNPCDetail = false; 
+
+    bool showStatsPanel = false; 
 
     // Scroll for large NPC lists
     float npcListScrollOffset = 0.0f;
@@ -80,6 +82,7 @@ public:
     void handleButtonClicks(sf::RenderWindow& window, sf::Event& event, std::vector<PlayerEntity>& npcs);
     void handleHover(sf::RenderWindow& window);
     void handleNPCPanel(sf::RenderWindow& window, sf::Event& event);
+    void handleStatsPanel(sf::RenderWindow& window, sf::Event& event);
     void render(sf::RenderWindow& window, const Market& market);
     void drawPriceTrends(sf::RenderWindow& window, const Market& market);
 
@@ -88,8 +91,11 @@ public:
     void setTooltipContent(const std::string& content);
     void updateTooltipPosition(const sf::RenderWindow& window);
 
+    void updateStats(const std::vector<PlayerEntity>& npcs, int day, const std::string& time, int iteration);
     // Responsive Layout
     void adjustLayout(sf::RenderWindow& window);
+
+    void toggleMarketPanel();
 };
 
 #endif

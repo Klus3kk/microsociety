@@ -5,7 +5,7 @@
 #include <iostream>
 
 UI::UI() 
-    : npcListPanel(400, 600, "NPC List"), npcDetailPanel(400, 600, "NPC Details") {
+    : npcListPanel(400, 600, "NPC List"), npcDetailPanel(400, 600, "NPC Details"), statsPanel(500, 400, "Simulation Stats") {
     if (!font.loadFromFile("../assets/fonts/font.ttf")) {
         throw std::runtime_error("Failed to load font!");
     }
@@ -14,6 +14,12 @@ UI::UI()
     npcDetailText.setCharacterSize(16);
     npcDetailText.setFillColor(sf::Color::White);
     npcDetailText.setPosition(npcDetailPanel.getBounds().left + 20, npcDetailPanel.getBounds().top + 20);
+
+    // Stats Text
+    statsText.setFont(font);
+    statsText.setCharacterSize(16);
+    statsText.setFillColor(sf::Color::White);
+    statsText.setPosition(statsPanel.getBounds().left + 20, statsPanel.getBounds().top + 20);
 
     // Money Panel (Top Left)
     moneyPanel.setSize({100, 50});
@@ -157,6 +163,11 @@ void UI::handleButtonClicks(sf::RenderWindow& window, sf::Event& event, std::vec
     }
 
     if (statsButton.isClicked(window, event)) {
+        showStatsPanel = !showStatsPanel; // Toggle visibility
+    }
+
+
+    if (statsButton.isClicked(window, event)) {
         std::cout << "Stats button clicked.\n";
     }
 
@@ -183,8 +194,49 @@ void UI::handleButtonClicks(sf::RenderWindow& window, sf::Event& event, std::vec
     }
 }
 
+void UI::handleStatsPanel(sf::RenderWindow& window, sf::Event& event) {
+    if (showStatsPanel) {
+        statsPanel.handleEvent(window, event);
+    }
+}
 
+void UI::updateStats(const std::vector<PlayerEntity>& npcs, int day, const std::string& time, int iteration) {
+    std::ostringstream statsStream;
 
+    // General Simulation Stats
+    statsStream << "Simulation Stats:\n\n";
+    statsStream << "Day: " << day << "\n";
+    statsStream << "Time: " << time << "\n";
+    statsStream << "Iteration: " << iteration << "\n\n";
+
+    // NPC Stats
+    statsStream << "NPC Stats:\n";
+    statsStream << "  Total NPCs: " << npcs.size() << "\n";
+
+    float totalHealth = 0, totalEnergy = 0, totalHunger = 0;
+    for (const auto& npc : npcs) {
+        totalHealth += npc.getHealth();
+        totalEnergy += npc.getEnergy();
+        totalHunger += npc.getHunger();
+    }
+    statsStream << "  Avg. Health: " << (npcs.empty() ? 0 : totalHealth / npcs.size()) << "\n";
+    statsStream << "  Avg. Energy: " << (npcs.empty() ? 0 : totalEnergy / npcs.size()) << "\n";
+    statsStream << "  Avg. Hunger: " << (npcs.empty() ? 0 : totalHunger / npcs.size()) << "\n\n";
+
+    // Resource Stats
+    statsStream << "Resource Stats:\n";
+    std::unordered_map<std::string, int> totalResources;
+    for (const auto& npc : npcs) {
+        for (const auto& [item, quantity] : npc.getInventory()) {
+            totalResources[item] += quantity;
+        }
+    }
+    for (const auto& [item, total] : totalResources) {
+        statsStream << "  " << item << ": " << total << "\n";
+    }
+
+    statsText.setString(statsStream.str());
+}
 
 void UI::handleHover(sf::RenderWindow& window) {
     npcButton.handleHover(window);
@@ -198,6 +250,7 @@ void UI::handleHover(sf::RenderWindow& window) {
         }
     }   
 }
+
 
 void UI::drawPriceTrends(sf::RenderWindow& window, const Market& market) {
     float startX = marketPanel.getPosition().x + 20.0f;
@@ -284,6 +337,11 @@ void UI::render(sf::RenderWindow& window, const Market& market) {
     if (showNPCDetail) {
         npcDetailPanel.render(window);
         window.draw(npcDetailText);
+    }
+
+    if (showStatsPanel) {
+        statsPanel.render(window);
+        window.draw(statsText);
     }
 }
 
