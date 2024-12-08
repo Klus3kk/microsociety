@@ -195,17 +195,19 @@ void UI::handleButtonClicks(sf::RenderWindow& window, sf::Event& event, std::vec
         }
     }
 
-    if (statsButton.isClicked(window, event)) {
-        std::cout << "Stats button clicked.\n";
-    }
+    // if (statsButton.isClicked(window, event)) {
+    //     std::cout << "Stats button clicked.\n";
+    // }
 
-    if (marketButton.isClicked(window, event)) {
-        std::cout << "Market button clicked.\n";
-    }
+    // if (marketButton.isClicked(window, event)) {
+    //     std::cout << "Market button clicked.\n";
+    // }
 
     if (optionsButton.isClicked(window, event)) {
-        std::cout << "Options button clicked.\n";
+        showOptionsPanel = !showOptionsPanel; // Toggle visibility
+        std::cout << "Options button clicked. Panel visibility: " << showOptionsPanel << "\n";
     }
+
 
     // Handle NPC list clicks
     if (showNPCList) {
@@ -463,7 +465,7 @@ void UI::renderOptionsPanel(sf::RenderWindow& window) {
     // Background
     sf::RectangleShape optionsPanel;
     optionsPanel.setSize({600, 400});
-    optionsPanel.setPosition(100, 100);
+    optionsPanel.setPosition(150, 150);
     optionsPanel.setFillColor(sf::Color(50, 50, 50, 200));
 
     // Title
