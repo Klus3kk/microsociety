@@ -26,8 +26,9 @@ private:
     ClockGUI clockGUI;
     float deltaTime;
     std::vector<std::vector<std::unique_ptr<Tile>>> tileMap;
-
-    int mapWidth;
+    bool showTileBorders = false;
+    float simulationSpeed = 1.0f;
+    int mapWidth;   
     int mapHeight;
     int tileSize;
     std::vector<PlayerEntity> npcs; 
@@ -39,6 +40,9 @@ public:
     void render();
     void drawTileBorders();
     bool detectCollision(const PlayerEntity& npc);
+    void resetSimulation();
+    void toggleTileBorders();
+    void setSimulationSpeed(float speedFactor);
 
     std::unordered_map<std::string, int> aggregateResources(const std::vector<PlayerEntity>& npcs) const;
     std::vector<PlayerEntity> generateNPCs() const;  // For generating npcs

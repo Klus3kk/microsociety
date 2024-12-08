@@ -97,9 +97,11 @@ void Game::run() {
                 debugConsole.toggle();
             }
 
-            ui.handleButtonClicks(window, event, npcs);
-            ui.handleNPCPanel(window, event);
+            ui.handleButtonClicks(window, event, npcs, timeManager);
+            ui.handleNPCPanel(window, event, npcs);
             ui.handleStatsPanel(window, event);
+            ui.handleMarketButton(window, event, market);
+            ui.handleOptionsEvents(window, event, *this);
         }
 
 
@@ -297,7 +299,7 @@ void Game::run() {
         // Update day and iteration logic
         timeManager.update(deltaTime);
         clockGUI.update(timeManager.getElapsedTime());
-
+        
 
         ui.updateStatus(
             timeManager.getCurrentDay(),
@@ -503,5 +505,27 @@ void Game::render() {
     }
 }
 
+void Game::resetSimulation() {
+    generateMap();
+    npcs = generateNPCs();
+    ui.updateNPCList(npcs);
+    getDebugConsole().log("Options", "Simulation reset.");
+}
+
+void Game::toggleTileBorders() {
+    showTileBorders = !showTileBorders;
+    getDebugConsole().log("Options", "Tile borders toggled: " + std::string(showTileBorders ? "ON" : "OFF"));
+}
+
+void Game::setSimulationSpeed(float speedFactor) {
+    simulationSpeed = speedFactor;
+    getDebugConsole().log("Options", "Simulation speed set to: " + std::to_string(speedFactor));
+}
+
+// void Game::saveGame(const std::string& saveFile);
+// void Game::loadGame(const std::string& saveFile);
 
 
+// void Game::setAIDifficulty(int level);
+
+// void Game::applySeason(const std::string& season);

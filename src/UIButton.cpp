@@ -1,13 +1,17 @@
 #include "UIButton.hpp"
 #include <iostream>
+
 UIButton::UIButton()
     : isHovered(false), isClickedState(false), cornerRadius(8.0f), borderThickness(2.0f) {
-    normalColor = sf::Color(50, 50, 50, 255);
-    hoverColor = sf::Color(70, 70, 100, 255);
-    clickColor = sf::Color(100, 100, 150, 255);
-    borderColor = sf::Color::White;
+    // Set default colors with transparency (80%)
+    normalColor = sf::Color(50, 50, 50, 204);
+    hoverColor = sf::Color(70, 70, 100, 204);
+    clickColor = sf::Color(100, 100, 150, 204);
+    borderColor = sf::Color(200, 200, 200, 204);
 
     buttonShape.setFillColor(normalColor);
+    buttonShape.setOutlineThickness(borderThickness);
+    buttonShape.setOutlineColor(borderColor);
 }
 
 UIButton::UIButton(float x, float y, float width, float height, const std::string& text, const sf::Font& font)
@@ -95,6 +99,35 @@ bool UIButton::isMouseOver(sf::RenderWindow& window) const {
 }
 
 void UIButton::draw(sf::RenderWindow& window) {
+    // Create a gradient effect by overlaying a semi-transparent rectangle
+    sf::RectangleShape gradientShape(buttonShape.getSize());
+    gradientShape.setPosition(buttonShape.getPosition());
+    gradientShape.setFillColor(sf::Color(255, 255, 255, 50)); // Light gradient overlay
+
+    // Draw the button base and gradient
     window.draw(buttonShape);
+    window.draw(gradientShape);
+
+    // Draw the button text
     window.draw(buttonText);
+}
+
+sf::Vector2f UIButton::getPosition() const {
+    return buttonShape.getPosition();
+}
+
+sf::Vector2f UIButton::getSize() const {
+    return buttonShape.getSize();
+}
+
+std::string UIButton::getText() const {
+    return buttonText.getString();
+}
+
+void UIButton::setRelativePosition(const sf::Vector2f& position) {
+    relativePosition = position;
+}
+
+sf::Vector2f UIButton::getRelativePosition() const {
+    return relativePosition;
 }

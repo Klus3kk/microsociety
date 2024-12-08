@@ -26,6 +26,8 @@ private:
     // Animation and timing helpers
     sf::Clock clickAnimationClock;
 
+    sf::Vector2f relativePosition;
+
 
 public:
     UIButton();
@@ -39,8 +41,12 @@ public:
     void handleClickAnimation();
     bool isClicked(sf::RenderWindow& window, sf::Event& event);
     bool isMouseOver(sf::RenderWindow& window) const;
-
+    void setRelativePosition(const sf::Vector2f& position);
     void draw(sf::RenderWindow& window);
-};
+    sf::Vector2f getPosition() const; // Get button position
+    sf::Vector2f getSize() const;     // Get button size
+    std::string getText() const;      // Get button text
+    sf::Vector2f getRelativePosition() const;
+}; 
 
 #endif

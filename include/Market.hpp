@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cmath>
 #include <vector>
+#include <numeric>
 #include "Player.hpp"
 #include "Object.hpp"
 #include "debug.hpp" 
@@ -16,6 +17,11 @@ private:
     std::unordered_map<std::string, int> demand;        // Demand for each item
     std::unordered_map<std::string, int> supply;        // Supply for each item
     std::unordered_map<std::string, std::vector<float>> priceHistory;
+    std::unordered_map<std::string, int> totalBuyTransactions;
+    std::unordered_map<std::string, int> totalSellTransactions;
+    std::unordered_map<std::string, float> totalRevenue;   // Total money earned from selling
+    std::unordered_map<std::string, float> totalExpenditure; // Total money spent on buying
+
 
     const float priceAdjustmentFactor = 0.2f; // Scaling factor for price updates
     const float minimumPrice = 1.0f;          // Minimum price for any item
@@ -57,57 +63,79 @@ public:
         return std::round(getPrice(item) * sellMargin * 10) / 10.0f; // Ensure consistent rounding
     }
 
-
     bool buyItem(PlayerEntity& player, const std::string& item, int quantity) {
         if (prices.find(item) == prices.end()) setPrice(item, 10.0f);
 
         float cost = calculateBuyPrice(item) * quantity;
-        getDebugConsole().log("Market", "Buying " + item + ": cost=" + std::to_string(cost) + 
-                            ", playerMoney=" + std::to_string(player.getMoney()));
-
         if (player.getMoney() >= cost) {
             player.setMoney(player.getMoney() - cost);
             player.addToInventory(item, quantity);
 
             demand[item] += quantity;
             supply[item] = std::max(0, supply[item] - quantity);
-
             prices[item] = adjustPriceOnBuy(prices[item], demand[item], supply[item], 0.3f);
+
+            trackPriceHistory(item);
+
+            // Advanced Stats
+            totalBuyTransactions[item] += quantity;
+            totalExpenditure[item] += cost;
+
             return true;
         }
-
         return false;
     }
-
-
 
     bool sellItem(PlayerEntity& player, const std::string& item, int quantity) {
         if (prices.find(item) == prices.end()) setPrice(item, 10.0f);
 
         if (player.getInventoryItemCount(item) >= quantity) {
             float revenue = calculateSellPrice(item) * quantity;
-            getDebugConsole().log("Market", "Selling " + item + ": revenue=" + std::to_string(revenue) + 
-                                ", playerMoney=" + std::to_string(player.getMoney()));
-
             player.removeFromInventory(item, quantity);
             player.setMoney(player.getMoney() + revenue);
 
             supply[item] += quantity;
             demand[item] = std::max(0, demand[item] - quantity);
-
             prices[item] = adjustPriceOnSell(prices[item], demand[item], supply[item], 0.2f);
+
+            trackPriceHistory(item);
+
+            // Advanced Stats
+            totalSellTransactions[item] += quantity;
+            totalRevenue[item] += revenue;
+
             return true;
         }
-
         return false;
     }
+
+    float calculateVolatility(const std::string& item) const {
+        // Check if item exists in priceHistory
+        auto it = priceHistory.find(item);
+        if (it == priceHistory.end() || it->second.size() < 2) {
+            getDebugConsole().log("Market", "Volatility calculation skipped: Insufficient history for " + item);
+            return 0.0f;
+        }
+
+        const auto& history = it->second;
+        float mean = std::accumulate(history.begin(), history.end(), 0.0f) / history.size();
+        float variance = 0.0f;
+
+        for (float price : history) {
+            variance += std::pow(price - mean, 2);
+        }
+        variance /= history.size();
+
+        return std::sqrt(variance); // Standard deviation
+    }
+
 
     const std::unordered_map<std::string, float>& getPrices() const {
         return prices;
     }
 
     const std::unordered_map<std::string, std::vector<float>>& getPriceTrendMap() const {
-        return priceHistory; // Assuming `priceHistory` tracks the trends
+        return priceHistory; 
     }
 
     float adjustPriceOnBuy(float currentPrice, int demand, int supply, float buyFactor) {
@@ -227,6 +255,53 @@ public:
     ObjectType getType() const override {
         return ObjectType::Market; // Returns the type as Market
     }
+
+    int getTotalTrades() const {
+        int total = 0;
+        for (const auto& [item, qty] : supply) {
+            total += qty;
+        }
+        return total;
+    }
+
+    std::unordered_map<std::string, float> getResourceStats() const {
+        std::unordered_map<std::string, float> stats;
+        for (const auto& [item, price] : prices) {
+            stats[item] = price;
+        }
+        return stats;
+    }
+
+    int getBuyTransactions(const std::string& item) const {
+        auto it = totalBuyTransactions.find(item);
+        return it != totalBuyTransactions.end() ? it->second : 0;
+    }
+
+    int getSellTransactions(const std::string& item) const {
+        auto it = totalSellTransactions.find(item);
+        return it != totalSellTransactions.end() ? it->second : 0;
+    }
+
+    float getRevenue(const std::string& item) const {
+        auto it = totalRevenue.find(item);
+        return it != totalRevenue.end() ? it->second : 0.0f;
+    }
+
+    float getExpenditure(const std::string& item) const {
+        auto it = totalExpenditure.find(item);
+        return it != totalExpenditure.end() ? it->second : 0.0f;
+    }
+
+    float getSupplyDemandRatio(const std::string& item) const {
+        auto supplyIt = supply.find(item);
+        auto demandIt = demand.find(item);
+        if (supplyIt != supply.end() && demandIt != demand.end() && supplyIt->second > 0) {
+            return static_cast<float>(demandIt->second) / supplyIt->second;
+        }
+        return 0.0f;
+    }
+
+
 };
 
 #endif // MARKET_HPP

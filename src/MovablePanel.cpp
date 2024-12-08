@@ -14,7 +14,13 @@ MovablePanel::MovablePanel(float width, float height, const std::string& title) 
     panelTitle.setCharacterSize(18);
     panelTitle.setString(title);
     panelTitle.setFillColor(sf::Color::White);
-    panelTitle.setPosition(10, 10); // Title position
+    updateTextPosition();
+}
+
+MovablePanel::~MovablePanel() {
+    for (UIButton* button : childButtons) {
+        delete button; // Free memory for buttons
+    }
 }
 
 void MovablePanel::handleEvent(const sf::RenderWindow& window, sf::Event& event) {
@@ -31,6 +37,8 @@ void MovablePanel::handleEvent(const sf::RenderWindow& window, sf::Event& event)
     if (isDragging && event.type == sf::Event::MouseMoved) {
         panelShape.setPosition(static_cast<float>(mousePos.x) + dragOffset.x,
                                static_cast<float>(mousePos.y) + dragOffset.y);
+        updateTextPosition(); // Update title position
+        updateChildPositions(); // Update child positions
     }
 }
 
@@ -44,13 +52,56 @@ void MovablePanel::setTitle(const std::string& title) {
 
 void MovablePanel::setPosition(float x, float y) {
     panelShape.setPosition(x, y);
+    updateTextPosition();
+    updateChildPositions();
 }
+
+void MovablePanel::addChild(UIButton* button) {
+    sf::Vector2f panelPosition = panelShape.getPosition();
+    sf::Vector2f buttonOffset = button->getPosition() - panelPosition;
+    button->setRelativePosition(buttonOffset); // Store relative offset
+    childButtons.push_back(button);
+}
+
 
 void MovablePanel::render(sf::RenderWindow& window) {
     window.draw(panelShape);
     window.draw(panelTitle);
+    for (UIButton* button : childButtons) {
+        if (button) {
+            button->draw(window);
+        }
+    }
 }
 
 sf::FloatRect MovablePanel::getBounds() const {
     return panelShape.getGlobalBounds();
+}
+
+void MovablePanel::updateTextPosition() {
+    panelTitle.setPosition(panelShape.getPosition().x + 10, panelShape.getPosition().y + 10);
+}
+
+void MovablePanel::clearChildren() {
+    for (UIButton* button : childButtons) {
+        delete button; 
+    }
+    childButtons.clear(); 
+}
+
+
+void MovablePanel::updateChildPositions() {
+    sf::Vector2f panelPosition = panelShape.getPosition();
+
+    for (UIButton* button : childButtons) {
+        sf::Vector2f relativeOffset = button->getRelativePosition(); // Add relative position logic
+        button->setProperties(
+            panelPosition.x + relativeOffset.x, // Maintain relative X
+            panelPosition.y + relativeOffset.y, // Maintain relative Y
+            button->getSize().x, // Preserve width
+            button->getSize().y, // Preserve height
+            button->getText(),   // Preserve text
+            font    // Preserve font
+        );
+    }
 }

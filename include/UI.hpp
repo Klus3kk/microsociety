@@ -8,7 +8,10 @@
 #include "UIButton.hpp"
 #include "Market.hpp"
 #include "MovablePanel.hpp"
-#include "MarketPanel.hpp"
+#include "TimeManager.hpp"
+
+
+
 class UI {
 private:
     sf::Font font;
@@ -20,8 +23,6 @@ private:
     sf::RectangleShape inventoryPanel;
     sf::Text inventoryText;
 
-    sf::RectangleShape marketPanel;
-    sf::Text marketText;
 
     sf::RectangleShape tooltipPanel;
     sf::Text tooltipText;
@@ -35,23 +36,35 @@ private:
     sf::RectangleShape centralPanel;
     sf::Text centralText;
 
+    sf::RectangleShape marketPanel;
+    sf::Text advancedMarketStatsText;
+    sf::Text marketText;
+
+    bool showOptionsPanel = false;
+    sf::RectangleShape resetButton;
+    sf::RectangleShape borderButton;
+    sf::RectangleShape speedSlider;
+
     MovablePanel npcListPanel;
-    MovablePanel statsPanel; 
+    MovablePanel statsPanel;
     MovablePanel npcDetailPanel;
-    sf::Text npcDetailText; 
+    sf::Text npcDetailText;
     sf::Text statsText;
+
     // Buttons
     UIButton statsButton;
     UIButton optionsButton;
     UIButton marketButton;
     UIButton npcButton;
-    // MarketPanel marketPanel; 
-    std::vector<std::pair<std::string, UIButton>> npcButtons;
 
-    bool showNPCList = false;  
-    bool showNPCDetail = false; 
+    std::vector<std::pair<std::string, UIButton*>> npcButtons;
 
-    bool showStatsPanel = false; 
+    bool showNPCList = false;
+    bool showNPCDetail = false;
+    const float npcListWidth = 300.0f;
+    const float npcListHeight = 400.0f;
+    bool showStatsPanel = false;
+    bool showMarketPanel = false;
 
     // Scroll for large NPC lists
     float npcListScrollOffset = 0.0f;
@@ -79,23 +92,31 @@ public:
     void updateClock(float timeElapsed);
 
     // Interaction and Rendering
-    void handleButtonClicks(sf::RenderWindow& window, sf::Event& event, std::vector<PlayerEntity>& npcs);
+    void handleButtonClicks(sf::RenderWindow& window, sf::Event& event, std::vector<PlayerEntity>& npcs, const TimeManager& timeManager);
+    void updateStats(const std::vector<PlayerEntity>& npcs, const TimeManager& timeManager);
+
     void handleHover(sf::RenderWindow& window);
-    void handleNPCPanel(sf::RenderWindow& window, sf::Event& event);
+    void handleNPCPanel(sf::RenderWindow& window, sf::Event& event, const std::vector<PlayerEntity>& npcs);
     void handleStatsPanel(sf::RenderWindow& window, sf::Event& event);
+
+    // Market functionality
+    void handleMarketButton(sf::RenderWindow& window, sf::Event& event, const Market& market); // Add this declaration
+    void updateMarketPanel(const Market& market);
+    void drawMarketGraph(sf::RenderWindow& window, const Market& market);
+    void renderMarketPanel(sf::RenderWindow& window, const Market& market);
+
     void render(sf::RenderWindow& window, const Market& market);
-    void drawPriceTrends(sf::RenderWindow& window, const Market& market);
 
     // Tooltip interaction
     bool isMouseOver(sf::RenderWindow& window) const;
     void setTooltipContent(const std::string& content);
     void updateTooltipPosition(const sf::RenderWindow& window);
 
-    void updateStats(const std::vector<PlayerEntity>& npcs, int day, const std::string& time, int iteration);
+    void renderOptionsPanel(sf::RenderWindow& window);
+    void handleOptionsEvents(sf::RenderWindow& window, sf::Event& event, Game& game);
+
     // Responsive Layout
     void adjustLayout(sf::RenderWindow& window);
-
-    void toggleMarketPanel();
 };
 
 #endif
