@@ -15,7 +15,7 @@ DebugConsole::DebugConsole(float windowWidth, float windowHeight) {
     text.setCharacterSize(14);
     text.setFillColor(sf::Color::White);
 
-    background.setSize(sf::Vector2f(windowWidth, 200));
+    background.setSize({windowWidth, 200});
     background.setFillColor(backgroundColor);
     background.setPosition(0, windowHeight - 200);
 }
@@ -25,34 +25,27 @@ void DebugConsole::enable() { enabled = true; }
 void DebugConsole::disable() { enabled = false; }
 bool DebugConsole::isEnabled() const { return enabled; }
 
-
 void DebugConsole::setLogLevel(LogLevel level) {
     filterLevel = level;
 }
 
 void DebugConsole::log(const std::string& category, const std::string& message, LogLevel level) {
-    if (level < filterLevel) return; // Filter out lower-severity logs
+    if (level < filterLevel) return;
 
     std::ostringstream formattedMessage;
-    switch (level) {
-        case LogLevel::Info: formattedMessage << "[INFO] "; break;
-        case LogLevel::Warning: formattedMessage << "[WARNING] "; break;
-        case LogLevel::Error: formattedMessage << "[ERROR] "; break;
-    }
     formattedMessage << "[" << category << "] " << message;
 
     logs.emplace_back(category, formattedMessage.str());
-    if (logs.size() > maxLogs) logs.erase(logs.begin());
+    trimLogs();
 }
 
 void DebugConsole::logThrottled(const std::string& category, const std::string& message, int throttleMs) {
     auto now = std::chrono::high_resolution_clock::now();
     std::string key = category + ":" + message;
     auto& lastLogTime = throttleTimers[key];
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastLogTime).count();
 
-    if (elapsed > throttleMs) {
-        log(category, message, LogLevel::Info);
+    if (std::chrono::duration_cast<std::chrono::milliseconds>(now - lastLogTime).count() > throttleMs) {
+        log(category, message);
         lastLogTime = now;
     }
 }
@@ -60,7 +53,7 @@ void DebugConsole::logThrottled(const std::string& category, const std::string& 
 void DebugConsole::logOnce(const std::string& category, const std::string& message) {
     std::string key = category + ":" + message;
     if (!logOnceTracker[key]) {
-        log(category, message, LogLevel::Info);
+        log(category, message);
         logOnceTracker[key] = true;
     }
 }
@@ -102,12 +95,15 @@ void DebugConsole::render(sf::RenderWindow& window) {
 
 void DebugConsole::clearLogs() {
     logs.clear();
-    // std::cerr << "Debug logs cleared." << std::endl;
+}
+
+void DebugConsole::trimLogs() {
+    if (logs.size() > 1000) logs.erase(logs.begin(), logs.begin() + (logs.size() - 1000));
 }
 
 // Singleton instance
 DebugConsole& getDebugConsole() {
-    static DebugConsole instance(GameConfig::windowWidth, GameConfig::windowHeight);
+    static DebugConsole instance(800, 800); // Adjust based on GameConfig
     return instance;
 }
 
@@ -131,13 +127,10 @@ void debugTileInfo(int tileX, int tileY, const Game& game) {
 void debugMarketPrices(const std::unordered_map<std::string, float>& marketPrices) {
     static auto lastMarketLogTime = std::chrono::high_resolution_clock::now();
     auto now = std::chrono::high_resolution_clock::now();
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastMarketLogTime).count();
-
-    if (elapsed > 1000) { // 1-second throttle
+    if (std::chrono::duration_cast<std::chrono::milliseconds>(now - lastMarketLogTime).count() > 1000) {
         std::ostringstream oss;
-        oss << "Market Prices:\n";
         for (const auto& [resource, price] : marketPrices) {
-            oss << "- " << resource << ": $" << price << "\n";
+            oss << resource << ": $" << price << " ";
         }
         getDebugConsole().log("Market", oss.str());
         lastMarketLogTime = now;
@@ -149,15 +142,9 @@ void debugCollisionEvent(const std::string& message, int throttleMs) {
 }
 
 void debugActionPerformed(const std::string& actionName, const std::string& objectType) {
-    std::ostringstream oss;
-    oss << "Action: " << actionName << " on " << objectType;
-    getDebugConsole().log("Action", oss.str());
+    getDebugConsole().log("Action", actionName + " on " + objectType);
 }
 
 void debugPlayerSpeed(float speed) {
-    static float lastLoggedSpeed = -1.0f;
-    if (speed != lastLoggedSpeed) {
-        getDebugConsole().log("Player", "Speed set to: " + std::to_string(speed));
-        lastLoggedSpeed = speed;
-    }
+    getDebugConsole().logThrottled("Player", "Speed: " + std::to_string(speed), 500);
 }

@@ -10,7 +10,7 @@
 #include <chrono>
 #include <fstream>
 
-class Game; 
+class Game;
 class PlayerEntity;
 
 // Log severity levels
@@ -34,6 +34,8 @@ private:
     std::unordered_map<std::string, std::chrono::high_resolution_clock::time_point> throttleTimers;
     std::unordered_map<std::string, bool> logOnceTracker;  // Tracker for `logOnce`
 
+    void trimLogs();
+
 public:
     DebugConsole(float windowWidth, float windowHeight);
     void toggle();
@@ -42,11 +44,8 @@ public:
     bool isEnabled() const;
 
     void setLogLevel(LogLevel level);
-    // Log with category and severity level
     void log(const std::string& category, const std::string& message, LogLevel level = LogLevel::Info);
-    // Throttled logging
     void logThrottled(const std::string& category, const std::string& message, int throttleMs);
-    // Log once per session
     void logOnce(const std::string& category, const std::string& message);
 
     void logSystemStats(float fps, size_t memoryUsage);
@@ -66,4 +65,4 @@ void debugCollisionEvent(const std::string& message, int throttleMs = 500);
 void debugActionPerformed(const std::string& actionName, const std::string& objectType);
 void debugPlayerSpeed(float speed);
 
-#endif
+#endif // DEBUG_HPP

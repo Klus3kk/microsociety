@@ -4,7 +4,7 @@
 #include "Object.hpp"
 #include "Player.hpp"
 #include <unordered_map>
-#include <iostream>
+#include <string>
 
 class House : public Object {
 private:
@@ -14,12 +14,14 @@ private:
     int healthBonus;
     int strengthBonus;
     int speedBonus;
-    std::unordered_map<std::string, int> storage;
+    std::unordered_map<std::string, int> storage; // Storage for items
+
+    void logUpgradeDetails() const; // Helper for upgrade debug logs
 
 public:
-    House(const sf::Texture& tex, int initialLevel = 1);
+    explicit House(const sf::Texture& tex, int initialLevel = 1);
 
-    const std::unordered_map<std::string, int>& getStorage() const { return storage; }
+    const std::unordered_map<std::string, int>& getStorage() const;
 
     // Energy regeneration
     void regenerateEnergy(PlayerEntity& player);
@@ -27,28 +29,23 @@ public:
     // Store item in the house
     bool storeItem(const std::string& item, int quantity);
 
-    // Upgrade house
+    // Take item from the storage
+    bool takeFromStorage(const std::string& item, int quantity, PlayerEntity& npc);
+
+    // Upgrade the house
     bool upgrade(float& playerMoney, PlayerEntity& player);
-
-    // Apply stat bonuses to the player while inside the house
-    void applyStatBonuses(PlayerEntity& player);
-
-    // Remove stat bonuses when leaving the house
-    void removeStatBonuses(PlayerEntity& player);
 
     // Display the storage contents
     void displayStorage() const;
 
-    // Taking from storage
-    bool takeFromStorage(const std::string& item, int quantity, PlayerEntity& npc);
-
     // Display house stats
     void displayStats() const;
 
-    // Draw method override
+    // Override draw method
     void draw(sf::RenderWindow& window) override;
 
+    // Get object type
     ObjectType getType() const override;
 };
 
-#endif
+#endif // HOUSE_HPP

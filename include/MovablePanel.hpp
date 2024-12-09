@@ -15,8 +15,8 @@ private:
 
     std::vector<UIButton*> childButtons; // Store pointers to child buttons
 
-    void updateTextPosition(); // Updates title text position relative to the panel
-    void updateChildPositions(); // Updates child button positions relative to the panel
+    void updateTextPosition();           // Updates title text position relative to the panel
+    void updateChildPositions();         // Updates child button positions relative to the panel
 
 public:
     MovablePanel(float width, float height, const std::string& title);
@@ -30,7 +30,8 @@ public:
     void setTitle(const std::string& title);
 
     void addChild(UIButton* button); // Add a child button
-    void clearChildren();
+    void clearChildren();            // Clear all child buttons
+
     // Rendering
     void render(sf::RenderWindow& window);
 
@@ -38,4 +39,4 @@ public:
     sf::FloatRect getBounds() const;
 };
 
-#endif
+#endif // MOVABLEPANEL_HPP

@@ -86,7 +86,9 @@ void ClockGUI::update(float currentTime) {
     secondHand.setRotation(secondAngle);
 }
 
-void ClockGUI::render(sf::RenderWindow& window) {
+void ClockGUI::render(sf::RenderWindow& window, bool isVisible) {
+    if (!isVisible) return; 
+
     // Draw clock components
     window.draw(clockCircle);
     for (const auto& number : clockNumbers) {
@@ -94,5 +96,5 @@ void ClockGUI::render(sf::RenderWindow& window) {
     }
     window.draw(hourHand);
     window.draw(minuteHand);
-    window.draw(secondHand);
+    // window.draw(secondHand);
 }

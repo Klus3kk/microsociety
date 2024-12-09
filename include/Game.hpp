@@ -31,6 +31,7 @@ private:
     int mapWidth;   
     int mapHeight;
     int tileSize;
+    bool isClockVisible = true;
     std::vector<PlayerEntity> npcs; 
 
 public:

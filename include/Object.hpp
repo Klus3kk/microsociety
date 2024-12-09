@@ -15,18 +15,20 @@ enum class ObjectType {
 class Object {
 protected:
     sf::Sprite sprite;
-    sf::Texture texture; // make sure that texture is declared here, because if you assign tex to the sprite, without assigning it to variable sf::Texture, it won't work
+    sf::Texture texture;
+
 public:
-    virtual void draw(sf::RenderWindow& window) = 0;
     virtual ~Object() = default;
-    virtual ObjectType getType() const = 0; // Getting a type
-    
+
+    virtual void draw(sf::RenderWindow& window) = 0;
+    virtual ObjectType getType() const = 0;
+
+    // Common functionalities
     sf::Sprite& getSprite() {
         return sprite;
     }
 
     virtual sf::FloatRect getObjectBounds() const {
-        // Expanded the object's bounds to make collision detection more forgiving
         sf::FloatRect bounds = sprite.getGlobalBounds();
         bounds.left -= 2;
         bounds.top -= 2;
@@ -42,13 +44,18 @@ public:
     void setSize(float scaleX, float scaleY) {
         sprite.setScale(scaleX, scaleY);  
     }
+
+    // New method to set texture in the base class
+    void setTexture(const sf::Texture& tex) {
+        texture = tex;
+        sprite.setTexture(texture);
+    }
 };
 
 class Tree : public Object {
 public:
     Tree(const sf::Texture& tex) {
-        texture = tex;
-        sprite.setTexture(texture);
+        setTexture(tex);
     }
 
     void draw(sf::RenderWindow& window) override {
@@ -63,8 +70,7 @@ public:
 class Rock : public Object {
 public:
     Rock(const sf::Texture& tex) {
-        texture = tex;
-        sprite.setTexture(texture);
+        setTexture(tex);
     }
 
     void draw(sf::RenderWindow& window) override {
@@ -76,12 +82,10 @@ public:
     }
 };
 
-
 class Bush : public Object {
 public:
     Bush(const sf::Texture& tex) {
-        texture = tex;
-        sprite.setTexture(texture);
+        setTexture(tex);
     }
 
     void draw(sf::RenderWindow& window) override {
@@ -93,5 +97,4 @@ public:
     }
 };
 
-
-#endif
+#endif // OBJECT_HPP

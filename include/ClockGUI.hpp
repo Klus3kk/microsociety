@@ -19,7 +19,7 @@ private:
 public:
     ClockGUI(float x, float y); // Constructor with position
     void update(float currentTime); // Update clock hands based on time
-    void render(sf::RenderWindow& window); // Render the clock
+    void render(sf::RenderWindow& window, bool isVisible); // Render the clock
 };
 
 #endif

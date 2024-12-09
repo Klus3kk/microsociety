@@ -30,14 +30,22 @@ public:
 
     void incrementSocietyIteration() { societyIteration++; }
 
+    mutable std::string cachedFormattedTime;
+    mutable float lastCachedElapsedTime = -1.0f;
+
     std::string getFormattedTime() const {
-        int hours = static_cast<int>((elapsedTime / 3600.0f)) % 24;
-        int minutes = static_cast<int>((elapsedTime / 60.0f)) % 60;
-        std::ostringstream oss;
-        oss << std::setw(2) << std::setfill('0') << hours << ":"
-            << std::setw(2) << std::setfill('0') << minutes;
-        return oss.str();
+        if (elapsedTime != lastCachedElapsedTime) {
+            int hours = static_cast<int>((elapsedTime / 3600.0f)) % 24;
+            int minutes = static_cast<int>((elapsedTime / 60.0f)) % 60;
+            std::ostringstream oss;
+            oss << std::setw(2) << std::setfill('0') << hours << ":"
+                << std::setw(2) << std::setfill('0') << minutes;
+            cachedFormattedTime = oss.str();
+            lastCachedElapsedTime = elapsedTime;
+        }
+        return cachedFormattedTime;
     }
+
 
     void reset() {
         elapsedTime = 0.0f;

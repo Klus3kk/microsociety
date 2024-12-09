@@ -15,7 +15,8 @@ Game::Game()
 
     // Initialize Market
     market.setPrice("wood", 10.0f);
-    market.setPrice("stone", 15.0f);
+    market.setPrice("stone", 10.0f);
+    market.setPrice("bush", 5.0f);
 
     // Extract NPC names for UI
     std::vector<std::string> npcNames;
@@ -312,7 +313,7 @@ void Game::run() {
 
         player.draw(window);   // Draw player's entity
         // market.renderPriceGraph(window, "wood", {50, 50}, {200, 100});
-        clockGUI.render(window);
+        clockGUI.render(window, isClockVisible);
         ui.render(window, market);
         debugConsole.render(window);
         window.display();
