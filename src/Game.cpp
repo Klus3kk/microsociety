@@ -8,8 +8,13 @@
 #include <unordered_map>
 #include "Market.hpp"
 
-Game::Game() 
-    : window(sf::VideoMode(GameConfig::windowWidth, GameConfig::windowHeight), "MicroSociety"), clockGUI(700, 100) {
+Game::Game()
+    : window(sf::VideoMode(GameConfig::windowWidth, GameConfig::windowHeight), "MicroSociety", sf::Style::Titlebar | sf::Style::Close),
+      clockGUI(700, 100) {
+    
+    #ifdef _WIN32
+    ui.adjustLayout(window);
+    #endif
     generateMap();
     npcs = generateNPCs();
 
@@ -25,7 +30,6 @@ Game::Game()
     }
     ui.updateNPCList(npcs); // Update UI with NPC names
 }
-
 
 
 const std::vector<std::vector<std::unique_ptr<Tile>>>& Game::getTileMap() const {
