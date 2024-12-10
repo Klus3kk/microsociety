@@ -11,14 +11,13 @@
 #include "TimeManager.hpp"
 
 namespace UIStyles {
-    const sf::Color PanelBackground = sf::Color(30, 30, 30, 200);
-    const sf::Color PanelBorder = sf::Color(100, 100, 100, 255);
-    const sf::Color ButtonNormal = sf::Color(80, 80, 150, 204);
-    const sf::Color ButtonHover = sf::Color(100, 100, 200, 204);
-    const sf::Color TextColor = sf::Color::White;
-    const float Padding = 10.0f;
-    const float PanelBorderSize = 2.0f;
+    const sf::Color PanelBackground = sf::Color(50, 50, 50, 220); // Slightly brighter
+    const sf::Color PanelBorder = sf::Color(150, 150, 150, 255);  // Brighter border
+    const sf::Color ButtonNormal = sf::Color(90, 150, 220, 200);  // Unity-like blue
+    const sf::Color ButtonHover = sf::Color(110, 170, 250, 255);  // Lighter hover
+    const sf::Color TextColor = sf::Color::White;                 // Keep text white
 }
+
 
 class UI {
 private:
