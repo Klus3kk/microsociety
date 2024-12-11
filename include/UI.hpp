@@ -10,6 +10,21 @@
 #include "MovablePanel.hpp"
 #include "TimeManager.hpp"
 
+<<<<<<< HEAD
+
+=======
+namespace UIStyles {
+    const sf::Color PanelBackground = sf::Color(45, 45, 48, 255); // Darker gray
+    const sf::Color PanelBorder = sf::Color(27, 82, 40, 255);     // Lighter gray for subtle borders
+
+    // Multicolored Buttons
+    const sf::Color ButtonNormal = sf::Color(50, 50, 50, 200);  // Light green
+    const sf::Color ButtonHover = sf::Color(0, 184, 148, 255);    // Vibrant green
+    const sf::Color ButtonPressed = sf::Color(253, 121, 168, 255); // Soft pink for clicks
+
+    const sf::Color TextColor = sf::Color(240, 240, 240, 255);    // Off-white for readability
+}
+>>>>>>> c58c2ae0db671771a141dbe652525b0b4aaea4db
 
 
 class UI {
@@ -56,8 +71,21 @@ private:
     UIButton optionsButton;
     UIButton marketButton;
     UIButton npcButton;
+<<<<<<< HEAD
+=======
+    sf::RectangleShape resetButton;
+    sf::RectangleShape borderButton;
+    sf::RectangleShape speedSlider;
+    sf::RectangleShape debugButton;
+    sf::RectangleShape sliderKnob;
+    bool sliderDragging = false;         // Whether the slider is being dragged
+    float currentSpeed = 0.5f;  
+
+
+>>>>>>> c58c2ae0db671771a141dbe652525b0b4aaea4db
 
     std::vector<std::pair<std::string, UIButton*>> npcButtons;
+    std::vector<sf::Text> marketResourceTexts;
 
     bool showNPCList = false;
     bool showNPCDetail = false;
@@ -92,6 +120,7 @@ public:
     void updateClock(float timeElapsed);
 
     // Interaction and Rendering
+<<<<<<< HEAD
     void handleButtonClicks(sf::RenderWindow& window, sf::Event& event, std::vector<PlayerEntity>& npcs, const TimeManager& timeManager);
     void updateStats(const std::vector<PlayerEntity>& npcs, const TimeManager& timeManager);
 
@@ -106,6 +135,18 @@ public:
     void renderMarketPanel(sf::RenderWindow& window, const Market& market);
 
     void render(sf::RenderWindow& window, const Market& market);
+=======
+    void handleButtonClicks(sf::RenderWindow& window, sf::Event& event, std::vector<PlayerEntity>& npcs, const TimeManager& timeManager, const Market& market);
+    void handleNPCPanel(sf::RenderWindow& window, sf::Event& event, const std::vector<PlayerEntity>& npcs);
+    void handleStatsPanel(sf::RenderWindow& window, sf::Event& event);
+    void handleOptionsEvents(sf::RenderWindow& window, sf::Event& event, Game& game);
+
+    void render(sf::RenderWindow& window, const Market& market, const std::vector<PlayerEntity>& npcs);
+    void renderOptionsPanel(sf::RenderWindow& window);
+    void renderMarketPanel(sf::RenderWindow& window, const Market& market);
+    void drawMarketGraph(sf::RenderWindow& window, const Market& market);
+    void updateMarketPanel(const Market& market);
+>>>>>>> c58c2ae0db671771a141dbe652525b0b4aaea4db
 
     // Tooltip interaction
     bool isMouseOver(sf::RenderWindow& window) const;

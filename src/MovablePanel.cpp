@@ -44,10 +44,12 @@ void MovablePanel::handleEvent(const sf::RenderWindow& window, sf::Event& event)
 
 void MovablePanel::setSize(float width, float height) {
     panelShape.setSize({width, height});
+    updateChildPositions(); // Ensure children adjust dynamically
 }
 
 void MovablePanel::setTitle(const std::string& title) {
     panelTitle.setString(title);
+    updateTextPosition(); // Adjust title placement if necessary
 }
 
 void MovablePanel::setPosition(float x, float y) {
@@ -65,6 +67,7 @@ void MovablePanel::addChild(UIButton* button) {
 
     button->setRelativePosition(relativeOffset);
     childButtons.push_back(button);
+    updateChildPositions(); // Ensure layout consistency
 }
 
 void MovablePanel::clearChildren() {
@@ -89,21 +92,27 @@ sf::FloatRect MovablePanel::getBounds() const {
 }
 
 void MovablePanel::updateTextPosition() {
-    panelTitle.setPosition(panelShape.getPosition().x + 10, panelShape.getPosition().y + 10);
+    // Center title horizontally and leave space above for padding
+    panelTitle.setPosition(
+        panelShape.getPosition().x + (panelShape.getSize().x - panelTitle.getLocalBounds().width) / 2,
+        panelShape.getPosition().y + 10
+    );
 }
 
 void MovablePanel::updateChildPositions() {
     sf::Vector2f panelPosition = panelShape.getPosition();
+    float startY = panelTitle.getPosition().y + panelTitle.getCharacterSize() + 20; // Space below the title
+    float buttonSpacing = 10.0f;
 
     for (UIButton* button : childButtons) {
-        sf::Vector2f relativeOffset = button->getRelativePosition(); // Add relative position logic
         button->setProperties(
-            panelPosition.x + relativeOffset.x, // Maintain relative X
-            panelPosition.y + relativeOffset.y, // Maintain relative Y
+            panelPosition.x + (panelShape.getSize().x - button->getSize().x) / 2, // Center horizontally
+            startY, // Incremental Y position
             button->getSize().x, // Preserve width
             button->getSize().y, // Preserve height
             button->getText(),   // Preserve text
-            font    // Preserve font
+            font                 // Preserve font
         );
+        startY += button->getSize().y + buttonSpacing; // Add spacing for the next button
     }
 }

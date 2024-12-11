@@ -1,12 +1,13 @@
 #include "debug.hpp"
 #include "Game.hpp"
-#include "Player.hpp"
+#include "NPCEntity.hpp"
 #include <sstream>
 #include <unordered_map>
 #include <chrono>
 #include <iomanip>
 #include <algorithm>
 
+// Constructor for DebugConsole
 DebugConsole::DebugConsole(float windowWidth, float windowHeight) {
     if (!consoleFont.loadFromFile("../assets/fonts/font.ttf")) {
         std::cerr << "Failed to load console font!" << std::endl;
@@ -20,15 +21,18 @@ DebugConsole::DebugConsole(float windowWidth, float windowHeight) {
     background.setPosition(0, windowHeight - 200);
 }
 
+// Enable/Disable DebugConsole
 void DebugConsole::toggle() { enabled = !enabled; }
 void DebugConsole::enable() { enabled = true; }
 void DebugConsole::disable() { enabled = false; }
 bool DebugConsole::isEnabled() const { return enabled; }
 
+// Set log filtering level
 void DebugConsole::setLogLevel(LogLevel level) {
     filterLevel = level;
 }
 
+// Log a message
 void DebugConsole::log(const std::string& category, const std::string& message, LogLevel level) {
     if (level < filterLevel) return;
 
@@ -39,6 +43,7 @@ void DebugConsole::log(const std::string& category, const std::string& message, 
     trimLogs();
 }
 
+// Log a throttled message
 void DebugConsole::logThrottled(const std::string& category, const std::string& message, int throttleMs) {
     auto now = std::chrono::high_resolution_clock::now();
     std::string key = category + ":" + message;
@@ -50,6 +55,7 @@ void DebugConsole::logThrottled(const std::string& category, const std::string& 
     }
 }
 
+// Log a message only once
 void DebugConsole::logOnce(const std::string& category, const std::string& message) {
     std::string key = category + ":" + message;
     if (!logOnceTracker[key]) {
@@ -58,6 +64,7 @@ void DebugConsole::logOnce(const std::string& category, const std::string& messa
     }
 }
 
+// Log system stats like FPS and memory usage
 void DebugConsole::logSystemStats(float fps, size_t memoryUsage) {
     std::ostringstream oss;
     oss << "FPS: " << std::fixed << std::setprecision(2) << fps
@@ -65,6 +72,17 @@ void DebugConsole::logSystemStats(float fps, size_t memoryUsage) {
     log("System", oss.str(), LogLevel::Info);
 }
 
+// Log resource stats for AI monitoring
+void DebugConsole::logResourceStats(const std::unordered_map<std::string, int>& resources) {
+    std::ostringstream oss;
+    oss << "Resource Stats: ";
+    for (const auto& [resource, quantity] : resources) {
+        oss << resource << ": " << quantity << " ";
+    }
+    log("Resources", oss.str());
+}
+
+// Save logs to a file
 void DebugConsole::saveLogsToFile(const std::string& filename) const {
     std::ofstream outFile(filename);
     if (!outFile.is_open()) {
@@ -77,6 +95,7 @@ void DebugConsole::saveLogsToFile(const std::string& filename) const {
     std::cout << "Logs saved to " << filename << std::endl;
 }
 
+// Render the debug console
 void DebugConsole::render(sf::RenderWindow& window) {
     if (!enabled) return;
 
@@ -93,17 +112,19 @@ void DebugConsole::render(sf::RenderWindow& window) {
     }
 }
 
+// Clear all logs
 void DebugConsole::clearLogs() {
     logs.clear();
 }
 
+// Trim excess logs to maintain performance
 void DebugConsole::trimLogs() {
     if (logs.size() > 1000) logs.erase(logs.begin(), logs.begin() + (logs.size() - 1000));
 }
 
-// Singleton instance
+// Singleton instance for DebugConsole
 DebugConsole& getDebugConsole() {
-    static DebugConsole instance(800, 800); // Adjust based on GameConfig
+    static DebugConsole instance(800, 800); // Adjust size based on your game window
     return instance;
 }
 
@@ -147,4 +168,26 @@ void debugActionPerformed(const std::string& actionName, const std::string& obje
 
 void debugPlayerSpeed(float speed) {
     getDebugConsole().logThrottled("Player", "Speed: " + std::to_string(speed), 500);
+}
+
+void debugNPCStats(const std::string& npcName, float health, float energy, float money) {
+    std::ostringstream oss;
+    oss << "NPC: " << npcName << " | Health: " << health
+        << " | Energy: " << energy << " | Money: " << money;
+    getDebugConsole().log("NPC", oss.str());
+}
+
+void debugSimulationIteration(int iteration, float elapsedTime) {
+    std::ostringstream oss;
+    oss << "Iteration: " << iteration << ", Elapsed Time: " << elapsedTime << "s";
+    getDebugConsole().log("Simulation", oss.str());
+}
+
+void debugMarketTransactions(const std::unordered_map<std::string, int>& transactions) {
+    std::ostringstream oss;
+    oss << "Market Transactions: ";
+    for (const auto& [item, count] : transactions) {
+        oss << item << ": " << count << " ";
+    }
+    getDebugConsole().log("Market", oss.str());
 }

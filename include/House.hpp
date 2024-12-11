@@ -2,7 +2,7 @@
 #define HOUSE_HPP
 
 #include "Object.hpp"
-#include "Player.hpp"
+#include "NPCEntity.hpp"
 #include <unordered_map>
 #include <string>
 
@@ -21,31 +21,30 @@ private:
 public:
     explicit House(const sf::Texture& tex, int initialLevel = 1);
 
+    // Getters
     const std::unordered_map<std::string, int>& getStorage() const;
+    int getLevel() const { return level; }
+    int getMaxStorageCapacity() const { return maxStorageCapacity; }
+    float getEnergyRegenRate() const { return energyRegenRate; }
 
-    // Energy regeneration
-    void regenerateEnergy(PlayerEntity& player);
+    // Actions
+    void regenerateEnergy(PlayerEntity& npc);  // Energy regeneration for NPC
+    bool storeItem(const std::string& item, int quantity); // Store resources
+    bool takeFromStorage(const std::string& item, int quantity, PlayerEntity& npc); // Take resources
+    bool upgrade(float& npcMoney, PlayerEntity& npc); // Upgrade house level
 
-    // Store item in the house
-    bool storeItem(const std::string& item, int quantity);
+    // Stats and Logs
+    void displayStorage() const; // Display storage details
+    void displayStats() const;   // Display house stats
 
-    // Take item from the storage
-    bool takeFromStorage(const std::string& item, int quantity, PlayerEntity& npc);
+    // AI Integration
+    bool isStorageFull() const;  // Check if storage is full
+    bool isUpgradeAvailable(float npcMoney) const; // Check if NPC can afford an upgrade
+    int getStoredItemCount(const std::string& item) const; // Get quantity of a specific resource
 
-    // Upgrade the house
-    bool upgrade(float& playerMoney, PlayerEntity& player);
-
-    // Display the storage contents
-    void displayStorage() const;
-
-    // Display house stats
-    void displayStats() const;
-
-    // Override draw method
-    void draw(sf::RenderWindow& window) override;
-
-    // Get object type
-    ObjectType getType() const override;
+    // Rendering
+    void draw(sf::RenderWindow& window) override; // Render house
+    ObjectType getType() const override;         // Return object type
 };
 
 #endif // HOUSE_HPP

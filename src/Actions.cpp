@@ -161,3 +161,97 @@ void SellItemAction::perform(PlayerEntity& player, Tile& tile) {
 std::string SellItemAction::getActionName() const {
     return "Sell Items to Market";
 }
+
+void SleepAction::perform(PlayerEntity& player, Tile& tile) {
+    if (auto house = dynamic_cast<House*>(tile.getObject())) {
+        house->regenerateEnergy(player);
+        player.addReward(getReward()); // Reward for proper energy management
+        getDebugConsole().log("Action", "NPC rested and regenerated energy.");
+    } else {
+        player.addPenalty(-10.0f); // Penalty for trying to sleep without a house
+        getDebugConsole().logOnce("Action", "No house available for resting.");
+    }
+}
+
+// ExploreAction
+void ExploreAction::perform(PlayerEntity& player, Tile&) {
+    // Exploration consumes some energy but provides small rewards
+    player.consumeEnergy(2.0f);
+    player.addReward(5.0f); // Small reward for exploration
+    getDebugConsole().log("Action", "NPC explored the map.");
+}
+
+// BuildAction
+void BuildAction::perform(PlayerEntity& player, Tile& tile) {
+    if (tile.hasObject()) {
+        player.addPenalty(-10.0f); // Penalty for trying to build on an occupied tile
+        getDebugConsole().logOnce("Action", "Tile is occupied. Cannot build here.");
+        return;
+    }
+
+    if (player.getInventoryItemCount("wood") >= 5 && player.getInventoryItemCount("stone") >= 3) {
+        player.removeFromInventory("wood", 5);
+        player.removeFromInventory("stone", 3);
+
+        // Simulate building an object (e.g., a house or structure)
+        auto newHouse = std::make_unique<House>(/* Pass appropriate texture */);
+        tile.placeObject(std::move(newHouse));
+
+        player.addReward(getReward());
+        getDebugConsole().log("Action", "NPC built a structure on the tile.");
+    } else {
+        player.addPenalty(-10.0f); // Penalty for insufficient resources
+        getDebugConsole().logOnce("Action", "Not enough resources to build.");
+    }
+}
+
+// GatherResourceAction
+GatherResourceAction::GatherResourceAction(const std::string& resource, int amount)
+    : resource(resource), amount(amount) {}
+
+void GatherResourceAction::perform(PlayerEntity& player, Tile& tile) {
+    if (tile.hasObject() && tile.getObjectType() == ObjectType::Resource) {
+        player.addToInventory(resource, amount);
+        tile.removeObject();
+        player.addReward(getReward());
+        getDebugConsole().log("Action", "Gathered " + std::to_string(amount) + " " + resource + "(s).");
+    } else {
+        player.addPenalty(-5.0f);
+        getDebugConsole().logOnce("Action", "No resource to gather on this tile.");
+    }
+}
+
+// PrioritizeAction
+void PrioritizeAction::perform(PlayerEntity& player, Tile&) {
+    // AI logic to prioritize actions dynamically
+    if (player.getEnergy() < 20.0f) {
+        player.addPenalty(-10.0f);
+        getDebugConsole().log("Action", "NPC has low energy and needs to regenerate.");
+    } else if (player.getInventorySize() >= player.getMaxInventorySize()) {
+        player.addPenalty(-5.0f);
+        getDebugConsole().log("Action", "NPC inventory is full; needs to store items.");
+    } else {
+        player.addReward(10.0f);
+        getDebugConsole().log("Action", "NPC prioritized its actions successfully.");
+    }
+}
+
+// IdleAction
+void IdleAction::perform(PlayerEntity& player, Tile&) {
+    player.addPenalty(-20.0f); // Heavy penalty for idling
+    getDebugConsole().log("Action", "NPC idled and lost rewards.");
+}
+
+// SpecialAction
+SpecialAction::SpecialAction(const std::string& description, float reward, float penalty)
+    : description(description), reward(reward), penalty(penalty) {}
+
+void SpecialAction::perform(PlayerEntity& player, Tile&) {
+    if (reward > penalty) {
+        player.addReward(reward);
+        getDebugConsole().log("SpecialAction", description + " succeeded with reward: " + std::to_string(reward));
+    } else {
+        player.addPenalty(penalty);
+        getDebugConsole().log("SpecialAction", description + " failed with penalty: " + std::to_string(penalty));
+    }
+}

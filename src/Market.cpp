@@ -1,5 +1,7 @@
 #include "Market.hpp"
 #include <algorithm>
+#include <cmath>
+#include <numeric>
 
 // Default constructor
 Market::Market() {
@@ -20,6 +22,10 @@ void Market::setPrice(const std::string& item, float price) {
         prices[item] = price;
         demand[item] = 50;
         supply[item] = 100;
+        totalBuyTransactions[item] = 0;
+        totalSellTransactions[item] = 0;
+        totalRevenue[item] = 0.0f;
+        totalExpenditure[item] = 0.0f;
     }
 }
 
@@ -50,14 +56,19 @@ bool Market::buyItem(PlayerEntity& player, const std::string& item, int quantity
 
         demand[item] += quantity;
         supply[item] = std::max(0, supply[item] - quantity);
-        prices[item] *= (1.0f + priceAdjustmentFactor);
+        prices[item] = adjustPriceOnBuy(prices[item], demand[item], supply[item], priceAdjustmentFactor);
 
         trackPriceHistory(item);
         totalBuyTransactions[item] += quantity;
         totalExpenditure[item] += cost;
 
+        // Reward for profitable transaction
+        player.addReward(10.0f * quantity); // Adjust reward value as needed
         return true;
     }
+
+    // Penalize for insufficient funds
+    player.addPenalty(5.0f);
     return false;
 }
 
@@ -72,14 +83,19 @@ bool Market::sellItem(PlayerEntity& player, const std::string& item, int quantit
 
         supply[item] += quantity;
         demand[item] = std::max(0, demand[item] - quantity);
-        prices[item] *= (1.0f - priceAdjustmentFactor);
+        prices[item] = adjustPriceOnSell(prices[item], demand[item], supply[item], priceAdjustmentFactor);
 
         trackPriceHistory(item);
         totalSellTransactions[item] += quantity;
         totalRevenue[item] += revenue;
 
+        // Reward for profitable transaction
+        player.addReward(15.0f * quantity); // Adjust reward value as needed
         return true;
     }
+
+    // Penalize for insufficient inventory
+    player.addPenalty(5.0f);
     return false;
 }
 
@@ -95,6 +111,50 @@ float Market::adjustPriceOnSell(float currentPrice, int demand, int supply, floa
     if (demand == 0) demand = 1;
     float adjustmentFactor = -sellFactor * (static_cast<float>(supply) / demand);
     return std::clamp(currentPrice * (1.0f + adjustmentFactor), minimumPrice, currentPrice * 2.0f);
+}
+
+// Suggest the best resource to buy
+std::string Market::suggestBestResourceToBuy() const {
+    std::string bestItem;
+    float maxProfitMargin = -1.0f;
+
+    for (const auto& [item, price] : prices) {
+        float profitMargin = calculateSellPrice(item) - calculateBuyPrice(item);
+        if (profitMargin > maxProfitMargin) {
+            maxProfitMargin = profitMargin;
+            bestItem = item;
+        }
+    }
+
+    return bestItem;
+}
+
+// Suggest the best resource to sell
+std::string Market::suggestBestResourceToSell() const {
+    std::string bestItem;
+    float maxProfit = -1.0f;
+
+    for (const auto& [item, price] : prices) {
+        float revenue = calculateSellPrice(item) * supply[item];
+        if (revenue > maxProfit) {
+            maxProfit = revenue;
+            bestItem = item;
+        }
+    }
+
+    return bestItem;
+}
+
+// Simulate market dynamics
+void Market::simulateMarketDynamics(float deltaTime) {
+    for (auto& [item, price] : prices) {
+        // Simulate demand and supply changes
+        demand[item] = std::max(10, demand[item] + static_cast<int>(std::sin(deltaTime) * 5));
+        supply[item] = std::max(10, supply[item] - static_cast<int>(std::cos(deltaTime) * 5));
+
+        // Stabilize prices based on new dynamics
+        stabilizePrices(deltaTime);
+    }
 }
 
 // Track price history
@@ -136,7 +196,7 @@ void Market::stabilizePrices(float deltaTime) {
 }
 
 // Render price graph
-void Market::renderPriceGraph(sf::RenderWindow& window, const std::string& item, sf::Vector2f position, sf::Vector2f size) {
+void Market::renderPriceGraph(sf::RenderWindow& window, const std::string& item, sf::Vector2f position, sf::Vector2f size) const {
     auto it = priceHistory.find(item);
     if (it == priceHistory.end() || it->second.empty()) return;
 
