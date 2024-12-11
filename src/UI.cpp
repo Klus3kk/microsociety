@@ -5,62 +5,69 @@
 #include <stdexcept>
 #include <iostream>
 #include "Game.hpp"
-UI::UI() 
-    : npcListPanel(npcListWidth, npcListHeight, "NPC List"), npcDetailPanel(400, 600, "NPC Details"), statsPanel(500, 400, "Simulation Stats"), marketPanel(sf::Vector2f(600, 400)) {
+UI::UI()
+    : npcListPanel(npcListWidth, npcListHeight, "NPC List"),
+      npcDetailPanel(400, 600, "NPC Details"),
+      statsPanel(500, 400, ""),
+      marketPanel(sf::Vector2f(600, 400)) {
     if (!font.loadFromFile("../assets/fonts/font.ttf")) {
         throw std::runtime_error("Failed to load font!");
     }
 
-    marketPanel.setSize({600, 400}); // Set appropriate size
-    marketPanel.setPosition(100, 100); // Adjust position as needed
-    marketPanel.setFillColor(sf::Color(30, 30, 30, 150)); // Light gray with transparency
-    applyShadow(marketPanel); // Optional, apply a shadow if needed
+    // Market Panel
+    marketPanel.setSize({600, 400});
+    marketPanel.setPosition(100, 100);
+    marketPanel.setFillColor(UIStyles::PanelBackground);
+    applyShadow(marketPanel);
 
+    // Advanced Market Stats Text
     advancedMarketStatsText.setFont(font);
     advancedMarketStatsText.setCharacterSize(14);
-    advancedMarketStatsText.setFillColor(sf::Color::White);
+    advancedMarketStatsText.setFillColor(UIStyles::TextColor);
 
-    npcListPanel.setPosition(50, 100); // Place it on the left side
+    // NPC List Panel
+    npcListPanel.setPosition(50, 100);
     npcListPanel.setSize(npcListWidth, npcListHeight);
     npcDetailText.setFont(font);
     npcDetailText.setCharacterSize(16);
-    npcDetailText.setFillColor(sf::Color::White);
+    npcDetailText.setFillColor(UIStyles::TextColor);
     npcDetailText.setPosition(npcDetailPanel.getBounds().left + 20, npcDetailPanel.getBounds().top + 20);
 
     // Stats Text
     statsText.setFont(font);
     statsText.setCharacterSize(16);
-    statsText.setFillColor(sf::Color::White);
+    statsText.setFillColor(UIStyles::TextColor);
     statsText.setPosition(statsPanel.getBounds().left + 20, statsPanel.getBounds().top + 20);
 
-    // Money Panel (Top Left)
+    // Money Panel
     moneyPanel.setSize({100, 50});
     moneyPanel.setPosition(20, 20);
-    moneyPanel.setFillColor(sf::Color(30, 30, 30));
+    moneyPanel.setFillColor(UIStyles::PanelBackground);
     applyShadow(moneyPanel);
 
     moneyText.setFont(font);
     moneyText.setCharacterSize(20);
-    moneyText.setFillColor(sf::Color::Black);
+    moneyText.setFillColor(UIStyles::TextColor);
     moneyText.setPosition(moneyPanel.getPosition().x + 10, moneyPanel.getPosition().y + 10);
 
-    // Status Panel (Top Center)
+    // Status Panel
     statusPanel.setSize({200, 80});
-    statusPanel.setPosition(300, 20); // Centered horizontally
-    statusPanel.setFillColor(sf::Color(55, 55, 55));
+    statusPanel.setPosition(300, 20);
+    statusPanel.setFillColor(UIStyles::PanelBackground);
     applyShadow(statusPanel);
 
     statusText.setFont(font);
     statusText.setCharacterSize(16);
-    statusText.setFillColor(sf::Color::Black);
+    statusText.setFillColor(UIStyles::TextColor);
     statusText.setPosition(statusPanel.getPosition().x + 10, statusPanel.getPosition().y + 10);
 
-    // Buttons (Bottom: NPC, Stats, Market, Options)
+    
+    // Buttons (NPC, Stats, Market, Options)
     float buttonWidth = 120.0f;
     float buttonHeight = 40.0f;
     float spacing = 20.0f;
-    float startX = 50.0f; // Left margin
-    float startY = 500.0f; // Bottom
+    float startX = 50.0f;
+    float startY = 500.0f;
 
     npcButton.setProperties(startX, startY, buttonWidth, buttonHeight, "NPC", font);
     statsButton.setProperties(startX + buttonWidth + spacing, startY, buttonWidth, buttonHeight, "STATS", font);
@@ -68,11 +75,12 @@ UI::UI()
     optionsButton.setProperties(startX + 3 * (buttonWidth + spacing), startY, buttonWidth, buttonHeight, "OPTIONS", font);
 
     // Set Button Colors
-    npcButton.setColors(sf::Color(200, 200, 200, 204), sf::Color(220, 220, 220, 204), sf::Color(160, 160, 160, 204), sf::Color(120, 120, 120));
-    statsButton.setColors(sf::Color(200, 200, 200, 204), sf::Color(220, 220, 220, 204), sf::Color(160, 160, 160, 204), sf::Color(120, 120, 120));
-    marketButton.setColors(sf::Color(200, 200, 200, 204), sf::Color(220, 220, 220, 204), sf::Color(160, 160, 160, 204), sf::Color(120, 120, 120));
-    optionsButton.setColors(sf::Color(200, 200, 200, 204), sf::Color(220, 220, 220, 204), sf::Color(160, 160, 160, 204), sf::Color(120, 120, 120));
+    npcButton.setColors(UIStyles::ButtonNormal, UIStyles::ButtonHover, sf::Color(160, 160, 160, 204), UIStyles::TextColor);
+    statsButton.setColors(UIStyles::ButtonNormal, UIStyles::ButtonHover, sf::Color(160, 160, 160, 204), UIStyles::TextColor);
+    marketButton.setColors(UIStyles::ButtonNormal, UIStyles::ButtonHover, sf::Color(160, 160, 160, 204), UIStyles::TextColor);
+    optionsButton.setColors(UIStyles::ButtonNormal, UIStyles::ButtonHover, sf::Color(160, 160, 160, 204), UIStyles::TextColor);
 }
+
 
 
 void UI::applyShadow(sf::RectangleShape& shape, float offset) {
@@ -146,7 +154,6 @@ void UI::updateMarket(const std::unordered_map<std::string, float>& prices) {
 
 
 void UI::populateNPCDetails(const PlayerEntity& npc) {
-    // Update the text content for NPC details
     std::ostringstream details;
     details << "Name: " << npc.getName() << "\n"
             << "Health: " << npc.getHealth() << " / 100\n"
@@ -155,39 +162,50 @@ void UI::populateNPCDetails(const PlayerEntity& npc) {
             << "Speed: " << npc.getBaseSpeed() << "\n"
             << "Strength: " << npc.getStrength() << "\n"
             << "Money: $" << npc.getMoney() << "\n"
-            << "Inventory:\n";
+            << "\nInventory:\n";
 
     for (const auto& [item, quantity] : npc.getInventory()) {
-        details << "  - " << item << ": " << quantity << "\n";
+        details << "- " << item << ": " << quantity << "\n";
     }
 
-    // Update the detail text for the panel
     npcDetailText.setString(details.str());
+
+    // Center text within the panel
+    npcDetailText.setPosition(
+        npcDetailPanel.getBounds().left + 20, // Padding
+        npcDetailPanel.getBounds().top + 50  // Start below the title
+    );
 }
 
 
 
-
 void UI::showNPCDetails(const std::string& npcDetails) {
-    npcDetailPanel.setPosition(100, 100); // Example position, adjust as needed
     npcDetailPanel.setSize(400, 600);
     npcDetailPanel.setTitle("NPC Details");
     npcDetailText.setFont(font);
     npcDetailText.setCharacterSize(16);
     npcDetailText.setFillColor(sf::Color::White);
-    npcDetailText.setPosition(npcDetailPanel.getBounds().left + 20, npcDetailPanel.getBounds().top + 20);
+    npcDetailPanel.setPosition((sf::VideoMode::getDesktopMode().width - 400) / 2, 120);
     npcDetailText.setString(npcDetails);
 }
 
 
 
 
-void UI::handleButtonClicks(sf::RenderWindow& window, sf::Event& event, std::vector<PlayerEntity>& npcs, const TimeManager& timeManager) {
+void UI::handleButtonClicks(sf::RenderWindow& window, sf::Event& event, std::vector<PlayerEntity>& npcs, const TimeManager& timeManager, const Market& market) {
     if (npcButton.isClicked(window, event)) {
         showNPCList = !showNPCList; // Toggle NPC list visibility
-        showNPCDetail = false;     // Hide details when list is toggled
+        showNPCDetail = false;   
         std::cout << "NPC button clicked.\n";
     }
+
+    if (marketButton.isClicked(window, event)) {
+        showMarketPanel = !showMarketPanel; // Toggle market panel visibility
+        if (showMarketPanel) {
+            updateMarketPanel(market);
+        }
+    }
+    
 
     if (statsButton.isClicked(window, event)) {
         showStatsPanel = !showStatsPanel; // Toggle visibility
@@ -215,9 +233,9 @@ void UI::handleButtonClicks(sf::RenderWindow& window, sf::Event& event, std::vec
         for (size_t i = 0; i < npcButtons.size(); ++i) {
             if (npcButtons[i].second->isClicked(window, event)) {
                 selectedNPCIndex = static_cast<int>(i);
-                populateNPCDetails(npcs[selectedNPCIndex]);
+                populateNPCDetails(npcs[selectedNPCIndex]); // Show NPC details
                 showNPCDetail = true;
-                showNPCList = false; // Hide list when details are shown
+                showNPCList = false;
                 std::cout << "NPC detail shown for: " << npcButtons[i].first << "\n";
                 break;
             }
@@ -234,13 +252,15 @@ void UI::handleStatsPanel(sf::RenderWindow& window, sf::Event& event) {
 void UI::updateStats(const std::vector<PlayerEntity>& npcs, const TimeManager& timeManager) {
     std::ostringstream statsStream;
 
-    // Use values from TimeManager
+    // Title
     statsStream << "Simulation Stats:\n\n";
+
+    // Time Details
     statsStream << "Day: " << timeManager.getCurrentDay() << "\n";
     statsStream << "Time: " << timeManager.getFormattedTime() << "\n";
     statsStream << "Iteration: " << timeManager.getSocietyIteration() << "\n\n";
 
-    // NPC Stats
+    // NPC Stats Section
     statsStream << "NPC Stats:\n";
     statsStream << "  Total NPCs: " << npcs.size() << "\n";
 
@@ -250,6 +270,8 @@ void UI::updateStats(const std::vector<PlayerEntity>& npcs, const TimeManager& t
         totalEnergy += npc.getEnergy();
         totalHunger += npc.getHunger();
     }
+
+    // Averages
     statsStream << "  Avg. Health: " << (npcs.empty() ? 0 : totalHealth / npcs.size()) << "\n";
     statsStream << "  Avg. Energy: " << (npcs.empty() ? 0 : totalEnergy / npcs.size()) << "\n";
     statsStream << "  Avg. Hunger: " << (npcs.empty() ? 0 : totalHunger / npcs.size()) << "\n\n";
@@ -266,13 +288,43 @@ void UI::updateStats(const std::vector<PlayerEntity>& npcs, const TimeManager& t
         statsStream << "  " << item << ": " << total << "\n";
     }
 
+    // Update the stats text
     statsText.setString(statsStream.str());
+
+    // Ensure text is dynamically centered and formatted
+    statsText.setPosition(statsPanel.getBounds().left + 20, statsPanel.getBounds().top + 50);
 }
+
 
 void UI::populateNPCList(const std::vector<PlayerEntity>& npcs) {
     npcListPanel.setSize(400, 600);
-    npcListPanel.setTitle("NPC List");
-    updateNPCList(npcs);
+    // npcListPanel.setTitle("");
+    npcListPanel.clearChildren();
+
+    float startY = npcListPanel.getBounds().top + 50; // Start below the title
+    float buttonSpacing = 10.0f;
+
+    for (size_t i = 0; i < npcs.size(); ++i) {
+        UIButton* button = new UIButton();
+        button->setProperties(
+            npcListPanel.getBounds().left + 20, // Padding
+            startY,
+            npcListPanel.getBounds().width - 40, // Width with padding
+            40,
+            npcs[i].getName(),
+            font
+        );
+        button->setColors(
+            UIStyles::ButtonNormal,
+            UIStyles::ButtonHover,
+            UIStyles::ButtonPressed,
+            UIStyles::TextColor
+        );
+
+        npcListPanel.addChild(button);
+        npcButtons.emplace_back(npcs[i].getName(), button);
+        startY += 50 + buttonSpacing; // Button height + spacing
+    }
 }
 
 void UI::handleNPCPanel(sf::RenderWindow& window, sf::Event& event, const std::vector<PlayerEntity>& npcs) {
@@ -310,7 +362,7 @@ void UI::handleNPCPanel(sf::RenderWindow& window, sf::Event& event, const std::v
 
 
 
-void UI::render(sf::RenderWindow& window, const Market& market) {
+void UI::render(sf::RenderWindow& window, const Market& market, const std::vector<PlayerEntity>& npcs) {
     // Top Panels
     window.draw(moneyPanel);
     window.draw(moneyText);
@@ -336,6 +388,14 @@ void UI::render(sf::RenderWindow& window, const Market& market) {
         }
     }
 
+
+    // Render NPC Details
+    if (showNPCDetail && selectedNPCIndex >= 0 && selectedNPCIndex < static_cast<int>(npcs.size())) {
+        populateNPCDetails(npcs[selectedNPCIndex]); // Dynamic update
+        npcDetailPanel.render(window);
+        window.draw(npcDetailText);
+    }
+
     if (showNPCDetail) {
         npcDetailPanel.render(window);
         window.draw(npcDetailText);
@@ -344,12 +404,23 @@ void UI::render(sf::RenderWindow& window, const Market& market) {
     if (showStatsPanel) {
         statsPanel.render(window);
         window.draw(statsText);
+        // Draw the title last so it's above the text
+        sf::Text title("Simulation Stats", font, 20);
+        title.setFillColor(sf::Color::White);
+        title.setStyle(sf::Text::Bold);
+        title.setPosition(
+            statsPanel.getBounds().left + (statsPanel.getBounds().width - title.getGlobalBounds().width) / 2,
+            statsPanel.getBounds().top + 10
+        );
+        window.draw(title);
     }
+
 
     // Add the missing market panel rendering logic
     if (showMarketPanel) {
         renderMarketPanel(window, market);
     }
+
 
     if (showOptionsPanel) {
         renderOptionsPanel(window);
@@ -383,6 +454,42 @@ bool UI::isMouseOver(sf::RenderWindow& window) const {
 
 void UI::adjustLayout(sf::RenderWindow& window) {
     sf::Vector2u size = window.getSize();
+
+
+    // NPC List Panel
+    npcListPanel.setPosition(
+        (size.x - npcListPanel.getBounds().width) / 2 - 220, // Offset left
+        size.y * 0.1f
+    );
+
+    // NPC Details Panel
+    npcDetailPanel.setPosition(
+        (size.x - npcDetailPanel.getBounds().width) / 2 + 220, // Offset right
+        size.y * 0.1f
+    );
+
+    npcDetailText.setPosition(
+        npcDetailPanel.getBounds().left + 20,
+        npcDetailPanel.getBounds().top + 50
+    );
+
+    // Center the Stats Panel
+    statsPanel.setPosition(
+        (size.x - statsPanel.getBounds().width) / 2, // Center horizontally
+        (size.y - statsPanel.getBounds().height) / 2 // Center vertically
+    );
+
+    // Adjust Stats Text Position
+    statsText.setPosition(
+        statsPanel.getBounds().left + 20, // Padding from the left
+        statsPanel.getBounds().top + 20  // Padding from the top
+    );
+
+    marketPanel.setPosition(
+        (size.x - marketPanel.getSize().x) / 2,
+        (size.y - marketPanel.getSize().y) / 2
+    );
+
 
     // Money Panel
     moneyPanel.setPosition(size.x * 0.02f, size.y * 0.02f);
@@ -418,109 +525,203 @@ void UI::adjustLayout(sf::RenderWindow& window) {
 
 // Update Market Panel
 void UI::updateMarketPanel(const Market& market) {
+    // Clear the advancedMarketStatsText to ensure no overlap
+    advancedMarketStatsText.setString("");
+
     std::ostringstream statsStream;
-    statsStream << "Advanced Market Stats:\n\n";
 
-    statsStream << "Total Trades: " << market.getTotalTrades() << "\n";
+    // Start positions for the horizontal layout
+    float startX = marketPanel.getPosition().x + 20;
+    float startY = marketPanel.getPosition().y + 50;
+    float spacingX = 200.0f; // Horizontal spacing between resource blocks
 
-    const auto& resourceStats = market.getResourceStats();
-    for (const auto& [resource, price] : resourceStats) {
-        float volatility = market.calculateVolatility(resource);
-        float supplyDemandRatio = 0.0f;
+    int index = 0; // Index to track the current resource
+    for (const auto& [resource, price] : market.getPrices()) {
+        float posX = startX + index * spacingX;
 
-        // Access supply and demand via Market methods
-        if (market.getPrices().count(resource)) {
-            supplyDemandRatio = market.getPrices().at(resource); // Replace with proper supply-demand ratio logic
-        }
-
-        statsStream << "- " << resource << ":\n";
+        statsStream << resource << ":\n";
         statsStream << "  Price: $" << price << "\n";
         statsStream << "  Buy Transactions: " << market.getBuyTransactions(resource) << "\n";
         statsStream << "  Sell Transactions: " << market.getSellTransactions(resource) << "\n";
         statsStream << "  Revenue: $" << market.getRevenue(resource) << "\n";
         statsStream << "  Expenditure: $" << market.getExpenditure(resource) << "\n";
-        statsStream << "  Volatility: " << volatility << "\n";
-        statsStream << "  Supply-to-Demand Ratio: " << supplyDemandRatio << "\n";
-    }
+        statsStream << "  Volatility: " << market.calculateVolatility(resource) << "\n";
 
-    advancedMarketStatsText.setString(statsStream.str());
+        // Draw the text block for each resource
+        sf::Text resourceText(statsStream.str(), font, 14);
+        resourceText.setFillColor(sf::Color::White);
+        resourceText.setPosition(posX, startY);
+
+        // Add the generated text block to the panel directly
+        marketResourceTexts.push_back(resourceText);
+
+        // Clear the stream for the next resource
+        statsStream.str("");
+        statsStream.clear();
+
+        index++;
+    }
 }
+
+
 
 void UI::renderOptionsPanel(sf::RenderWindow& window) {
     if (!showOptionsPanel) return;
 
-    // Background
+    // Get window dimensions for dynamic centering
+    sf::Vector2u windowSize = window.getSize();
+
+    // Background Panel
     sf::RectangleShape optionsPanel;
     optionsPanel.setSize({600, 400});
-    optionsPanel.setPosition(150, 150);
     optionsPanel.setFillColor(sf::Color(50, 50, 50, 200));
+    optionsPanel.setOutlineThickness(2);
+    optionsPanel.setOutlineColor(sf::Color(150, 150, 150)); // Light gray border
+
+    // Center the panel dynamically
+    optionsPanel.setPosition(
+        (windowSize.x - optionsPanel.getSize().x) / 2.0f,
+        (windowSize.y - optionsPanel.getSize().y) / 2.0f
+    );
 
     // Title
     sf::Text title("Options", font, 24);
     title.setFillColor(sf::Color::White);
-    title.setPosition(optionsPanel.getPosition().x + 20, optionsPanel.getPosition().y + 20);
+    title.setStyle(sf::Text::Bold);
+    title.setPosition(
+        optionsPanel.getPosition().x + (optionsPanel.getSize().x - title.getGlobalBounds().width) / 2.0f,
+        optionsPanel.getPosition().y + 20
+    );
 
-    // Option: Reset Simulation
+    // Button layout parameters
+    float buttonWidth = 400.0f;
+    float buttonHeight = 40.0f;
+    float spacing = 20.0f;
+
+    // Start positions for buttons
+    float startX = optionsPanel.getPosition().x + (optionsPanel.getSize().x - buttonWidth) / 2.0f;
+    float startY = optionsPanel.getPosition().y + 80.0f;
+
+    // Reset Simulation Button
+    sf::RectangleShape resetButton({buttonWidth, buttonHeight});
+    resetButton.setFillColor(sf::Color(100, 100, 100));
+    resetButton.setPosition(startX, startY);
     sf::Text resetText("Reset Simulation", font, 18);
     resetText.setFillColor(sf::Color::White);
-    resetText.setPosition(optionsPanel.getPosition().x + 20, optionsPanel.getPosition().y + 80);
+    resetText.setPosition(
+        resetButton.getPosition().x + (resetButton.getSize().x - resetText.getGlobalBounds().width) / 2.0f,
+        resetButton.getPosition().y + (resetButton.getSize().y - resetText.getGlobalBounds().height) / 2.0f
+    );
 
-    sf::RectangleShape resetButton({150, 30});
-    resetButton.setFillColor(sf::Color(100, 100, 100));
-    resetButton.setPosition(resetText.getPosition().x + 200, resetText.getPosition().y);
-
-    // Option: Toggle Tile Borders
+    // Toggle Tile Borders Button
+    sf::RectangleShape borderButton({buttonWidth, buttonHeight});
+    borderButton.setFillColor(sf::Color(100, 100, 100));
+    borderButton.setPosition(startX, startY + buttonHeight + spacing);
     sf::Text borderText("Toggle Tile Borders", font, 18);
     borderText.setFillColor(sf::Color::White);
-    borderText.setPosition(optionsPanel.getPosition().x + 20, optionsPanel.getPosition().y + 130);
+    borderText.setPosition(
+        borderButton.getPosition().x + (borderButton.getSize().x - borderText.getGlobalBounds().width) / 2.0f,
+        borderButton.getPosition().y + (borderButton.getSize().y - borderText.getGlobalBounds().height) / 2.0f
+    );
 
-    sf::RectangleShape borderButton({150, 30});
-    borderButton.setFillColor(sf::Color(100, 100, 100));
-    borderButton.setPosition(borderText.getPosition().x + 200, borderText.getPosition().y);
-
-    // Option: Simulation Speed
+    // Simulation Speed Slider
     sf::Text speedText("Simulation Speed", font, 18);
     speedText.setFillColor(sf::Color::White);
-    speedText.setPosition(optionsPanel.getPosition().x + 20, optionsPanel.getPosition().y + 180);
-
-    sf::RectangleShape speedSlider({200, 10});
+    speedText.setPosition(startX, startY + 2 * (buttonHeight + spacing));
+    sf::RectangleShape speedSlider({buttonWidth, 10});
     speedSlider.setFillColor(sf::Color(150, 150, 150));
-    speedSlider.setPosition(speedText.getPosition().x + 200, speedText.getPosition().y + 10);
+    speedSlider.setPosition(startX, startY + 2 * (buttonHeight + spacing) + 30);
+    sf::RectangleShape sliderKnob({10, 20});
+    sliderKnob.setFillColor(sf::Color::White);
+    sliderKnob.setPosition(
+        speedSlider.getPosition().x + currentSpeed * (speedSlider.getSize().x - sliderKnob.getSize().x),
+        speedSlider.getPosition().y - 5
+    );
+
+    // Toggle Debug Console Button
+    sf::RectangleShape debugButton({buttonWidth, buttonHeight});
+    debugButton.setFillColor(sf::Color(100, 100, 100));
+    debugButton.setPosition(startX, startY + 3 * (buttonHeight + spacing));
+    sf::Text debugText("Toggle Debug Console", font, 18);
+    debugText.setFillColor(sf::Color::White);
+    debugText.setPosition(
+        debugButton.getPosition().x + (debugButton.getSize().x - debugText.getGlobalBounds().width) / 2.0f,
+        debugButton.getPosition().y + (debugButton.getSize().y - debugText.getGlobalBounds().height) / 2.0f
+    );
 
     // Draw components
     window.draw(optionsPanel);
     window.draw(title);
-    window.draw(resetText);
     window.draw(resetButton);
-    window.draw(borderText);
+    window.draw(resetText);
     window.draw(borderButton);
+    window.draw(borderText);
     window.draw(speedText);
     window.draw(speedSlider);
+    window.draw(sliderKnob);
+    window.draw(debugButton);
+    window.draw(debugText);
+
+    // Cache buttons and slider for event handling
+    this->resetButton = resetButton;
+    this->borderButton = borderButton;
+    this->debugButton = debugButton;
+    this->speedSlider = speedSlider;
+    this->sliderKnob = sliderKnob;
 }
+
 
 void UI::handleOptionsEvents(sf::RenderWindow& window, sf::Event& event, Game& game) {
     if (!showOptionsPanel) return;
 
-    if (event.type == sf::Event::MouseButtonPressed) {
-        sf::Vector2i mousePos = sf::Mouse::getPosition(window);
+    sf::Vector2i mousePos = sf::Mouse::getPosition(window);
 
-        // Reset Simulation
+    // Hover effect for buttons
+    resetButton.setFillColor(resetButton.getGlobalBounds().contains(mousePos.x, mousePos.y) ? sf::Color(120, 120, 120) : sf::Color(100, 100, 100));
+    borderButton.setFillColor(borderButton.getGlobalBounds().contains(mousePos.x, mousePos.y) ? sf::Color(120, 120, 120) : sf::Color(100, 100, 100));
+    debugButton.setFillColor(debugButton.getGlobalBounds().contains(mousePos.x, mousePos.y) ? sf::Color(120, 120, 120) : sf::Color(100, 100, 100));
+
+    // Handle button clicks
+    if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
         if (resetButton.getGlobalBounds().contains(mousePos.x, mousePos.y)) {
             game.resetSimulation();
         }
-
-        // Toggle Tile Borders
         if (borderButton.getGlobalBounds().contains(mousePos.x, mousePos.y)) {
             game.toggleTileBorders();
         }
-
-        // Simulation Speed (Slider Logic)
+        if (debugButton.getGlobalBounds().contains(mousePos.x, mousePos.y)) {
+            getDebugConsole().toggle(); 
+            getDebugConsole().log("UI", "Debug Console Toggled");
+        }
         if (speedSlider.getGlobalBounds().contains(mousePos.x, mousePos.y)) {
-            float sliderPosition = static_cast<float>(mousePos.x - speedSlider.getPosition().x);
-            game.setSimulationSpeed(sliderPosition / speedSlider.getSize().x);
+            sliderDragging = true;
         }
     }
+
+    // Handle slider dragging
+    if (event.type == sf::Event::MouseMoved && sliderDragging) {
+        float sliderX = static_cast<float>(mousePos.x);
+        float sliderLeft = speedSlider.getPosition().x;
+        float sliderRight = speedSlider.getPosition().x + speedSlider.getSize().x;
+
+        // Constrain knob to slider bounds
+        sliderX = std::clamp(sliderX, sliderLeft, sliderRight);
+
+        // Update knob position
+        sliderKnob.setPosition(sliderX - sliderKnob.getSize().x / 2, sliderKnob.getPosition().y);
+
+        // Calculate simulation speed
+        float sliderProgress = (sliderKnob.getPosition().x - sliderLeft) / (sliderRight - sliderLeft);
+        currentSpeed = sliderProgress;
+        game.setSimulationSpeed(sliderProgress);
+    }
+
+    if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left) {
+        sliderDragging = false;
+    }
 }
+
+
 
 
 
@@ -574,21 +775,13 @@ void UI::drawMarketGraph(sf::RenderWindow& window, const Market& market) {
 
 // Render Market Panel
 void UI::renderMarketPanel(sf::RenderWindow& window, const Market& market) {
-    window.draw(marketPanel); // Correct rendering for a RectangleShape
-    drawMarketGraph(window, market);
+    window.draw(marketPanel); // Draw the panel background
+    window.draw(advancedMarketStatsText); // Static market stats
 
-    sf::Text statsText(advancedMarketStatsText);
-    statsText.setPosition(marketPanel.getGlobalBounds().left + 20, marketPanel.getGlobalBounds().top + 220);
-    window.draw(statsText);
-}
-
-
-// Handle Market Button
-void UI::handleMarketButton(sf::RenderWindow& window, sf::Event& event, const Market& market) {
-    if (marketButton.isClicked(window, event)) {
-        showMarketPanel = !showMarketPanel; // Toggle visibility
-        if (showMarketPanel) {
-            updateMarketPanel(market);
-        }
+    // Draw each resource text block
+    for (const auto& text : marketResourceTexts) {
+        window.draw(text);
     }
 }
+
+

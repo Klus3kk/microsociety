@@ -136,7 +136,7 @@ void Market::stabilizePrices(float deltaTime) {
 }
 
 // Render price graph
-void Market::renderPriceGraph(sf::RenderWindow& window, const std::string& item, sf::Vector2f position, sf::Vector2f size) {
+void Market::renderPriceGraph(sf::RenderWindow& window, const std::string& item, sf::Vector2f position, sf::Vector2f size) const {
     auto it = priceHistory.find(item);
     if (it == priceHistory.end() || it->second.empty()) return;
 
@@ -154,6 +154,7 @@ void Market::renderPriceGraph(sf::RenderWindow& window, const std::string& item,
 
     window.draw(graph);
 }
+
 
 // Draw the market
 void Market::draw(sf::RenderWindow& window) {

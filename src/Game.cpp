@@ -10,7 +10,7 @@
 
 Game::Game()
     : window(sf::VideoMode(GameConfig::windowWidth, GameConfig::windowHeight), "MicroSociety", sf::Style::Titlebar | sf::Style::Close),
-      clockGUI(700, 100) {
+      clockGUI(700, 100), debugConsole(800.0f, 600.0f) {
     
     #ifdef _WIN32
     ui.adjustLayout(window);
@@ -98,14 +98,9 @@ void Game::run() {
             if (event.type == sf::Event::Closed) window.close();
             if (event.type == sf::Event::Resized) ui.adjustLayout(window);
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) window.close();
-            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::F1) {
-                debugConsole.toggle();
-            }
-
-            ui.handleButtonClicks(window, event, npcs, timeManager);
+            ui.handleButtonClicks(window, event, npcs, timeManager, market);
             ui.handleNPCPanel(window, event, npcs);
             ui.handleStatsPanel(window, event);
-            ui.handleMarketButton(window, event, market);
             ui.handleOptionsEvents(window, event, *this);
         }
 
@@ -294,6 +289,10 @@ void Game::run() {
                 debugConsole.logThrottled("Collision", "Collision detected at tile.", 1000); 
             }
         }
+        
+        if (debugConsole.isEnabled()) {
+            debugConsole.render(window);
+        }
 
 
         // Aggregate resources from all NPCs
@@ -316,10 +315,9 @@ void Game::run() {
         render();          // Render the map
 
         player.draw(window);   // Draw player's entity
-        // market.renderPriceGraph(window, "wood", {50, 50}, {200, 100});
         clockGUI.render(window, isClockVisible);
-        ui.render(window, market);
-        debugConsole.render(window);
+        ui.render(window, market, npcs);
+        // debugConsole.render(window);
         window.display();
     }
 }
@@ -368,7 +366,7 @@ std::vector<PlayerEntity> Game::generateNPCs() const {
 
         occupiedPositions.insert({x, y});
 
-        PlayerEntity npc("NPC" + std::to_string(i + 1), 100, 50, 50, 150.0f, 10, 100);
+        PlayerEntity npc("Danuta" + std::to_string(i + 1), 100, 50, 50, 150.0f, 10, 100);
 
         // Populate inventory with random items
         npc.addToInventory("wood", rand() % 10 + 1);
@@ -526,6 +524,8 @@ void Game::setSimulationSpeed(float speedFactor) {
     simulationSpeed = speedFactor;
     getDebugConsole().log("Options", "Simulation speed set to: " + std::to_string(speedFactor));
 }
+
+
 
 // void Game::saveGame(const std::string& saveFile);
 // void Game::loadGame(const std::string& saveFile);

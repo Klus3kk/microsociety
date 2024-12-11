@@ -24,6 +24,7 @@ private:
     TimeManager timeManager; 
     MoneyManager moneyManager;
     ClockGUI clockGUI;
+    DebugConsole debugConsole;
     float deltaTime;
     std::vector<std::vector<std::unique_ptr<Tile>>> tileMap;
     bool showTileBorders = false;

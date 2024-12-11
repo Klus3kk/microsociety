@@ -58,7 +58,7 @@ public:
     float getRevenue(const std::string& item) const;
     float getExpenditure(const std::string& item) const;
 
-    void renderPriceGraph(sf::RenderWindow& window, const std::string& item, sf::Vector2f position, sf::Vector2f size);
+    void renderPriceGraph(sf::RenderWindow& window, const std::string& item, sf::Vector2f position, sf::Vector2f size) const;
 
     void draw(sf::RenderWindow& window) override;
     ObjectType getType() const override;

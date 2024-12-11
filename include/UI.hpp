@@ -11,11 +11,15 @@
 #include "TimeManager.hpp"
 
 namespace UIStyles {
-    const sf::Color PanelBackground = sf::Color(50, 50, 50, 220); // Slightly brighter
-    const sf::Color PanelBorder = sf::Color(150, 150, 150, 255);  // Brighter border
-    const sf::Color ButtonNormal = sf::Color(90, 150, 220, 200);  // Unity-like blue
-    const sf::Color ButtonHover = sf::Color(110, 170, 250, 255);  // Lighter hover
-    const sf::Color TextColor = sf::Color::White;                 // Keep text white
+    const sf::Color PanelBackground = sf::Color(45, 45, 48, 255); // Darker gray
+    const sf::Color PanelBorder = sf::Color(27, 82, 40, 255);     // Lighter gray for subtle borders
+
+    // Multicolored Buttons
+    const sf::Color ButtonNormal = sf::Color(51, 145, 73, 150);  // Light green
+    const sf::Color ButtonHover = sf::Color(0, 184, 148, 255);    // Vibrant green
+    const sf::Color ButtonPressed = sf::Color(253, 121, 168, 255); // Soft pink for clicks
+
+    const sf::Color TextColor = sf::Color(240, 240, 240, 255);    // Off-white for readability
 }
 
 
@@ -59,10 +63,15 @@ private:
     sf::RectangleShape resetButton;
     sf::RectangleShape borderButton;
     sf::RectangleShape speedSlider;
+    sf::RectangleShape debugButton;
+    sf::RectangleShape sliderKnob;
+    bool sliderDragging = false;         // Whether the slider is being dragged
+    float currentSpeed = 0.5f;  
 
 
 
     std::vector<std::pair<std::string, UIButton*>> npcButtons;
+    std::vector<sf::Text> marketResourceTexts;
 
     bool showNPCList = false;
     bool showNPCDetail = false;
@@ -97,13 +106,12 @@ public:
     void showNPCDetails(const std::string& npcDetails);
 
     // Interaction and Rendering
-    void handleButtonClicks(sf::RenderWindow& window, sf::Event& event, std::vector<PlayerEntity>& npcs, const TimeManager& timeManager);
+    void handleButtonClicks(sf::RenderWindow& window, sf::Event& event, std::vector<PlayerEntity>& npcs, const TimeManager& timeManager, const Market& market);
     void handleNPCPanel(sf::RenderWindow& window, sf::Event& event, const std::vector<PlayerEntity>& npcs);
     void handleStatsPanel(sf::RenderWindow& window, sf::Event& event);
-    void handleMarketButton(sf::RenderWindow& window, sf::Event& event, const Market& market);
     void handleOptionsEvents(sf::RenderWindow& window, sf::Event& event, Game& game);
 
-    void render(sf::RenderWindow& window, const Market& market);
+    void render(sf::RenderWindow& window, const Market& market, const std::vector<PlayerEntity>& npcs);
     void renderOptionsPanel(sf::RenderWindow& window);
     void renderMarketPanel(sf::RenderWindow& window, const Market& market);
     void drawMarketGraph(sf::RenderWindow& window, const Market& market);
