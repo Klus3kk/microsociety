@@ -5,7 +5,7 @@
 #include <iostream>
 #include "Configuration.hpp"
 
-enum class AnimationState { Idle, Walking, Interacting };
+enum class AnimationState { Idle, Walking, Interacting, Dead, Exhausted };
 
 class Entity {
 protected:
@@ -19,6 +19,7 @@ protected:
     sf::Sprite sprite;
     sf::Texture texture;
     AnimationState state = AnimationState::Idle;
+    bool dead = false; // Track if the entity is dead
 
 public:
     Entity(float initHealth, float initHunger, float initEnergy, float initSpeed, float initStrength, float initMoney)
@@ -52,14 +53,19 @@ public:
     float getSpeed() const { return speed; }
     float getStrength() const { return strength; }
     float getMoney() const { return money; }
+    AnimationState getState() const { return state; }
+    bool isDead() const { return dead; }
 
     // Modifiers
     void setSpeed(float newSpeed) { speed = newSpeed; }
     void setEnergy(float newEnergy) { energy = newEnergy; }
     void setMoney(float newMoney) { money = newMoney; }
+    void setDead(bool isDead) { dead = isDead; }
 
     // Movement with boundary checking
     void move(float dx, float dy, float deltaTime) {
+        if (dead) return; // Dead entities can't move
+
         float newX = position.x + dx * speed * deltaTime;
         float newY = position.y + dy * speed * deltaTime;
 
@@ -80,9 +86,37 @@ public:
         return sprite.getGlobalBounds().intersects(other.getSprite().getGlobalBounds());
     }
 
+    // Helper methods
+    bool needsEnergyRegeneration() const {
+        return energy < 30.0f; // Threshold for low energy
+    }
+
+    bool needsHealthRegeneration() const {
+        return health < 50.0f; // Threshold for low health
+    }
+
+    void takeDamage(float amount) {
+        health = std::max(0.0f, health - amount);
+        if (health == 0.0f) {
+            state = AnimationState::Dead;
+            dead = true;
+        }
+    }
+
     // Rendering
     void draw(sf::RenderWindow& window) {
-        window.draw(sprite);
+        if (!dead) {
+            window.draw(sprite);
+        }
+    }
+
+    // Reward/Penalty hooks (to be extended in subclasses)
+    virtual void applyReward(int reward) {
+        money += reward;
+    }
+
+    virtual void applyPenalty(int penalty) {
+        money = std::max(0.0f, money - penalty);
     }
 };
 

@@ -6,8 +6,6 @@
 #include <memory>
 #include <unordered_map>
 #include "Tile.hpp"
-#include "Player.hpp"  
-#include "Configuration.hpp" 
 #include "Actions.hpp"
 #include "House.hpp"
 #include "UI.hpp"
@@ -15,40 +13,70 @@
 #include "TimeManager.hpp"
 #include "MoneyManager.hpp"
 #include "ClockGUI.hpp"
+#include "Configuration.hpp"
+
+// Forward declaration for the NPC class
+class NPC;
 
 class Game {
 private:
+    // UI and Market
     UI ui;
     Market market;
+
+    // Window and Graphics
     sf::RenderWindow window;
-    TimeManager timeManager; 
-    MoneyManager moneyManager;
     ClockGUI clockGUI;
+
+    // Simulation Control
     float deltaTime;
-    std::vector<std::vector<std::unique_ptr<Tile>>> tileMap;
     bool showTileBorders = false;
+    bool isClockVisible = true;
     float simulationSpeed = 1.0f;
-    int mapWidth;   
+
+    // Map and Environment
+    std::vector<std::vector<std::unique_ptr<Tile>>> tileMap;
+    int mapWidth;
     int mapHeight;
     int tileSize;
-    bool isClockVisible = true;
-    std::vector<PlayerEntity> npcs; 
 
-public:
-    Game();
-    void run();
+    // Time and Resources Management
+    TimeManager timeManager;
+    MoneyManager moneyManager;
+
+    // NPC Management
+    std::vector<NPC> npcs;
+
+    // Private Helper Methods
     void generateMap();
+    std::vector<NPC> generateNPCs() const;  
+    void simulateNPCBehavior(float deltaTime);
+    void evaluateNPCState(NPC& npc);
+
+    // Rendering Helpers
     void render();
     void drawTileBorders();
-    bool detectCollision(const PlayerEntity& npc);
+
+    // Utility
+    std::unordered_map<std::string, int> aggregateResources() const;
+
+public:
+    // Constructor
+    Game();
+
+    // Main Run Loop
+    void run();
+
+    // Simulation Management
     void resetSimulation();
     void toggleTileBorders();
     void setSimulationSpeed(float speedFactor);
 
-    std::unordered_map<std::string, int> aggregateResources(const std::vector<PlayerEntity>& npcs) const;
-    std::vector<PlayerEntity> generateNPCs() const;  // For generating npcs
-    // Might remove later
+    // Collision Detection
+    bool detectCollision(const NPC& npc);
+
+    // Accessor for TileMap
     const std::vector<std::vector<std::unique_ptr<Tile>>>& getTileMap() const;
 };
 
-#endif 
+#endif
