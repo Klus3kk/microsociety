@@ -15,7 +15,7 @@ namespace UIStyles {
     const sf::Color PanelBorder = sf::Color(27, 82, 40, 255);     // Lighter gray for subtle borders
 
     // Multicolored Buttons
-    const sf::Color ButtonNormal = sf::Color(51, 145, 73, 150);  // Light green
+    const sf::Color ButtonNormal = sf::Color(50, 50, 50, 200);  // Light green
     const sf::Color ButtonHover = sf::Color(0, 184, 148, 255);    // Vibrant green
     const sf::Color ButtonPressed = sf::Color(253, 121, 168, 255); // Soft pink for clicks
 

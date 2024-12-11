@@ -77,10 +77,21 @@ bool House::takeFromStorage(const std::string& item, int quantity, PlayerEntity&
 
 // Upgrade the house
 bool House::upgrade(float& playerMoney, PlayerEntity& player) {
-    int upgradeCost = level * 50;
+    int upgradeCost = level * 50 + 25; // Dynamic cost scaling
+    int woodRequired = level * 15;    // Linear scaling
+    int stoneRequired = level * 10;
+    int bushRequired = level * 5;     // Added bushes as a requirement
 
-    if (playerMoney >= upgradeCost) {
+    // Check if the player has enough money and resources
+    if (playerMoney >= upgradeCost && 
+        storage["wood"] >= woodRequired && 
+        storage["stone"] >= stoneRequired && 
+        storage["bush"] >= bushRequired) {
+        
         playerMoney -= upgradeCost;
+        storage["wood"] -= woodRequired;
+        storage["stone"] -= stoneRequired;
+        storage["bush"] -= bushRequired; // Deduct bushes
         level++;
         maxStorageCapacity += 10;
         energyRegenRate += 1.0f;
@@ -88,6 +99,7 @@ bool House::upgrade(float& playerMoney, PlayerEntity& player) {
         strengthBonus += 2;
         speedBonus += 1;
 
+        // Update player stats
         player.setHealth(player.getHealth() + healthBonus);
         player.setStrength(player.getStrength() + strengthBonus);
         player.setSpeed(player.getSpeed() + speedBonus);
@@ -96,10 +108,26 @@ bool House::upgrade(float& playerMoney, PlayerEntity& player) {
         return true;
     }
 
-    getDebugConsole().log("House", "Not enough money to upgrade.");
+    // Log missing requirements
+    if (playerMoney < upgradeCost) {
+        getDebugConsole().log("House", "You need " + std::to_string(upgradeCost - playerMoney) + " more money.");
+    }
+    if (storage["wood"] < woodRequired) {
+        getDebugConsole().log("House", "You need " + std::to_string(woodRequired - storage["wood"]) + " more wood.");
+    }
+    if (storage["stone"] < stoneRequired) {
+        getDebugConsole().log("House", "You need " + std::to_string(stoneRequired - storage["stone"]) + " more stone.");
+    }
+    if (storage["bush"] < bushRequired) {
+        getDebugConsole().log("House", "You need " + std::to_string(bushRequired - storage["bush"]) + " more bush(es).");
+    }
+
     return false;
 }
 
+
+
+// Log upgrade details
 void House::logUpgradeDetails() const {
     getDebugConsole().log("House", "Upgraded to level " + std::to_string(level) +
                                          ". Storage: " + std::to_string(maxStorageCapacity) +

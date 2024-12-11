@@ -10,7 +10,7 @@
 
 Game::Game()
     : window(sf::VideoMode(GameConfig::windowWidth, GameConfig::windowHeight), "MicroSociety", sf::Style::Titlebar | sf::Style::Close),
-      clockGUI(700, 100), debugConsole(800.0f, 600.0f) {
+      clockGUI(700, 100) {
     
     #ifdef _WIN32
     ui.adjustLayout(window);
@@ -58,7 +58,7 @@ void Game::run() {
     
     // Set up the debug console
     DebugConsole& debugConsole = getDebugConsole();
-    debugConsole.enable(); 
+    // debugConsole.enable(); 
     std::set<std::pair<int, int>> shownMessages;
 
     sf::Image icon;
@@ -289,10 +289,6 @@ void Game::run() {
                 debugConsole.logThrottled("Collision", "Collision detected at tile.", 1000); 
             }
         }
-        
-        if (debugConsole.isEnabled()) {
-            debugConsole.render(window);
-        }
 
 
         // Aggregate resources from all NPCs
@@ -317,7 +313,7 @@ void Game::run() {
         player.draw(window);   // Draw player's entity
         clockGUI.render(window, isClockVisible);
         ui.render(window, market, npcs);
-        // debugConsole.render(window);
+        debugConsole.render(window);
         window.display();
     }
 }
@@ -524,8 +520,6 @@ void Game::setSimulationSpeed(float speedFactor) {
     simulationSpeed = speedFactor;
     getDebugConsole().log("Options", "Simulation speed set to: " + std::to_string(speedFactor));
 }
-
-
 
 // void Game::saveGame(const std::string& saveFile);
 // void Game::loadGame(const std::string& saveFile);
