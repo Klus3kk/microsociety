@@ -28,10 +28,10 @@ public:
     float getEnergyRegenRate() const { return energyRegenRate; }
 
     // Actions
-    void regenerateEnergy(PlayerEntity& npc);  // Energy regeneration for NPC
+    void regenerateEnergy(NPCEntity& npc);  // Energy regeneration for NPC
     bool storeItem(const std::string& item, int quantity); // Store resources
-    bool takeFromStorage(const std::string& item, int quantity, PlayerEntity& npc); // Take resources
-    bool upgrade(float& npcMoney, PlayerEntity& npc); // Upgrade house level
+    bool takeFromStorage(const std::string& item, int quantity, NPCEntity& npc); // Take resources
+    bool upgrade(float& npcMoney, NPCEntity& npc); // Upgrade house level
 
     // Stats and Logs
     void displayStorage() const; // Display storage details

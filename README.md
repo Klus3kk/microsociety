@@ -87,3 +87,6 @@ valgrind --leak-check=full --track-origins=yes ./MicroSociety
 valgrind --tool=callgrind ./MicroSociety
 kcachegrind callgrind.out.<pid>
 ```
+
+### GCloud Settings
+

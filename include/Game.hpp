@@ -15,8 +15,8 @@
 #include "ClockGUI.hpp"
 #include "Configuration.hpp"
 
-// Forward declaration for the NPC class
-class NPC;
+// Forward declaration for the NPCEntity class
+class NPCEntity;
 
 class Game {
 private:
@@ -44,14 +44,12 @@ private:
     TimeManager timeManager;
     MoneyManager moneyManager;
 
-    // NPC Management
-    std::vector<NPC> npcs;
+    // NPCEntity Management
+    std::vector<NPCEntity> npcs;
 
     // Private Helper Methods
     void generateMap();
-    std::vector<NPC> generateNPCs() const;  
-    void simulateNPCBehavior(float deltaTime);
-    void evaluateNPCState(NPC& npc);
+    std::vector<NPCEntity> generateNPCs() const;  
 
     // Rendering Helpers
     void render();
@@ -71,9 +69,11 @@ public:
     void resetSimulation();
     void toggleTileBorders();
     void setSimulationSpeed(float speedFactor);
+    void simulateNPCEntityBehavior(float deltaTime);
+    void simulateSocietalGrowth(float deltaTime);
 
     // Collision Detection
-    bool detectCollision(const NPC& npc);
+    bool detectCollision(const NPCEntity& npc);
 
     // Accessor for TileMap
     const std::vector<std::vector<std::unique_ptr<Tile>>>& getTileMap() const;

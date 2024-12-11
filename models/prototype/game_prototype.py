@@ -176,7 +176,7 @@ class DQLAgent:
 if __name__ == "__main__":
     env = Environment()
     agent = DQLAgent(state_size=7, action_size=13)  # Update state size and action count
-    episodes = 50
+    episodes = 100
     rewards = []
 
     for episode in range(episodes):

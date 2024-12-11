@@ -1,7 +1,7 @@
 #include "Actions.hpp"
 
 // TreeAction
-void TreeAction::perform(PlayerEntity& player, Tile& tile) {
+void TreeAction::perform(NPCEntity& player, Tile& tile) {
     if (tile.hasObject() && player.addToInventory("wood", 1)) {
         tile.removeObject();
         getDebugConsole().log("Action", "Tree chopped! Wood added to inventory.");
@@ -13,7 +13,7 @@ void TreeAction::perform(PlayerEntity& player, Tile& tile) {
 }
 
 // StoneAction
-void StoneAction::perform(PlayerEntity& player, Tile& tile) {
+void StoneAction::perform(NPCEntity& player, Tile& tile) {
     if (tile.hasObject() && player.addToInventory("stone", 1)) {
         tile.removeObject();
         getDebugConsole().log("Action", "Rock mined! Stone added to inventory.");
@@ -25,7 +25,7 @@ void StoneAction::perform(PlayerEntity& player, Tile& tile) {
 }
 
 // BushAction
-void BushAction::perform(PlayerEntity& player, Tile& tile) {
+void BushAction::perform(NPCEntity& player, Tile& tile) {
     if (tile.hasObject() && player.addToInventory("food", 1)) {
         tile.removeObject();
         getDebugConsole().log("Action", "Food gathered from bush!");
@@ -37,17 +37,17 @@ void BushAction::perform(PlayerEntity& player, Tile& tile) {
 }
 
 // MoveAction
-void MoveAction::perform(PlayerEntity& player, Tile&) {
+void MoveAction::perform(NPCEntity& player, Tile&) {
     getDebugConsole().log("Action", "Player moved.");
 }
 
 // TradeAction
-void TradeAction::perform(PlayerEntity& player, Tile&) {
+void TradeAction::perform(NPCEntity& player, Tile&) {
     getDebugConsole().log("Action", "Trade action performed.");
 }
 
 // RegenerateEnergyAction
-void RegenerateEnergyAction::perform(PlayerEntity& player, Tile& tile) {
+void RegenerateEnergyAction::perform(NPCEntity& player, Tile& tile) {
     if (auto house = dynamic_cast<House*>(tile.getObject())) {
         house->regenerateEnergy(player);
         getDebugConsole().log("Action", "Player energy regenerated.");
@@ -57,7 +57,7 @@ void RegenerateEnergyAction::perform(PlayerEntity& player, Tile& tile) {
 }
 
 // UpgradeHouseAction
-void UpgradeHouseAction::perform(PlayerEntity& player, Tile& tile) {
+void UpgradeHouseAction::perform(NPCEntity& player, Tile& tile) {
     if (auto house = dynamic_cast<House*>(tile.getObject())) {
         float playerMoney = player.getMoney();
         if (house->upgrade(playerMoney, player)) {
@@ -75,7 +75,7 @@ void UpgradeHouseAction::perform(PlayerEntity& player, Tile& tile) {
 StoreItemAction::StoreItemAction(const std::string& item, int quantity)
     : item(item), quantity(quantity) {}
 
-void StoreItemAction::perform(PlayerEntity& player, Tile& tile) {
+void StoreItemAction::perform(NPCEntity& player, Tile& tile) {
     if (auto house = dynamic_cast<House*>(tile.getObject())) {
         const auto& inventory = player.getInventory();
         if (inventory.empty()) {
@@ -106,7 +106,7 @@ std::string StoreItemAction::getActionName() const {
 TakeOutItemsAction::TakeOutItemsAction(const std::string& item, int quantity)
     : item(item), quantity(quantity) {}
 
-void TakeOutItemsAction::perform(PlayerEntity& player, Tile& tile) {
+void TakeOutItemsAction::perform(NPCEntity& player, Tile& tile) {
     if (auto house = dynamic_cast<House*>(tile.getObject())) {
         if (house->takeFromStorage(item, quantity, player)) {
             getDebugConsole().log("Action", "Took " + std::to_string(quantity) + " " + item + " from the house.");
@@ -126,7 +126,7 @@ std::string TakeOutItemsAction::getActionName() const {
 BuyItemAction::BuyItemAction(const std::string& item, int quantity)
     : item(item), quantity(quantity) {}
 
-void BuyItemAction::perform(PlayerEntity& player, Tile& tile) {
+void BuyItemAction::perform(NPCEntity& player, Tile& tile) {
     if (auto market = dynamic_cast<Market*>(tile.getObject())) {
         if (market->buyItem(player, item, quantity)) {
             getDebugConsole().log("Action", "Bought " + std::to_string(quantity) + " " + item + " from the market.");
@@ -143,10 +143,11 @@ std::string BuyItemAction::getActionName() const {
 }
 
 // SellItemAction
-SellItemAction::SellItemAction(const std::string& item, int quantity)
+StoreItemAction::StoreItemAction(const std::string& item, int quantity)
     : item(item), quantity(quantity) {}
 
-void SellItemAction::perform(PlayerEntity& player, Tile& tile) {
+
+void SellItemAction::perform(NPCEntity& player, Tile& tile) {
     if (auto market = dynamic_cast<Market*>(tile.getObject())) {
         if (market->sellItem(player, item, quantity)) {
             getDebugConsole().log("Action", "Sold " + std::to_string(quantity) + " " + item + " to the market.");
@@ -162,19 +163,8 @@ std::string SellItemAction::getActionName() const {
     return "Sell Items to Market";
 }
 
-void SleepAction::perform(PlayerEntity& player, Tile& tile) {
-    if (auto house = dynamic_cast<House*>(tile.getObject())) {
-        house->regenerateEnergy(player);
-        player.addReward(getReward()); // Reward for proper energy management
-        getDebugConsole().log("Action", "NPC rested and regenerated energy.");
-    } else {
-        player.addPenalty(-10.0f); // Penalty for trying to sleep without a house
-        getDebugConsole().logOnce("Action", "No house available for resting.");
-    }
-}
-
 // ExploreAction
-void ExploreAction::perform(PlayerEntity& player, Tile&) {
+void ExploreAction::perform(NPCEntity& player, Tile&) {
     // Exploration consumes some energy but provides small rewards
     player.consumeEnergy(2.0f);
     player.addReward(5.0f); // Small reward for exploration
@@ -182,7 +172,7 @@ void ExploreAction::perform(PlayerEntity& player, Tile&) {
 }
 
 // BuildAction
-void BuildAction::perform(PlayerEntity& player, Tile& tile) {
+void BuildAction::perform(NPCEntity& player, Tile& tile) {
     if (tile.hasObject()) {
         player.addPenalty(-10.0f); // Penalty for trying to build on an occupied tile
         getDebugConsole().logOnce("Action", "Tile is occupied. Cannot build here.");
@@ -205,24 +195,10 @@ void BuildAction::perform(PlayerEntity& player, Tile& tile) {
     }
 }
 
-// GatherResourceAction
-GatherResourceAction::GatherResourceAction(const std::string& resource, int amount)
-    : resource(resource), amount(amount) {}
 
-void GatherResourceAction::perform(PlayerEntity& player, Tile& tile) {
-    if (tile.hasObject() && tile.getObjectType() == ObjectType::Resource) {
-        player.addToInventory(resource, amount);
-        tile.removeObject();
-        player.addReward(getReward());
-        getDebugConsole().log("Action", "Gathered " + std::to_string(amount) + " " + resource + "(s).");
-    } else {
-        player.addPenalty(-5.0f);
-        getDebugConsole().logOnce("Action", "No resource to gather on this tile.");
-    }
-}
 
 // PrioritizeAction
-void PrioritizeAction::perform(PlayerEntity& player, Tile&) {
+void PrioritizeAction::perform(NPCEntity& player, Tile&) {
     // AI logic to prioritize actions dynamically
     if (player.getEnergy() < 20.0f) {
         player.addPenalty(-10.0f);
@@ -237,7 +213,7 @@ void PrioritizeAction::perform(PlayerEntity& player, Tile&) {
 }
 
 // IdleAction
-void IdleAction::perform(PlayerEntity& player, Tile&) {
+void IdleAction::perform(NPCEntity& player, Tile&) {
     player.addPenalty(-20.0f); // Heavy penalty for idling
     getDebugConsole().log("Action", "NPC idled and lost rewards.");
 }
@@ -246,12 +222,33 @@ void IdleAction::perform(PlayerEntity& player, Tile&) {
 SpecialAction::SpecialAction(const std::string& description, float reward, float penalty)
     : description(description), reward(reward), penalty(penalty) {}
 
-void SpecialAction::perform(PlayerEntity& player, Tile&) {
+void SpecialAction::perform(NPCEntity& player, Tile&) {
     if (reward > penalty) {
         player.addReward(reward);
         getDebugConsole().log("SpecialAction", description + " succeeded with reward: " + std::to_string(reward));
     } else {
         player.addPenalty(penalty);
         getDebugConsole().log("SpecialAction", description + " failed with penalty: " + std::to_string(penalty));
+    }
+}
+
+// RestAction
+void RestAction::perform(NPCEntity& player, Tile&) {
+    if (player.getEnergy() < player.getMaxEnergy()) {
+        player.setEnergy(player.getMaxEnergy()); // Fully restore energy
+        getDebugConsole().log("Action", "NPC rested and restored energy.");
+    } else {
+        getDebugConsole().logOnce("Action", "Energy is already full. No need to rest.");
+    }
+}
+
+// EvaluateStateAction
+void EvaluateStateAction::perform(NPCEntity& player, Tile&) {
+    if (player.getHunger() < 50.0f) {
+        getDebugConsole().log("Action", "NPC is hungry and should gather food.");
+    } else if (player.getEnergy() < 20.0f) {
+        getDebugConsole().log("Action", "NPC is tired and needs to regenerate energy.");
+    } else {
+        getDebugConsole().log("Action", "NPC is in a balanced state.");
     }
 }

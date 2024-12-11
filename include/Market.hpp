@@ -39,8 +39,8 @@ public:
     float calculateSellPrice(const std::string& item) const;
 
     // Core Transactions
-    bool buyItem(PlayerEntity& player, const std::string& item, int quantity);
-    bool sellItem(PlayerEntity& player, const std::string& item, int quantity);
+    bool buyItem(NPCEntity& player, const std::string& item, int quantity);
+    bool sellItem(NPCEntity& player, const std::string& item, int quantity);
 
     // Price Adjustments
     float adjustPriceOnBuy(float currentPrice, int demand, int supply, float buyFactor);
@@ -74,6 +74,8 @@ public:
     void displayPrices() const;
     void draw(sf::RenderWindow& window) override;
     ObjectType getType() const override;
+    std::unordered_map<std::string, float> getResourceStats() const;
+
 };
 
-#endif // MARKET_HPP
+#endif 

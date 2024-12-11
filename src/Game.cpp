@@ -6,10 +6,6 @@
 #include <unordered_map>
 #include <algorithm>
 
-<<<<<<< HEAD
-Game::Game() 
-    : window(sf::VideoMode(GameConfig::windowWidth, GameConfig::windowHeight), "MicroSociety"), clockGUI(700, 100) {
-=======
 // Constructor
 Game::Game()
     : window(sf::VideoMode(GameConfig::windowWidth, GameConfig::windowHeight), "MicroSociety", sf::Style::Titlebar | sf::Style::Close),
@@ -18,41 +14,35 @@ Game::Game()
     ui.adjustLayout(window);
 #endif
 
->>>>>>> c58c2ae0db671771a141dbe652525b0b4aaea4db
     generateMap();
-    npcs = generateNPCs();
+    npcs = generateNPCs(); 
 
     // Initialize market prices
     market.setPrice("wood", 10.0f);
     market.setPrice("stone", 10.0f);
     market.setPrice("bush", 5.0f);
 
-    ui.updateNPCList(npcs); // Update UI with NPC list
+    ui.updateNPCEntityList(npcs); // Update UI with NPCEntity list
 }
 
-<<<<<<< HEAD
-
-
-=======
->>>>>>> c58c2ae0db671771a141dbe652525b0b4aaea4db
 const std::vector<std::vector<std::unique_ptr<Tile>>>& Game::getTileMap() const {
     return tileMap;
 }
 
-bool Game::detectCollision(const NPC& npc) {
-    int tileX = static_cast<int>(npc.getPosition().x / GameConfig::tileSize);
-    int tileY = static_cast<int>(npc.getPosition().y / GameConfig::tileSize);
+bool Game::detectCollision(const NPCEntity& NPCEntity) {
+    int tileX = static_cast<int>(NPCEntity.getPosition().x / GameConfig::tileSize);
+    int tileY = static_cast<int>(NPCEntity.getPosition().y / GameConfig::tileSize);
 
     if (tileX >= 0 && tileX < tileMap[0].size() && tileY >= 0 && tileY < tileMap.size()) {
         auto& tile = tileMap[tileY][tileX];
-        return tile->hasObject() && npc.getSprite().getGlobalBounds().intersects(tile->getObjectBounds());
+        return tile->hasObject() && NPCEntity.getSprite().getGlobalBounds().intersects(tile->getObjectBounds());
     }
     return false;
 }
 
 void Game::run() {
     sf::Clock clock;
-
+    
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -60,15 +50,15 @@ void Game::run() {
             if (event.type == sf::Event::Resized) ui.adjustLayout(window);
 
             ui.handleButtonClicks(window, event, npcs, timeManager, market);
-            ui.handleNPCPanel(window, event, npcs);
+            ui.handleNPCEntityPanel(window, event, npcs);
             ui.handleStatsPanel(window, event);
             ui.handleOptionsEvents(window, event, *this);
         }
 
         deltaTime = clock.restart().asSeconds() * simulationSpeed;
 
-        // Simulate NPCs and societal growth
-        simulateNPCBehavior(deltaTime);
+        // Simulate npcs and societal growth
+        simulateNPCEntityBehavior(deltaTime);
         simulateSocietalGrowth(deltaTime);
 
         timeManager.update(deltaTime);
@@ -89,26 +79,26 @@ void Game::run() {
     }
 }
 
-void Game::simulateNPCBehavior(float deltaTime) {
-    for (auto& npc : npcs) {
-        evaluateNPCState(npc);
+void Game::simulateNPCEntityBehavior(float deltaTime) {
+    for (auto& NPCEntity : npcs) {
+        evaluateNPCEntityState(NPCEntity);
 
-        if (npc.getEnergy() <= 20.0f) {
-            npc.performAction(std::make_unique<RegenerateEnergyAction>(), tileMap);
-        } else if (npc.getMoney() >= 50.0f) {
-            npc.performAction(std::make_unique<UpgradeHouseAction>(), tileMap);
+        if (NPCEntity.getEnergy() <= 20.0f) {
+            NPCEntity.performAction(std::make_unique<RegenerateEnergyAction>(), tileMap);
+        } else if (NPCEntity.getMoney() >= 50.0f) {
+            NPCEntity.performAction(std::make_unique<UpgradeHouseAction>(), tileMap);
         } else {
-            performPathfinding(npc);
+            performPathfinding(NPCEntity);
         }
 
-        npc.update(deltaTime);
+        NPCEntity.update(deltaTime);
     }
 }
 
-void Game::evaluateNPCState(NPC& npc) {
-    if (npc.getEnergy() <= 0.0f) {
-        getDebugConsole().log("NPC", npc.getName() + " ran out of energy and died.");
-        // Handle NPC death (remove or reset state)
+void Game::evaluateNPCEntityState(NPCEntity& NPCEntity) {
+    if (NPCEntity.getEnergy() <= 0.0f) {
+        getDebugConsole().log("NPCEntity", NPCEntity.getName() + " ran out of energy and died.");
+        // Handle NPCEntity death (remove or reset state)
     }
 }
 
@@ -124,8 +114,8 @@ void Game::simulateSocietalGrowth(float deltaTime) {
     }
 }
 
-void Game::performPathfinding(NPC& npc) {
-    // Basic random pathfinding logic for NPCs
+void Game::performPathfinding(NPCEntity& NPCEntity) {
+    // Basic random pathfinding logic for npcs
     static std::random_device rd;
     static std::mt19937 gen(rd());
     static std::uniform_int_distribution<> dist(-1, 1);
@@ -133,8 +123,8 @@ void Game::performPathfinding(NPC& npc) {
     int moveX = dist(gen);
     int moveY = dist(gen);
 
-    sf::Vector2f newPosition = npc.getPosition() + sf::Vector2f(moveX * GameConfig::tileSize, moveY * GameConfig::tileSize);
-    npc.setPosition(newPosition.x, newPosition.y);
+    sf::Vector2f newPosition = NPCEntity.getPosition() + sf::Vector2f(moveX * GameConfig::tileSize, moveY * GameConfig::tileSize);
+    NPCEntity.setPosition(newPosition.x, newPosition.y);
 }
 
 void Game::generateMap() {
@@ -190,7 +180,7 @@ void Game::generateMap() {
     }
 
     std::set<std::pair<int, int>> occupiedPositions;
-    for (int i = 0; i < GameConfig::npcCount; ++i) {
+    for (int i = 0; i < GameConfig::NPCEntityCount; ++i) {
         int houseX, houseY;
         do {
             houseX = rand() % GameConfig::mapWidth;
@@ -219,8 +209,8 @@ void Game::generateMap() {
     }
 }
 
-std::vector<NPC> Game::generateNPCs() const {
-    std::vector<NPC> npcs;
+std::vector<NPCEntity> Game::generateNPCEntitys() const {
+    std::vector<NPCEntity> npcs;
     std::set<std::pair<int, int>> occupiedPositions;
 
     std::random_device rd;
@@ -229,7 +219,7 @@ std::vector<NPC> Game::generateNPCs() const {
     std::uniform_int_distribution<> distY(0, GameConfig::mapHeight - 1);
     std::uniform_int_distribution<> statDist(50, 150);
 
-    for (int i = 0; i < GameConfig::npcCount; ++i) {
+    for (int i = 0; i < GameConfig::NPCEntityCount; ++i) {
         int x, y;
         do {
             x = distX(gen);
@@ -238,12 +228,12 @@ std::vector<NPC> Game::generateNPCs() const {
 
         occupiedPositions.insert({x, y});
 
-        sf::Color npcColor(rand() % 256, rand() % 256, rand() % 256);
-        NPC npc("NPC" + std::to_string(i + 1), statDist(gen), statDist(gen), statDist(gen), 150.0f, 10, statDist(gen));
-        npc.setTexture(playerTexture, npcColor);
-        npc.setPosition(x * GameConfig::tileSize, y * GameConfig::tileSize);
+        sf::Color NPCEntityColor(rand() % 256, rand() % 256, rand() % 256);
+        NPCEntity NPCEntity("NPCEntity" + std::to_string(i + 1), statDist(gen), statDist(gen), statDist(gen), 150.0f, 10, statDist(gen));
+        NPCEntity.setTexture(playerTexture, NPCEntityColor);
+        NPCEntity.setPosition(x * GameConfig::tileSize, y * GameConfig::tileSize);
 
-        npcs.push_back(npc);
+        npcs.push_back(NPCEntity);
     }
     return npcs;
 }
@@ -255,8 +245,8 @@ void Game::render() {
         }
     }
 
-    for (const auto& npc : npcs) {
-        npc.draw(window);
+    for (const auto& NPCEntity : npcs) {
+        NPCEntity.draw(window);
     }
 
     if (showTileBorders) drawTileBorders();
@@ -277,8 +267,8 @@ void Game::drawTileBorders() {
 
 void Game::resetSimulation() {
     generateMap();
-    npcs = generateNPCs();
-    ui.updateNPCList(npcs);
+    npcs = generateNPCEntitys();
+    ui.updateNPCEntityList(npcs);
     getDebugConsole().log("Options", "Simulation reset.");
 }
 

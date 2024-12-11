@@ -29,10 +29,15 @@ public:
 
     // Texture and rendering
     void setTexture(const sf::Texture& tex, const sf::Color& color = sf::Color::White) {
+        if (!tex.getSize().x || !tex.getSize().y) {
+            std::cerr << "Error: Invalid texture provided." << std::endl;
+            return;
+        }
         texture = tex;
         sprite.setTexture(texture);
         sprite.setColor(color);
     }
+
 
     void setPosition(float x, float y) {
         position = {x, y};

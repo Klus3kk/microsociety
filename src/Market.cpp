@@ -46,7 +46,7 @@ float Market::calculateSellPrice(const std::string& item) const {
 }
 
 // Player buys an item
-bool Market::buyItem(PlayerEntity& player, const std::string& item, int quantity) {
+bool Market::buyItem(NPCEntity& player, const std::string& item, int quantity) {
     if (prices.find(item) == prices.end()) setPrice(item, 10.0f);
 
     float cost = calculateBuyPrice(item) * quantity;
@@ -73,7 +73,7 @@ bool Market::buyItem(PlayerEntity& player, const std::string& item, int quantity
 }
 
 // Player sells an item
-bool Market::sellItem(PlayerEntity& player, const std::string& item, int quantity) {
+bool Market::sellItem(NPCEntity& player, const std::string& item, int quantity) {
     if (prices.find(item) == prices.end()) setPrice(item, 10.0f);
 
     if (player.getInventoryItemCount(item) >= quantity) {
@@ -135,15 +135,19 @@ std::string Market::suggestBestResourceToSell() const {
     float maxProfit = -1.0f;
 
     for (const auto& [item, price] : prices) {
-        float revenue = calculateSellPrice(item) * supply[item];
-        if (revenue > maxProfit) {
-            maxProfit = revenue;
-            bestItem = item;
+        auto supplyIt = supply.find(item);
+        if (supplyIt != supply.end()) {
+            float revenue = calculateSellPrice(item) * supplyIt->second;
+            if (revenue > maxProfit) {
+                maxProfit = revenue;
+                bestItem = item;
+            }
         }
     }
 
     return bestItem;
 }
+
 
 // Simulate market dynamics
 void Market::simulateMarketDynamics(float deltaTime) {
@@ -233,6 +237,7 @@ std::unordered_map<std::string, float> Market::getResourceStats() const {
     }
     return stats;
 }
+
 
 // Get total trades
 int Market::getTotalTrades() const {

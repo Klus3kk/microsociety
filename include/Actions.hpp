@@ -7,6 +7,7 @@
 #include "Market.hpp"
 #include "debug.hpp"
 #include <string>
+#include <memory> // For std::make_unique
 
 enum class ActionType {
     None,
@@ -20,8 +21,12 @@ enum class ActionType {
     TakeOutItems,
     BuyItem,
     SellItem,
-    Rest,               // New action for idle/rest behavior
-    EvaluateState       // New action for AI evaluation and decision-making
+    Rest,
+    EvaluateState,
+    Explore,
+    Build,
+    SpecialAction, // Added SpecialAction
+    Idle           // Added IdleAction
 };
 
 // Base Action class
@@ -30,7 +35,7 @@ public:
     virtual ~Action() = default;
 
     // Perform action
-    virtual void perform(PlayerEntity& player, Tile& tile) = 0; 
+    virtual void perform(NPCEntity& player, Tile& tile) = 0; 
 
     // Name of the action
     virtual std::string getActionName() const = 0;
@@ -45,57 +50,57 @@ public:
 // TreeAction
 class TreeAction : public Action {
 public:
-    void perform(PlayerEntity& player, Tile& tile) override;
+    void perform(NPCEntity& player, Tile& tile) override;
     std::string getActionName() const override { return "Chop Tree"; }
-    float getReward() const override { return 10.0f; } // Reward for gathering resources
+    float getReward() const override { return 10.0f; }
 };
 
 // StoneAction
 class StoneAction : public Action {
 public:
-    void perform(PlayerEntity& player, Tile& tile) override;
+    void perform(NPCEntity& player, Tile& tile) override;
     std::string getActionName() const override { return "Mine Rock"; }
-    float getReward() const override { return 8.0f; } // Slightly lower reward than chopping trees
+    float getReward() const override { return 8.0f; }
 };
 
 // BushAction
 class BushAction : public Action {
 public:
-    void perform(PlayerEntity& player, Tile& tile) override;
+    void perform(NPCEntity& player, Tile& tile) override;
     std::string getActionName() const override { return "Gather Bush"; }
-    float getReward() const override { return 5.0f; } // Smaller reward
+    float getReward() const override { return 5.0f; }
 };
 
 // MoveAction
 class MoveAction : public Action {
 public:
-    void perform(PlayerEntity& player, Tile&) override;
+    void perform(NPCEntity& player, Tile&) override;
     std::string getActionName() const override { return "Move"; }
-    float getPenalty() const override { return -1.0f; } // Small energy cost for moving
+    float getPenalty() const override { return -1.0f; }
 };
 
 // TradeAction
 class TradeAction : public Action {
 public:
-    void perform(PlayerEntity& player, Tile&) override;
+    void perform(NPCEntity& player, Tile&) override;
     std::string getActionName() const override { return "Trade"; }
-    float getReward() const override { return 15.0f; } // Reward for trading successfully
+    float getReward() const override { return 15.0f; }
 };
 
 // RegenerateEnergyAction
 class RegenerateEnergyAction : public Action {
 public:
-    void perform(PlayerEntity& player, Tile& tile) override;
+    void perform(NPCEntity& player, Tile& tile) override;
     std::string getActionName() const override { return "Regenerate Energy"; }
-    float getReward() const override { return 5.0f; } // Positive reward for staying alive
+    float getReward() const override { return 5.0f; }
 };
 
 // UpgradeHouseAction
 class UpgradeHouseAction : public Action {
 public:
-    void perform(PlayerEntity& player, Tile& tile) override;
+    void perform(NPCEntity& player, Tile& tile) override;
     std::string getActionName() const override { return "Upgrade House"; }
-    float getReward() const override { return 20.0f; } // Large reward for upgrades
+    float getReward() const override { return 20.0f; }
 };
 
 // StoreItemAction
@@ -106,9 +111,9 @@ private:
 
 public:
     StoreItemAction(const std::string& item, int quantity);
-    void perform(PlayerEntity& player, Tile& tile) override;
+    void perform(NPCEntity& player, Tile& tile) override;
     std::string getActionName() const override;
-    float getReward() const override { return 5.0f; } // Reward for managing resources
+    float getReward() const override { return 5.0f; }
 };
 
 // TakeOutItemsAction
@@ -119,9 +124,9 @@ private:
 
 public:
     TakeOutItemsAction(const std::string& item, int quantity);
-    void perform(PlayerEntity& player, Tile& tile) override;
+    void perform(NPCEntity& player, Tile& tile) override;
     std::string getActionName() const override;
-    float getPenalty() const override { return -2.0f; } // Slight penalty for taking resources
+    float getPenalty() const override { return -2.0f; }
 };
 
 // BuyItemAction
@@ -132,9 +137,9 @@ private:
 
 public:
     BuyItemAction(const std::string& item, int quantity);
-    void perform(PlayerEntity& player, Tile& tile) override;
+    void perform(NPCEntity& player, Tile& tile) override;
     std::string getActionName() const override;
-    float getReward() const override { return 10.0f; } // Reward for acquiring needed items
+    float getReward() const override { return 10.0f; }
 };
 
 // SellItemAction
@@ -145,25 +150,74 @@ private:
 
 public:
     SellItemAction(const std::string& item, int quantity);
-    void perform(PlayerEntity& player, Tile& tile) override;
+    void perform(NPCEntity& player, Tile& tile) override;
     std::string getActionName() const override;
-    float getReward() const override { return 12.0f; } // Reward for earning money
+    float getReward() const override { return 12.0f; }
 };
 
-// RestAction for idling or skipping a turn
+// RestAction
 class RestAction : public Action {
 public:
-    void perform(PlayerEntity& player, Tile&) override;
+    void perform(NPCEntity& player, Tile&) override;
     std::string getActionName() const override { return "Rest"; }
-    float getPenalty() const override { return -5.0f; } // Penalty for wasting time
+    float getPenalty() const override { return -5.0f; }
 };
 
-// EvaluateStateAction for AI evaluation and planning
+// EvaluateStateAction
 class EvaluateStateAction : public Action {
 public:
-    void perform(PlayerEntity& player, Tile&) override;
+    void perform(NPCEntity& player, Tile&) override;
     std::string getActionName() const override { return "Evaluate State"; }
-    float getReward() const override { return 0.0f; } // Neutral reward
+    float getReward() const override { return 0.0f; }
 };
+
+// ExploreAction
+class ExploreAction : public Action {
+public:
+    void perform(NPCEntity& player, Tile&) override;
+    std::string getActionName() const override { return "Explore"; }
+    float getReward() const override { return 5.0f; }
+};
+
+// BuildAction
+class BuildAction : public Action {
+public:
+    void perform(NPCEntity& player, Tile& tile) override;
+    std::string getActionName() const override { return "Build"; }
+    float getReward() const override { return 20.0f; }
+};
+
+// SpecialAction
+class SpecialAction : public Action {
+private:
+    std::string description;
+    float reward;
+    float penalty;
+
+public:
+    SpecialAction(const std::string& description, float reward, float penalty);
+    void perform(NPCEntity& player, Tile&) override;
+    std::string getActionName() const override { return "Special Action"; }
+    float getReward() const override { return reward; }
+    float getPenalty() const override { return penalty; }
+};
+
+// IdleAction
+class IdleAction : public Action {
+public:
+    void perform(NPCEntity& player, Tile&) override;
+    std::string getActionName() const override { return "Idle"; }
+    float getPenalty() const override { return -20.0f; }
+};
+
+class PrioritizeAction : public Action {
+public:
+    void perform(NPCEntity& player, Tile&) override;
+    std::string getActionName() const override { return "Prioritize"; }
+    float getReward() const override { return 10.0f; }
+    float getPenalty() const override { return -10.0f; } // Adjust as needed
+};
+
+
 
 #endif

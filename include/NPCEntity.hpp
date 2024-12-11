@@ -21,6 +21,8 @@ private:
     float baseSpeed = 150.0f;                       // Default base speed
     float currentSpeed = baseSpeed;                 // Current movement speed
     int deathPenalty = -100;                        // Penalty for NPC death
+    int currentReward = 0;                          // Reward balance
+    int currentPenalty = 0;                         // Penalty balance
 
 public:
     // Constructor
@@ -31,6 +33,7 @@ public:
 
     // Getters
     const std::string& getName() const { return name; }
+    float getMaxEnergy() const { return MAX_ENERGY; }
     float getBaseSpeed() const { return baseSpeed; }
     float getEnergyPercentage() const { return energy / MAX_ENERGY; }
     const std::unordered_map<std::string, int>& getInventory() const { return inventory; }
@@ -61,6 +64,22 @@ public:
         }
         getDebugConsole().logOnce("Inventory", name + " failed to remove " + std::to_string(quantity) + " " + item + ".");
         return false;
+    }
+
+    int getInventoryItemCount(const std::string& item) const {
+        auto it = inventory.find(item);
+        return (it != inventory.end()) ? it->second : 0;
+    }
+
+    // Reward and Penalty Management
+    void addReward(int reward) {
+        currentReward += reward;
+        getDebugConsole().log(name, name + " received a reward of " + std::to_string(reward) + ".");
+    }
+
+    void addPenalty(int penalty) {
+        currentPenalty += penalty;
+        getDebugConsole().log(name, name + " incurred a penalty of " + std::to_string(penalty) + ".");
     }
 
     // Energy Management
@@ -97,12 +116,7 @@ public:
     void handleDeath() {
         getDebugConsole().log(name, name + " has died.");
         // Apply death penalty or other logic
-        applyReward(deathPenalty);
-    }
-
-    // Apply Reward
-    void applyReward(int reward) {
-        getDebugConsole().log(name, name + " received a reward of " + std::to_string(reward));
+        addPenalty(deathPenalty);
     }
 
     // Inventory Capacity Upgrades
@@ -110,6 +124,15 @@ public:
         inventoryCapacity += extraSlots;
         getDebugConsole().log(name, name + "'s inventory capacity upgraded to " + std::to_string(inventoryCapacity));
     }
+    void setHealth(float newHealth) {
+        health = std::clamp(newHealth, 0.0f, MAX_HEALTH);
+        if (health == 0.0f) {
+            setDead(true);
+        }
+    }
+
+    void setStrength(float newStrength) { strength = newStrength; }
+    void setSpeed(float newSpeed) { speed = newSpeed; }
 };
 
 #endif
