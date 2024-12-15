@@ -9,13 +9,13 @@
 // Constructor
 Game::Game()
     : window(sf::VideoMode(GameConfig::windowWidth, GameConfig::windowHeight), "MicroSociety", sf::Style::Titlebar | sf::Style::Close),
-      clockGUI(700, 100) {
+      clockGUI(700, 100), debugConsole(800.0f, 600.0f) {
 #ifdef _WIN32
     ui.adjustLayout(window);
 #endif
 
     generateMap();
-    npcs = generateNPCs(); 
+    npcs = generateNPCEntitys(); 
 
     // Initialize market prices
     market.setPrice("wood", 10.0f);
@@ -34,8 +34,8 @@ bool Game::detectCollision(const NPCEntity& NPCEntity) {
     int tileY = static_cast<int>(NPCEntity.getPosition().y / GameConfig::tileSize);
 
     if (tileX >= 0 && tileX < tileMap[0].size() && tileY >= 0 && tileY < tileMap.size()) {
-        auto& tile = tileMap[tileY][tileX];
-        return tile->hasObject() && NPCEntity.getSprite().getGlobalBounds().intersects(tile->getObjectBounds());
+        Tile& targetTile = *tileMap[tileY][tileX];
+        NPCEntity.performAction(std::make_unique<RegenerateEnergyAction>(), targetTile);
     }
     return false;
 }
@@ -52,15 +52,18 @@ void Game::run() {
             ui.handleButtonClicks(window, event, npcs, timeManager, market);
             ui.handleNPCEntityPanel(window, event, npcs);
             ui.handleStatsPanel(window, event);
+            // ui.handleMarketButton(window, event, market);
             ui.handleOptionsEvents(window, event, *this);
         }
 
-        deltaTime = clock.restart().asSeconds() * simulationSpeed;
+        sf::Time dt = clock.restart();
+        deltaTime = dt.asSeconds();
+        // Aggregate resources from all NPCs
+        std::unordered_map<std::string, int> allResources = aggregateResources(npcs);
+        // debugConsole.logThrottled("Energy", "Energy: " + std::to_string(player.getEnergy()), 500);
 
-        // Simulate npcs and societal growth
-        simulateNPCEntityBehavior(deltaTime);
-        simulateSocietalGrowth(deltaTime);
-
+        ui.updateMoney(MoneyManager::calculateTotalMoney(npcs));
+        // Update day and iteration logic
         timeManager.update(deltaTime);
         clockGUI.update(timeManager.getElapsedTime());
 
@@ -71,9 +74,12 @@ void Game::run() {
         );
 
         window.clear();
-        render();
-        ui.render(window, market, npcs);
+        render();          // Render the map
+
+        // player.draw(window);   // Draw player's entity
+        // market.renderPriceGraph(window, "wood", {50, 50}, {200, 100});
         clockGUI.render(window, isClockVisible);
+        ui.render(window, market, npcs);
         debugConsole.render(window);
         window.display();
     }
@@ -93,6 +99,34 @@ void Game::simulateNPCEntityBehavior(float deltaTime) {
 
         NPCEntity.update(deltaTime);
     }
+    //         int targetTileX = static_cast<int>(std::round(player.getPosition().x / GameConfig::tileSize));
+    //     int targetTileY = static_cast<int>(std::round(player.getPosition().y / GameConfig::tileSize));
+
+    //     // Declare a raw pointer to the tile for use throughout the logic
+    //     Tile* targetTile = nullptr;
+
+    //     if (targetTileX >= 0 && targetTileX < tileMap[0].size() &&
+    //         targetTileY >= 0 && targetTileY < tileMap.size()) {
+            
+    //         targetTile = tileMap[targetTileY][targetTileX].get();
+    // if (player.getEnergy() > 0) {
+    //         float energyFactor = player.getEnergyPercentage();
+
+    //         if (targetTile) {
+    //             if (auto stoneTile = dynamic_cast<StoneTile*>(targetTile)) {
+    //                 player.setSpeed(player.getBaseSpeed() * 0.2f * energyFactor); // Slower on stone tiles
+    //             } else {
+    //                 player.setSpeed(player.getBaseSpeed() * energyFactor); // Normal speed elsewhere
+    //             }
+    //         } else {
+    //             player.setSpeed(player.getBaseSpeed() * energyFactor); // Fallback if no tile detected
+    //         }
+
+    //         player.consumeEnergy(deltaTime * 0.5f); // Energy drains over time
+    //     } else {
+    //         player.setSpeed(0.0f); // Prevent movement if out of energy
+    //         // No additional regeneration logic here; it's handled by H action.
+    //     }
 }
 
 void Game::evaluateNPCEntityState(NPCEntity& NPCEntity) {
@@ -127,30 +161,70 @@ void Game::performPathfinding(NPCEntity& NPCEntity) {
     NPCEntity.setPosition(newPosition.x, newPosition.y);
 }
 
+std::unordered_map<std::string, int> Game::aggregateResources(const std::vector<NPCEntity>& npcs) const {
+    std::unordered_map<std::string, int> allResources;
+
+    for (const auto& npc : npcs) {
+        const auto& inventory = npc.getInventory();
+        for (const auto& [item, quantity] : inventory) {
+            allResources[item] += quantity;
+        }
+    }
+
+    return allResources;
+}
+
 void Game::generateMap() {
     FastNoiseLite noise;
     noise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
     noise.SetFrequency(0.1f);
     noise.SetSeed(static_cast<int>(time(nullptr)));
 
-    std::vector<sf::Texture> grassTextures(3), stoneTextures(3), flowerTextures(5);
-    std::vector<sf::Texture> bushTextures(2), rockTextures(3), treeTextures(3);
-    std::vector<sf::Texture> houseTextures(3), marketTextures(3);
+    auto& textureManager = TextureManager::getInstance();
 
-    for (int i = 0; i < 3; ++i) {
-        grassTextures[i].loadFromFile("../assets/tiles/grass/grass" + std::to_string(i + 1) + ".png");
-        stoneTextures[i].loadFromFile("../assets/tiles/stone/stone" + std::to_string(i + 1) + ".png");
-        houseTextures[i].loadFromFile("../assets/objects/house" + std::to_string(i + 1) + ".png");
-        marketTextures[i].loadFromFile("../assets/objects/market" + std::to_string(i + 1) + ".png");
-    }
+    // Load textures using TextureManager
+    std::vector<const sf::Texture*> grassTextures = {
+        &textureManager.getTexture("grass1", "../assets/tiles/grass/grass1.png"),
+        &textureManager.getTexture("grass2", "../assets/tiles/grass/grass2.png"),
+        &textureManager.getTexture("grass3", "../assets/tiles/grass/grass3.png")
+    };
 
-    for (int i = 0; i < 2; ++i) {
-        bushTextures[i].loadFromFile("../assets/objects/bush" + std::to_string(i + 1) + ".png");
-    }
+    std::vector<const sf::Texture*> stoneTextures = {
+        &textureManager.getTexture("stone1", "../assets/tiles/stone/stone1.png"),
+        &textureManager.getTexture("stone2", "../assets/tiles/stone/stone2.png"),
+        &textureManager.getTexture("stone3", "../assets/tiles/stone/stone3.png")
+    };
 
-    for (int i = 0; i < 5; ++i) {
-        flowerTextures[i].loadFromFile("../assets/tiles/flower/flower" + std::to_string(i + 1) + ".png");
-    }
+    std::vector<const sf::Texture*> flowerTextures = {
+        &textureManager.getTexture("flower1", "../assets/tiles/flower/flower1.png"),
+        &textureManager.getTexture("flower2", "../assets/tiles/flower/flower2.png"),
+        &textureManager.getTexture("flower3", "../assets/tiles/flower/flower3.png"),
+        &textureManager.getTexture("flower4", "../assets/tiles/flower/flower4.png"),
+        &textureManager.getTexture("flower5", "../assets/tiles/flower/flower5.png")
+    };
+
+    std::vector<const sf::Texture*> bushTextures = {
+        &textureManager.getTexture("bush1", "../assets/objects/bush1.png"),
+        &textureManager.getTexture("bush2", "../assets/objects/bush2.png")
+    };
+
+    std::vector<const sf::Texture*> treeTextures = {
+        &textureManager.getTexture("tree1", "../assets/objects/tree1.png"),
+        &textureManager.getTexture("tree2", "../assets/objects/tree2.png"),
+        &textureManager.getTexture("tree3", "../assets/objects/tree3.png")
+    };
+
+    std::vector<const sf::Texture*> houseTextures = {
+        &textureManager.getTexture("house1", "../assets/objects/house1.png"),
+        &textureManager.getTexture("house2", "../assets/objects/house2.png"),
+        &textureManager.getTexture("house3", "../assets/objects/house3.png")
+    };
+
+    std::vector<const sf::Texture*> marketTextures = {
+        &textureManager.getTexture("market1", "../assets/objects/market1.png"),
+        &textureManager.getTexture("market2", "../assets/objects/market2.png"),
+        &textureManager.getTexture("market3", "../assets/objects/market3.png")
+    };
 
     tileMap.resize(GameConfig::mapHeight, std::vector<std::unique_ptr<Tile>>(GameConfig::mapWidth));
 
@@ -160,21 +234,26 @@ void Game::generateMap() {
             noiseValue = (noiseValue + 1.0f) / 2.0f;
 
             if (noiseValue < 0.2f) {
-                tileMap[i][j] = std::make_unique<FlowerTile>(flowerTextures[rand() % 5]);
+                tileMap[i][j] = std::make_unique<FlowerTile>(*flowerTextures[rand() % flowerTextures.size()]);
             } else if (noiseValue < 0.6f) {
-                tileMap[i][j] = std::make_unique<GrassTile>(grassTextures[rand() % 3]);
+                tileMap[i][j] = std::make_unique<GrassTile>(*grassTextures[rand() % grassTextures.size()]);
             } else {
-                tileMap[i][j] = std::make_unique<StoneTile>(stoneTextures[rand() % 3]);
+                tileMap[i][j] = std::make_unique<StoneTile>(*stoneTextures[rand() % stoneTextures.size()]);
             }
 
             tileMap[i][j]->setPosition(j * GameConfig::tileSize, i * GameConfig::tileSize);
 
             int objectChance = rand() % 100;
             if (auto grassTile = dynamic_cast<GrassTile*>(tileMap[i][j].get())) {
-                if (objectChance < 20) grassTile->placeObject(std::make_unique<Tree>(treeTextures[rand() % 3]));
-                else if (objectChance < 30) grassTile->placeObject(std::make_unique<Bush>(bushTextures[rand() % 2]));
+                if (objectChance < 20) {
+                    grassTile->placeObject(std::make_unique<Tree>(*treeTextures[rand() % treeTextures.size()]));
+                } else if (objectChance < 30) {
+                    grassTile->placeObject(std::make_unique<Bush>(*bushTextures[rand() % bushTextures.size()]));
+                }
             } else if (auto stoneTile = dynamic_cast<StoneTile*>(tileMap[i][j].get())) {
-                if (objectChance < 20) stoneTile->placeObject(std::make_unique<Rock>(rockTextures[rand() % 3]));
+                if (objectChance < 20) {
+                    stoneTile->placeObject(std::make_unique<Rock>(*stoneTextures[rand() % stoneTextures.size()]));
+                }
             }
         }
     }
@@ -190,7 +269,7 @@ void Game::generateMap() {
         occupiedPositions.insert({houseX, houseY});
 
         sf::Color houseColor(rand() % 256, rand() % 256, rand() % 256);
-        auto house = std::make_unique<House>(houseTextures[i % 3]);
+        auto house = std::make_unique<House>(*houseTextures[i % houseTextures.size()]);
         house->getSprite().setColor(houseColor);
 
         tileMap[houseY][houseX]->placeObject(std::move(house));
@@ -205,7 +284,7 @@ void Game::generateMap() {
         } while (occupiedPositions.count({marketX, marketY}) || tileMap[marketY][marketX]->hasObject());
 
         occupiedPositions.insert({marketX, marketY});
-        tileMap[marketY][marketX]->placeObject(std::make_unique<Market>(marketTextures[m % 3]));
+        tileMap[marketY][marketX]->placeObject(std::make_unique<Market>(*marketTextures[m % marketTextures.size()]));
     }
 }
 
@@ -281,3 +360,11 @@ void Game::setSimulationSpeed(float speedFactor) {
     simulationSpeed = speedFactor;
     getDebugConsole().log("Options", "Simulation speed set to: " + std::to_string(speedFactor));
 }
+
+// void Game::saveGame(const std::string& saveFile);
+// void Game::loadGame(const std::string& saveFile);
+
+
+// void Game::setAIDifficulty(int level);
+
+// void Game::applySeason(const std::string& season);

@@ -142,11 +142,6 @@ std::string BuyItemAction::getActionName() const {
     return "Buy Items from Market";
 }
 
-// SellItemAction
-StoreItemAction::StoreItemAction(const std::string& item, int quantity)
-    : item(item), quantity(quantity) {}
-
-
 void SellItemAction::perform(NPCEntity& player, Tile& tile) {
     if (auto market = dynamic_cast<Market*>(tile.getObject())) {
         if (market->sellItem(player, item, quantity)) {
@@ -183,8 +178,10 @@ void BuildAction::perform(NPCEntity& player, Tile& tile) {
         player.removeFromInventory("wood", 5);
         player.removeFromInventory("stone", 3);
 
-        // Simulate building an object (e.g., a house or structure)
-        auto newHouse = std::make_unique<House>(/* Pass appropriate texture */);
+        auto& textureManager = TextureManager::getInstance();
+        const sf::Texture& texture = textureManager.getTexture("house1", "../assets/objects/house1.png");
+
+        auto newHouse = std::make_unique<House>(texture, 1); // Pass texture and level
         tile.placeObject(std::move(newHouse));
 
         player.addReward(getReward());

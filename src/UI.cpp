@@ -198,7 +198,7 @@ void UI::handleButtonClicks(sf::RenderWindow& window, sf::Event& event, std::vec
     if (npcButton.isClicked(window, event)) {
         showNPCList = !showNPCList; // Toggle NPC list visibility
         showNPCDetail = false;   
-        std::cout << "NPC button clicked.\n";
+        // std::cout << "NPC button clicked.\n";
     }
 
     if (marketButton.isClicked(window, event)) {
@@ -226,7 +226,7 @@ void UI::handleButtonClicks(sf::RenderWindow& window, sf::Event& event, std::vec
 
     if (optionsButton.isClicked(window, event)) {
         showOptionsPanel = !showOptionsPanel; // Toggle visibility
-        std::cout << "Options button clicked. Panel visibility: " << showOptionsPanel << "\n";
+        // std::cout << "Options button clicked. Panel visibility: " << showOptionsPanel << "\n";
     }
 
 
@@ -238,7 +238,7 @@ void UI::handleButtonClicks(sf::RenderWindow& window, sf::Event& event, std::vec
                 populateNPCDetails(npcs[selectedNPCIndex]); // Show NPC details
                 showNPCDetail = true;
                 showNPCList = false;
-                std::cout << "NPC detail shown for: " << npcButtons[i].first << "\n";
+                // std::cout << "NPC detail shown for: " << npcButtons[i].first << "\n";
                 break;
             }
         }
@@ -812,7 +812,7 @@ void UI::updateNPCEntityList(const std::vector<NPCEntity>& npcs) {
 void UI::handleNPCEntityPanel(sf::RenderWindow& window, sf::Event& event, const std::vector<NPCEntity>& npcs) {
     for (auto& [name, button] : npcButtons) {
         if (button->isClicked(window, event)) {
-            std::cout << "NPC selected: " << name << std::endl;
+            // std::cout << "NPC selected: " << name << std::endl;
         }
     }
 }

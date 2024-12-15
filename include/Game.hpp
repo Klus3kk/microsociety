@@ -14,6 +14,7 @@
 #include "MoneyManager.hpp"
 #include "ClockGUI.hpp"
 #include "Configuration.hpp"
+#include "TextureManager.hpp"
 
 // Forward declaration for the NPCEntity class
 class NPCEntity;
@@ -27,6 +28,8 @@ private:
     // Window and Graphics
     sf::RenderWindow window;
     ClockGUI clockGUI;
+    std::unordered_map<std::string, int> aggregateResources(const std::vector<NPCEntity>& npcs) const;
+    DebugConsole debugConsole;
 
     // Simulation Control
     float deltaTime;
@@ -49,14 +52,12 @@ private:
 
     // Private Helper Methods
     void generateMap();
-    std::vector<NPCEntity> generateNPCs() const;  
+    std::vector<NPCEntity> generateNPCEntitys() const;  
 
     // Rendering Helpers
     void render();
     void drawTileBorders();
 
-    // Utility
-    std::unordered_map<std::string, int> aggregateResources() const;
 
 public:
     // Constructor
@@ -71,8 +72,9 @@ public:
     void setSimulationSpeed(float speedFactor);
     void simulateNPCEntityBehavior(float deltaTime);
     void simulateSocietalGrowth(float deltaTime);
-
-    // Collision Detection
+    void evaluateNPCEntityState(NPCEntity& NPCEntity);
+    void performPathfinding(const NPCEntity& NPCEntity);
+    // Collision Detection  
     bool detectCollision(const NPCEntity& npc);
 
     // Accessor for TileMap

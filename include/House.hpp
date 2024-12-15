@@ -5,6 +5,7 @@
 #include "NPCEntity.hpp"
 #include <unordered_map>
 #include <string>
+#include "TextureManager.hpp"
 
 class House : public Object {
 private:

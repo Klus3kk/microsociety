@@ -51,7 +51,6 @@ private:
     sf::Text advancedMarketStatsText;
     sf::Text marketText;
 
-    bool showOptionsPanel = false;
     sf::RectangleShape resetButton;
     sf::RectangleShape borderButton;
     sf::RectangleShape speedSlider;
@@ -67,9 +66,6 @@ private:
     UIButton optionsButton;
     UIButton marketButton;
     UIButton npcButton;
-    sf::RectangleShape resetButton;
-    sf::RectangleShape borderButton;
-    sf::RectangleShape speedSlider;
     sf::RectangleShape debugButton;
     sf::RectangleShape sliderKnob;
     bool sliderDragging = false;         // Whether the slider is being dragged
@@ -80,13 +76,14 @@ private:
     std::vector<std::pair<std::string, UIButton*>> npcButtons;
     std::vector<sf::Text> marketResourceTexts;
 
-    bool showNPCList = false;
-    bool showNPCDetail = false;
     const float npcListWidth = 300.0f;
     const float npcListHeight = 400.0f;
+    
+    bool showNPCList = false;
+    bool showNPCDetail = false;
     bool showStatsPanel = false;
     bool showMarketPanel = false;
-
+    bool showOptionsPanel = false;
     // Scroll for large NPC lists
     float npcListScrollOffset = 0.0f;
     const float scrollSpeed = 20.0f;
@@ -130,9 +127,6 @@ public:
     bool isMouseOver(sf::RenderWindow& window) const;
     void setTooltipContent(const std::string& content);
     void updateTooltipPosition(const sf::RenderWindow& window);
-
-    void renderOptionsPanel(sf::RenderWindow& window);
-    void handleOptionsEvents(sf::RenderWindow& window, sf::Event& event, Game& game);
 
     void updateNPCEntityList(const std::vector<NPCEntity>& npcs);
     void handleNPCEntityPanel(sf::RenderWindow& window, sf::Event& event, const std::vector<NPCEntity>& npcs);

@@ -8,26 +8,9 @@
 #include "debug.hpp"
 #include <string>
 #include <memory> // For std::make_unique
+#include "ActionType.hpp"
 
-enum class ActionType {
-    None,
-    Move,
-    ChopTree,
-    MineRock,
-    GatherBush,
-    StoreItem,
-    UpgradeHouse,
-    RegenerateEnergy,
-    TakeOutItems,
-    BuyItem,
-    SellItem,
-    Rest,
-    EvaluateState,
-    Explore,
-    Build,
-    SpecialAction, // Added SpecialAction
-    Idle           // Added IdleAction
-};
+class NPCEntity;
 
 // Base Action class
 class Action {
