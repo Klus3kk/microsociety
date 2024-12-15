@@ -29,7 +29,6 @@ private:
     sf::RenderWindow window;
     ClockGUI clockGUI;
     std::unordered_map<std::string, int> aggregateResources(const std::vector<NPCEntity>& npcs) const;
-    DebugConsole debugConsole;
     sf::Texture playerTexture;
 
 

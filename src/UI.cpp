@@ -705,9 +705,11 @@ void UI::handleOptionsEvents(sf::RenderWindow& window, sf::Event& event, Game& g
             game.toggleTileBorders();
         }
         if (debugButton.getGlobalBounds().contains(mousePos.x, mousePos.y)) {
+            std::cout << "Debug button clicked.\n";
             getDebugConsole().toggle(); 
             getDebugConsole().log("UI", "Debug Console Toggled");
         }
+
         if (speedSlider.getGlobalBounds().contains(mousePos.x, mousePos.y)) {
             sliderDragging = true;
         }

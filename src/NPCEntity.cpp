@@ -124,13 +124,17 @@ void NPCEntity::update(float deltaTime) {
 
 // Brain of the AI
 ActionType NPCEntity::decideNextAction(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
-    // Scan nearby tiles for resources
     auto nearbyObjects = scanNearbyTiles(tileMap);
+
+    // Debug: Log nearby objects
+    for (ObjectType obj : nearbyObjects) {
+        getDebugConsole().log("AI Decision", getName() + " sees nearby object of type: " + std::to_string(static_cast<int>(obj)));
+    }
 
     if (getEnergy() < 20.0f) return ActionType::RegenerateEnergy; // Low energy, regenerate
     if (getHunger() < 30.0f) return ActionType::GatherBush; // Low hunger, gather food
 
-    // Prioritize gathering resources (wood, stone, bush)
+    // Prioritize gathering resources
     for (ObjectType objType : nearbyObjects) {
         if (objType == ObjectType::Tree) return ActionType::ChopTree;
         if (objType == ObjectType::Rock) return ActionType::MineRock;
@@ -144,6 +148,7 @@ ActionType NPCEntity::decideNextAction(const std::vector<std::vector<std::unique
 
     return ActionType::Explore; // Default fallback
 }
+
 
 std::vector<ObjectType> NPCEntity::scanNearbyTiles(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) const {
     std::vector<ObjectType> nearbyObjects;

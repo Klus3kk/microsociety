@@ -9,7 +9,7 @@
 // Constructor
 Game::Game()
     : window(sf::VideoMode(GameConfig::windowWidth, GameConfig::windowHeight), "MicroSociety", sf::Style::Titlebar | sf::Style::Close),
-      clockGUI(700, 100), debugConsole(800.0f, 600.0f) {
+      clockGUI(700, 100) {
 #ifdef _WIN32
     ui.adjustLayout(window);
 #endif
@@ -46,7 +46,7 @@ bool Game::detectCollision(NPCEntity& NPCEntity) {
 
 void Game::run() {
     sf::Clock clock;
-    
+
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -56,18 +56,17 @@ void Game::run() {
             ui.handleButtonClicks(window, event, npcs, timeManager, market);
             ui.handleNPCEntityPanel(window, event, npcs);
             ui.handleStatsPanel(window, event);
-            // ui.handleMarketButton(window, event, market);
             ui.handleOptionsEvents(window, event, *this);
         }
 
         sf::Time dt = clock.restart();
         deltaTime = dt.asSeconds();
-        // Aggregate resources from all NPCs
-        std::unordered_map<std::string, int> allResources = aggregateResources(npcs);
-        // debugConsole.logThrottled("Energy", "Energy: " + std::to_string(player.getEnergy()), 500);
 
+        // Simulate NPC behavior
+        simulateNPCEntityBehavior(deltaTime);
+
+        // Other updates and rendering
         ui.updateMoney(MoneyManager::calculateTotalMoney(npcs));
-        // Update day and iteration logic
         timeManager.update(deltaTime);
         clockGUI.update(timeManager.getElapsedTime());
 
@@ -78,16 +77,15 @@ void Game::run() {
         );
 
         window.clear();
-        render();          // Render the map
-
-        // player.draw(window);   // Draw player's entity
-        // market.renderPriceGraph(window, "wood", {50, 50}, {200, 100});
+        render();
         clockGUI.render(window, isClockVisible);
         ui.render(window, market, npcs);
-        debugConsole.render(window);
+        getDebugConsole().render(window);
         window.display();
     }
 }
+
+
 
 void Game::simulateNPCEntityBehavior(float deltaTime) {
     for (auto& NPCEntity : npcs) {
@@ -96,13 +94,16 @@ void Game::simulateNPCEntityBehavior(float deltaTime) {
         int x = static_cast<int>(NPCEntity.getPosition().x / GameConfig::tileSize);
         int y = static_cast<int>(NPCEntity.getPosition().y / GameConfig::tileSize);
 
+        // Debug: Log NPC position before actions
+        getDebugConsole().log("NPC", NPCEntity.getName() + " at (" + std::to_string(x) + ", " + std::to_string(y) + ")");
+
         if (x >= 0 && x < tileMap[0].size() && y >= 0 && y < tileMap.size()) {
             Tile& targetTile = *tileMap[y][x];
 
             // Let NPC decide the next action dynamically
             ActionType actionType = NPCEntity.decideNextAction(tileMap);
 
-            // Debug log to verify actions
+            // Debug: Log chosen action
             getDebugConsole().log("Behavior", NPCEntity.getName() + " chose action: " + std::to_string(static_cast<int>(actionType)));
 
             // Perform the chosen action
@@ -124,7 +125,14 @@ void Game::simulateNPCEntityBehavior(float deltaTime) {
             }
         }
 
+        // Update NPC state
         NPCEntity.update(deltaTime);
+
+        // Debug: Log NPC position after update
+        sf::Vector2f pos = NPCEntity.getPosition();
+        getDebugConsole().log("NPC Update", NPCEntity.getName() + " moved to (" +
+                              std::to_string(static_cast<int>(pos.x / GameConfig::tileSize)) + ", " +
+                              std::to_string(static_cast<int>(pos.y / GameConfig::tileSize)) + ")");
     }
 }
 
@@ -140,6 +148,9 @@ void Game::moveToResource(NPCEntity& npc, ActionType actionType) {
     else if (actionType == ActionType::MineRock) targetType = ObjectType::Rock;
     else if (actionType == ActionType::GatherBush) targetType = ObjectType::Bush;
     else return;  // No valid target
+
+    // Debug: Log resource type and action
+    getDebugConsole().log("Pathfinding", npc.getName() + " searching for " + std::to_string(static_cast<int>(targetType)));
 
     // Search for the nearest target object
     float shortestDistance = std::numeric_limits<float>::max();
@@ -162,9 +173,19 @@ void Game::moveToResource(NPCEntity& npc, ActionType actionType) {
         int moveY = (targetY > currentY) ? 1 : (targetY < currentY) ? -1 : 0;
 
         sf::Vector2f newPosition((currentX + moveX) * GameConfig::tileSize, (currentY + moveY) * GameConfig::tileSize);
+
+        // Update NPC position
         npc.setPosition(newPosition.x, newPosition.y);
+
+        // Debug: Log movement
+        getDebugConsole().log("Pathfinding", npc.getName() + " moving to (" +
+                              std::to_string(currentX + moveX) + ", " + std::to_string(currentY + moveY) + ")");
+    } else {
+        // Debug: Log if no target found
+        getDebugConsole().log("Pathfinding", npc.getName() + " found no valid target.");
     }
 }
+
 
 
 void Game::storeItems(NPCEntity& npc, Tile& tile) {
