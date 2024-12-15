@@ -1,11 +1,11 @@
 #include <gtest/gtest.h>
-#include "Player.hpp"
+#include "NPCEntity.hpp"
 #include "Game.hpp"
 #include <string>
 
 // Test NPC Initialization
 TEST(NPCBehaviorTest, NPCInitialization) {
-    PlayerEntity npc("Player1",100, 50, 100, 1.5f, 15, 500);
+    NPCEntity npc("Player1",100, 50, 100, 1.5f, 15, 500);
     EXPECT_FLOAT_EQ(npc.getHealth(), 100);
     EXPECT_FLOAT_EQ(npc.getHunger(), 50);
     EXPECT_FLOAT_EQ(npc.getEnergy(), 100);
@@ -16,7 +16,7 @@ TEST(NPCBehaviorTest, NPCInitialization) {
 
 // Test NPC Adding to Inventory
 TEST(NPCBehaviorTest, NPCAddToInventory) {
-    PlayerEntity npc("Player1",100, 50, 100, 1.5f, 15, 500);
+    NPCEntity npc("Player1",100, 50, 100, 1.5f, 15, 500);
     bool success = npc.addToInventory("wood", 5);
     EXPECT_TRUE(success);
     EXPECT_EQ(npc.getInventoryItemCount("wood"), 5);
@@ -29,7 +29,7 @@ TEST(NPCBehaviorTest, NPCAddToInventory) {
 
 // Test NPC Removing from Inventory
 TEST(NPCBehaviorTest, NPCRemoveFromInventory) {
-    PlayerEntity npc("Player1",100, 50, 100, 1.5f, 15, 500);
+    NPCEntity npc("Player1",100, 50, 100, 1.5f, 15, 500);
     npc.addToInventory("food", 3);
 
     bool success = npc.removeFromInventory("food", 2);
@@ -43,8 +43,8 @@ TEST(NPCBehaviorTest, NPCRemoveFromInventory) {
 
 // Test NPC Interaction
 TEST(NPCBehaviorTest, NPCInteraction) {
-    PlayerEntity npc1("Player1",100, 50, 100, 1.5f, 15, 500);
-    PlayerEntity npc2("Player2",100, 50, 100, 1.5f, 15, 500);
+    NPCEntity npc1("Player1",100, 50, 100, 1.5f, 15, 500);
+    NPCEntity npc2("Player2",100, 50, 100, 1.5f, 15, 500);
 
     npc1.addToInventory("gold", 3);
     EXPECT_EQ(npc1.getInventoryItemCount("gold"), 3);

@@ -30,6 +30,8 @@ private:
     ClockGUI clockGUI;
     std::unordered_map<std::string, int> aggregateResources(const std::vector<NPCEntity>& npcs) const;
     DebugConsole debugConsole;
+    sf::Texture playerTexture;
+
 
     // Simulation Control
     float deltaTime;
@@ -51,7 +53,6 @@ private:
     std::vector<NPCEntity> npcs;
 
     // Private Helper Methods
-    void generateMap();
     std::vector<NPCEntity> generateNPCEntitys() const;  
 
     // Rendering Helpers
@@ -73,10 +74,10 @@ public:
     void simulateNPCEntityBehavior(float deltaTime);
     void simulateSocietalGrowth(float deltaTime);
     void evaluateNPCEntityState(NPCEntity& NPCEntity);
-    void performPathfinding(const NPCEntity& NPCEntity);
+    void performPathfinding(NPCEntity& NPCEntity);
     // Collision Detection  
-    bool detectCollision(const NPCEntity& npc);
-
+    bool detectCollision(NPCEntity& npc);
+    void generateMap();
     // Accessor for TileMap
     const std::vector<std::vector<std::unique_ptr<Tile>>>& getTileMap() const;
 };

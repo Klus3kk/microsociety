@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
-#include "Player.hpp"
+#include "NPCEntity.hpp"
 #include "Tile.hpp"
 #include "Actions.hpp"
 
 TEST(ResourceCollectionTest, InventoryFullTest) {
-    PlayerEntity player("Player1",100, 50, 50, 150.0f, 10, 100);
+    NPCEntity player("Player1",100, 50, 50, 150.0f, 10, 100);
 
     // Mock a tile with a tree object
     sf::Texture treeTexture;
@@ -26,7 +26,7 @@ TEST(ResourceCollectionTest, InventoryFullTest) {
 }
 
 TEST(ResourceCollectionTest, ObjectRemovedOnCollection) {
-    PlayerEntity player("Player1",100, 50, 50, 150.0f, 10, 100);
+    NPCEntity player("Player1",100, 50, 50, 150.0f, 10, 100);
 
     // Mock a tile with a bush object
     sf::Texture bushTexture;

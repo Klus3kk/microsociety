@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include "Game.hpp"
-#include "Player.hpp"
+#include "NPCEntity.hpp"
 #include "Tile.hpp"
 #include "Object.hpp"
 #include <SFML/Graphics.hpp>
@@ -9,7 +9,7 @@
 // Test that an NPC collides with a static object (e.g., tree)
 TEST(CollisionTest, NPCTreeCollision) {
     Game game;
-    PlayerEntity npc("Player1",100, 50, 50, 150.0f, 10, 100);
+    NPCEntity npc("Player1",100, 50, 50, 150.0f, 10, 100);
     game.generateMap();
 
     // Load a texture for the tree
@@ -27,7 +27,7 @@ TEST(CollisionTest, NPCTreeCollision) {
 // Test that an NPC can move freely when there is no object in the path
 TEST(CollisionTest, NPCFreeMovement) {
     Game game;
-    PlayerEntity npc("Player1",100, 50, 50, 150.0f, 10, 100);
+    NPCEntity npc("Player1",100, 50, 50, 150.0f, 10, 100);
     game.generateMap();
 
     // Move NPC to an empty tile (no object)
@@ -39,7 +39,7 @@ TEST(CollisionTest, NPCFreeMovement) {
 // Edge case: Test collision near the boundary of a tile
 TEST(CollisionTest, NPCBoundaryCollision) {
     Game game;
-    PlayerEntity npc("Player1",100, 50, 50, 150.0f, 10, 100);
+    NPCEntity npc("Player1",100, 50, 50, 150.0f, 10, 100);
     game.generateMap();
 
     // Load a texture for the tree

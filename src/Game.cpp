@@ -13,6 +13,10 @@ Game::Game()
 #ifdef _WIN32
     ui.adjustLayout(window);
 #endif
+    playerTexture.loadFromFile("../assets/npc/person1.png"); // Adjust path as needed
+    if (!playerTexture.getSize().x) {
+        std::cerr << "Failed to load player texture!" << std::endl;
+    }
 
     generateMap();
     npcs = generateNPCEntitys(); 
@@ -29,7 +33,7 @@ const std::vector<std::vector<std::unique_ptr<Tile>>>& Game::getTileMap() const 
     return tileMap;
 }
 
-bool Game::detectCollision(const NPCEntity& NPCEntity) {
+bool Game::detectCollision(NPCEntity& NPCEntity) {
     int tileX = static_cast<int>(NPCEntity.getPosition().x / GameConfig::tileSize);
     int tileY = static_cast<int>(NPCEntity.getPosition().y / GameConfig::tileSize);
 
@@ -89,16 +93,24 @@ void Game::simulateNPCEntityBehavior(float deltaTime) {
     for (auto& NPCEntity : npcs) {
         evaluateNPCEntityState(NPCEntity);
 
-        if (NPCEntity.getEnergy() <= 20.0f) {
-            NPCEntity.performAction(std::make_unique<RegenerateEnergyAction>(), tileMap);
-        } else if (NPCEntity.getMoney() >= 50.0f) {
-            NPCEntity.performAction(std::make_unique<UpgradeHouseAction>(), tileMap);
-        } else {
-            performPathfinding(NPCEntity);
+        int x = static_cast<int>(NPCEntity.getPosition().x / GameConfig::tileSize);
+        int y = static_cast<int>(NPCEntity.getPosition().y / GameConfig::tileSize);
+
+        if (x >= 0 && x < tileMap[0].size() && y >= 0 && y < tileMap.size()) {
+            Tile& targetTile = *tileMap[y][x];
+
+            if (NPCEntity.getEnergy() <= 20.0f) {
+                NPCEntity.performAction(std::make_unique<RegenerateEnergyAction>(), targetTile);
+            } else if (NPCEntity.getMoney() >= 50.0f) {
+                NPCEntity.performAction(std::make_unique<UpgradeHouseAction>(), targetTile);
+            } else {
+                performPathfinding(NPCEntity);
+            }
         }
 
         NPCEntity.update(deltaTime);
     }
+
     //         int targetTileX = static_cast<int>(std::round(player.getPosition().x / GameConfig::tileSize));
     //     int targetTileY = static_cast<int>(std::round(player.getPosition().y / GameConfig::tileSize));
 
@@ -142,7 +154,14 @@ void Game::simulateSocietalGrowth(float deltaTime) {
     timeAccumulator += deltaTime;
 
     if (timeAccumulator >= 60.0f) { // Adjust market prices every 60 seconds
-        market.adjustPrices(1.05f); // Increase all prices by 5%
+        for (const auto& [item, currentPrice] : market.getPrices()) {
+            int demand = market.getBuyTransactions(item);
+            int supply = market.getSellTransactions(item);
+            float buyFactor = 1.05f;
+
+            float newPrice = market.adjustPriceOnBuy(currentPrice, demand, supply, buyFactor);
+            market.setPrice(item, newPrice); // Update the price
+        }
         getDebugConsole().log("Society", "Market prices adjusted due to societal growth.");
         timeAccumulator = 0.0f;
     }
@@ -226,7 +245,13 @@ void Game::generateMap() {
         &textureManager.getTexture("market3", "../assets/objects/market3.png")
     };
 
-    tileMap.resize(GameConfig::mapHeight, std::vector<std::unique_ptr<Tile>>(GameConfig::mapWidth));
+    tileMap.resize(GameConfig::mapHeight);
+    for (auto& row : tileMap) {
+        row.resize(GameConfig::mapWidth);
+        for (auto& tile : row) {
+            tile = std::make_unique<Tile>();
+        }
+    }
 
     for (int i = 0; i < GameConfig::mapHeight; ++i) {
         for (int j = 0; j < GameConfig::mapWidth; ++j) {

@@ -1,12 +1,11 @@
 #include <gtest/gtest.h>
 #include "Market.hpp"
-#include "Player.hpp"
-
+#include "NPCEntity.hpp"
 TEST(MarketTest, RealisticPriceAdjustment) {
     Market market;
     market.setPrice("wood", 10.0f);
 
-    PlayerEntity player("Player", 100, 50, 50, 200.0f, 10, 100);
+    NPCEntity player("Player", 100, 50, 50, 200.0f, 10, 100);
 
     // Buy items to increase demand
     for (int i = 0; i < 5; ++i) {
@@ -28,7 +27,7 @@ TEST(MarketTest, PriceAdjustmentOnBuyAndSell) {
     Market market;
     market.setPrice("wood", 10.0f);
 
-    PlayerEntity player("TestPlayer", 1000.0f, 50.0f, 50.0f, 1.0f, 10.0f, 1000.0f);
+    NPCEntity player("TestPlayer", 1000.0f, 50.0f, 50.0f, 1.0f, 10.0f, 1000.0f);
 
     // Initial price
     float initialPrice = market.getPrice("wood");

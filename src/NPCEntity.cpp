@@ -112,3 +112,18 @@ void NPCEntity::setHealth(float newHealth) {
 
 void NPCEntity::setStrength(float newStrength) { strength = newStrength; }
 void NPCEntity::setSpeed(float newSpeed) { speed = newSpeed; }
+
+void NPCEntity::update(float deltaTime) {
+    // Example logic for updating NPC state
+    // This could include animations, timers, or energy decay.
+    if (energy > 0) {
+        energy = std::max(0.0f, energy - deltaTime * 0.5f); // Example: slow energy decay over time
+    }
+
+    // Update NPC state, e.g., based on health or energy
+    if (isDead()) {
+        handleDeath();
+    }
+
+    getDebugConsole().log(name, "Updated NPC state for " + name);
+}

@@ -106,6 +106,8 @@ float Market::adjustPriceOnBuy(float currentPrice, int demand, int supply, float
     return std::clamp(currentPrice * (1.0f + adjustmentFactor), minimumPrice, currentPrice * 2.0f);
 }
 
+
+
 // Adjust price after a sell
 float Market::adjustPriceOnSell(float currentPrice, int demand, int supply, float sellFactor) {
     if (demand == 0) demand = 1;

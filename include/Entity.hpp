@@ -31,10 +31,10 @@ public:
     void setTexture(const sf::Texture& tex, const sf::Color& color = sf::Color::White) {
         if (!tex.getSize().x || !tex.getSize().y) {
             std::cerr << "Error: Invalid texture provided." << std::endl;
+            sprite.setTexture(sf::Texture());
             return;
         }
-        texture = tex;
-        sprite.setTexture(texture);
+        sprite.setTexture(tex);
         sprite.setColor(color);
     }
 
@@ -109,7 +109,7 @@ public:
     }
 
     // Rendering
-    void draw(sf::RenderWindow& window) {
+    void draw(sf::RenderWindow& window) const{
         if (!dead) {
             window.draw(sprite);
         }

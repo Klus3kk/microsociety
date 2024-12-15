@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
 #include "Market.hpp"
-#include "Player.hpp"
+#include "NPCEntity.hpp"
 
 TEST(TradingTest, BuyItem) {
     Market market;
-    PlayerEntity player("Player1",100, 50, 50, 150.0f, 10, 200);
+    NPCEntity player("Player1",100, 50, 50, 150.0f, 10, 200);
 
     market.setPrice("wood", 10);
 
@@ -15,7 +15,7 @@ TEST(TradingTest, BuyItem) {
 
 TEST(TradingTest, InsufficientFunds) {
     Market market;
-    PlayerEntity player("Player1",100, 50, 50, 150.0f, 10, 5);
+    NPCEntity player("Player1",100, 50, 50, 150.0f, 10, 5);
 
     market.setPrice("stone", 10);
 
@@ -26,7 +26,7 @@ TEST(TradingTest, InsufficientFunds) {
 
 TEST(TradingTest, SellItem) {
     Market market;
-    PlayerEntity player("Player1",100, 50, 50, 150.0f, 10, 0);
+    NPCEntity player("Player1",100, 50, 50, 150.0f, 10, 0);
 
     market.setPrice("food", 5);
     player.addToInventory("food", 2);
