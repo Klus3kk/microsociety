@@ -99,17 +99,93 @@ void Game::simulateNPCEntityBehavior(float deltaTime) {
         if (x >= 0 && x < tileMap[0].size() && y >= 0 && y < tileMap.size()) {
             Tile& targetTile = *tileMap[y][x];
 
-            if (NPCEntity.getEnergy() <= 20.0f) {
-                NPCEntity.performAction(std::make_unique<RegenerateEnergyAction>(), targetTile);
-            } else if (NPCEntity.getMoney() >= 50.0f) {
-                NPCEntity.performAction(std::make_unique<UpgradeHouseAction>(), targetTile);
-            } else {
-                performPathfinding(NPCEntity);
+            // Let NPC decide the next action dynamically
+            ActionType actionType = NPCEntity.decideNextAction(tileMap);
+
+            // Debug log to verify actions
+            getDebugConsole().log("Behavior", NPCEntity.getName() + " chose action: " + std::to_string(static_cast<int>(actionType)));
+
+            // Perform the chosen action
+            switch (actionType) {
+                case ActionType::ChopTree:
+                case ActionType::MineRock:
+                case ActionType::GatherBush:
+                    moveToResource(NPCEntity, actionType);  // Move toward the resource first
+                    break;
+                case ActionType::RegenerateEnergy:
+                    NPCEntity.performAction(std::make_unique<RegenerateEnergyAction>(), targetTile);
+                    break;
+                case ActionType::StoreItem:
+                    storeItems(NPCEntity, targetTile);
+                    break;
+                default:
+                    performPathfinding(NPCEntity); // Default fallback movement
+                    break;
             }
         }
 
         NPCEntity.update(deltaTime);
     }
+}
+
+void Game::moveToResource(NPCEntity& npc, ActionType actionType) {
+    int currentX = static_cast<int>(npc.getPosition().x / GameConfig::tileSize);
+    int currentY = static_cast<int>(npc.getPosition().y / GameConfig::tileSize);
+
+    int targetX = -1, targetY = -1;
+    ObjectType targetType;
+
+    // Determine target object type based on action
+    if (actionType == ActionType::ChopTree) targetType = ObjectType::Tree;
+    else if (actionType == ActionType::MineRock) targetType = ObjectType::Rock;
+    else if (actionType == ActionType::GatherBush) targetType = ObjectType::Bush;
+    else return;  // No valid target
+
+    // Search for the nearest target object
+    float shortestDistance = std::numeric_limits<float>::max();
+    for (int y = 0; y < tileMap.size(); ++y) {
+        for (int x = 0; x < tileMap[y].size(); ++x) {
+            if (tileMap[y][x]->hasObject() && tileMap[y][x]->getObject()->getType() == targetType) {
+                float distance = std::hypot(x - currentX, y - currentY);
+                if (distance < shortestDistance) {
+                    shortestDistance = distance;
+                    targetX = x;
+                    targetY = y;
+                }
+            }
+        }
+    }
+
+    // If a valid target is found, move toward it
+    if (targetX != -1 && targetY != -1) {
+        int moveX = (targetX > currentX) ? 1 : (targetX < currentX) ? -1 : 0;
+        int moveY = (targetY > currentY) ? 1 : (targetY < currentY) ? -1 : 0;
+
+        sf::Vector2f newPosition((currentX + moveX) * GameConfig::tileSize, (currentY + moveY) * GameConfig::tileSize);
+        npc.setPosition(newPosition.x, newPosition.y);
+    }
+}
+
+
+void Game::storeItems(NPCEntity& npc, Tile& tile) {
+    auto inventory = npc.getInventory();
+    std::string mostAbundantResource;
+    int maxQuantity = 0;
+
+    // Find the most abundant resource
+    for (const auto& [item, quantity] : inventory) {
+        if (quantity > maxQuantity) {
+            mostAbundantResource = item;
+            maxQuantity = quantity;
+        }
+    }
+
+    if (!mostAbundantResource.empty()) {
+        npc.performAction(std::make_unique<StoreItemAction>(mostAbundantResource, maxQuantity), tile);
+    }
+}
+
+
 
     //         int targetTileX = static_cast<int>(std::round(player.getPosition().x / GameConfig::tileSize));
     //     int targetTileY = static_cast<int>(std::round(player.getPosition().y / GameConfig::tileSize));
@@ -139,7 +215,7 @@ void Game::simulateNPCEntityBehavior(float deltaTime) {
     //         player.setSpeed(0.0f); // Prevent movement if out of energy
     //         // No additional regeneration logic here; it's handled by H action.
     //     }
-}
+// }
 
 void Game::evaluateNPCEntityState(NPCEntity& NPCEntity) {
     if (NPCEntity.getEnergy() <= 0.0f) {
@@ -168,7 +244,6 @@ void Game::simulateSocietalGrowth(float deltaTime) {
 }
 
 void Game::performPathfinding(NPCEntity& NPCEntity) {
-    // Basic random pathfinding logic for npcs
     static std::random_device rd;
     static std::mt19937 gen(rd());
     static std::uniform_int_distribution<> dist(-1, 1);
@@ -176,9 +251,22 @@ void Game::performPathfinding(NPCEntity& NPCEntity) {
     int moveX = dist(gen);
     int moveY = dist(gen);
 
-    sf::Vector2f newPosition = NPCEntity.getPosition() + sf::Vector2f(moveX * GameConfig::tileSize, moveY * GameConfig::tileSize);
-    NPCEntity.setPosition(newPosition.x, newPosition.y);
+    int currentX = static_cast<int>(NPCEntity.getPosition().x / GameConfig::tileSize);
+    int currentY = static_cast<int>(NPCEntity.getPosition().y / GameConfig::tileSize);
+
+    int newX = currentX + moveX;
+    int newY = currentY + moveY;
+
+    // Ensure new position is within map bounds and not blocked
+    if (newX >= 0 && newX < GameConfig::mapWidth &&
+        newY >= 0 && newY < GameConfig::mapHeight &&
+        !tileMap[newY][newX]->hasObject()) {
+
+        sf::Vector2f newPosition(newX * GameConfig::tileSize, newY * GameConfig::tileSize);
+        NPCEntity.setPosition(newPosition.x, newPosition.y);
+    }
 }
+
 
 std::unordered_map<std::string, int> Game::aggregateResources(const std::vector<NPCEntity>& npcs) const {
     std::unordered_map<std::string, int> allResources;

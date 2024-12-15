@@ -78,6 +78,8 @@ public:
     // Collision Detection  
     bool detectCollision(NPCEntity& npc);
     void generateMap();
+    void storeItems(NPCEntity& npc, Tile& tile);
+    void moveToResource(NPCEntity& npc, ActionType actionType);
     // Accessor for TileMap
     const std::vector<std::vector<std::unique_ptr<Tile>>>& getTileMap() const;
 };

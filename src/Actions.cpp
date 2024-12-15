@@ -4,6 +4,7 @@
 void TreeAction::perform(NPCEntity& player, Tile& tile) {
     if (tile.hasObject() && player.addToInventory("wood", 1)) {
         tile.removeObject();
+        player.consumeEnergy(5.0f); // Consumes 5 energy
         getDebugConsole().log("Action", "Tree chopped! Wood added to inventory.");
     } else if (!tile.hasObject()) {
         getDebugConsole().logOnce("Action", "No tree to chop on this tile.");
@@ -12,10 +13,12 @@ void TreeAction::perform(NPCEntity& player, Tile& tile) {
     }
 }
 
+
 // StoneAction
 void StoneAction::perform(NPCEntity& player, Tile& tile) {
     if (tile.hasObject() && player.addToInventory("stone", 1)) {
         tile.removeObject();
+        player.consumeEnergy(5.0f);
         getDebugConsole().log("Action", "Rock mined! Stone added to inventory.");
     } else if (!tile.hasObject()) {
         getDebugConsole().logOnce("Action", "No rock to mine on this tile.");
@@ -28,6 +31,7 @@ void StoneAction::perform(NPCEntity& player, Tile& tile) {
 void BushAction::perform(NPCEntity& player, Tile& tile) {
     if (tile.hasObject() && player.addToInventory("food", 1)) {
         tile.removeObject();
+        player.consumeEnergy(5.0f);
         getDebugConsole().log("Action", "Food gathered from bush!");
     } else if (!tile.hasObject()) {
         getDebugConsole().logOnce("Action", "No bush to gather food from on this tile.");

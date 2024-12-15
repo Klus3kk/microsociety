@@ -56,8 +56,8 @@ public:
     void regenerateEnergy(float rate);
 
     // Decision-Making Hook (AI will override this)
-    ActionType decideNextAction();
-
+    ActionType decideNextAction(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap);
+    std::vector<ObjectType> scanNearbyTiles(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) const;
     // Perform Action
     void performAction(std::unique_ptr<Action> action, Tile& tile); // No changes needed as it modifies the entity
     void update(float deltaTime); // Ensure this modifies the entity

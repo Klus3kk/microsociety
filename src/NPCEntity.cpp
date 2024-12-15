@@ -74,12 +74,6 @@ void NPCEntity::regenerateEnergy(float rate) {
         getDebugConsole().log(name, name + "'s energy regenerated to " + std::to_string(energy));
     }
 }
-
-// Decision-Making Hook
-ActionType NPCEntity::decideNextAction() {
-    return ActionType::None; // Placeholder
-}
-
 // Perform Action
 void NPCEntity::performAction(std::unique_ptr<Action> action, Tile& tile) {
     if (action) {
@@ -126,4 +120,47 @@ void NPCEntity::update(float deltaTime) {
     }
 
     getDebugConsole().log(name, "Updated NPC state for " + name);
+}
+
+// Brain of the AI
+ActionType NPCEntity::decideNextAction(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
+    // Scan nearby tiles for resources
+    auto nearbyObjects = scanNearbyTiles(tileMap);
+
+    if (getEnergy() < 20.0f) return ActionType::RegenerateEnergy; // Low energy, regenerate
+    if (getHunger() < 30.0f) return ActionType::GatherBush; // Low hunger, gather food
+
+    // Prioritize gathering resources (wood, stone, bush)
+    for (ObjectType objType : nearbyObjects) {
+        if (objType == ObjectType::Tree) return ActionType::ChopTree;
+        if (objType == ObjectType::Rock) return ActionType::MineRock;
+        if (objType == ObjectType::Bush) return ActionType::GatherBush;
+    }
+
+    // Check if inventory is full and needs storing
+    if (getInventorySize() >= getMaxInventorySize()) {
+        return ActionType::StoreItem;
+    }
+
+    return ActionType::Explore; // Default fallback
+}
+
+std::vector<ObjectType> NPCEntity::scanNearbyTiles(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) const {
+    std::vector<ObjectType> nearbyObjects;
+
+    // Scan surrounding tiles
+    int npcX = static_cast<int>(getPosition().x / GameConfig::tileSize);
+    int npcY = static_cast<int>(getPosition().y / GameConfig::tileSize);
+
+    for (int y = npcY - 1; y <= npcY + 1; ++y) {
+        for (int x = npcX - 1; x <= npcX + 1; ++x) {
+            if (y >= 0 && y < tileMap.size() && x >= 0 && x < tileMap[0].size()) {
+                if (tileMap[y][x]->hasObject()) {
+                    nearbyObjects.push_back(tileMap[y][x]->getObject()->getType());
+                }
+            }
+        }
+    }
+
+    return nearbyObjects;
 }
