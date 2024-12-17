@@ -108,13 +108,16 @@ void NPCEntity::setStrength(float newStrength) { strength = newStrength; }
 void NPCEntity::setSpeed(float newSpeed) { speed = newSpeed; }
 
 void NPCEntity::update(float deltaTime) {
-    // Example logic for updating NPC state
-    // This could include animations, timers, or energy decay.
-    if (energy > 0) {
-        energy = std::max(0.0f, energy - deltaTime * 0.5f); // Example: slow energy decay over time
+    // Ensure cooldown decrements properly
+    if (currentActionCooldown > 0) {
+        currentActionCooldown -= deltaTime;
+        currentActionCooldown = std::max(0.0f, currentActionCooldown); // Clamp to 0
     }
 
-    // Update NPC state, e.g., based on health or energy
+    if (energy > 0) {
+        energy = std::max(0.0f, energy - deltaTime * 0.5f); // Energy decay
+    }
+
     if (isDead()) {
         handleDeath();
     }
@@ -122,31 +125,53 @@ void NPCEntity::update(float deltaTime) {
     getDebugConsole().log(name, "Updated NPC state for " + name);
 }
 
+
 // Brain of the AI
 ActionType NPCEntity::decideNextAction(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
+    // Debug log cooldown
+    getDebugConsole().log("AI Cooldown", getName() + " cooldown: " + std::to_string(currentActionCooldown));
+
+    if (currentActionCooldown > 0) {
+        return ActionType::Idle; // Skip actions during cooldown
+    }
+
     auto nearbyObjects = scanNearbyTiles(tileMap);
 
-    // Debug: Log nearby objects
     for (ObjectType obj : nearbyObjects) {
         getDebugConsole().log("AI Decision", getName() + " sees nearby object of type: " + std::to_string(static_cast<int>(obj)));
     }
 
-    if (getEnergy() < 20.0f) return ActionType::RegenerateEnergy; // Low energy, regenerate
-    if (getHunger() < 30.0f) return ActionType::GatherBush; // Low hunger, gather food
-
-    // Prioritize gathering resources
-    for (ObjectType objType : nearbyObjects) {
-        if (objType == ObjectType::Tree) return ActionType::ChopTree;
-        if (objType == ObjectType::Rock) return ActionType::MineRock;
-        if (objType == ObjectType::Bush) return ActionType::GatherBush;
+    if (getEnergy() < 20.0f) {
+        currentActionCooldown = actionCooldownTime;
+        return ActionType::RegenerateEnergy;
+    }
+    if (getHunger() < 30.0f) {
+        currentActionCooldown = actionCooldownTime;
+        return ActionType::GatherBush;
     }
 
-    // Check if inventory is full and needs storing
+    for (ObjectType objType : nearbyObjects) {
+        if (objType == ObjectType::Tree) {
+            currentActionCooldown = actionCooldownTime;
+            return ActionType::ChopTree;
+        }
+        if (objType == ObjectType::Rock) {
+            currentActionCooldown = actionCooldownTime;
+            return ActionType::MineRock;
+        }
+        if (objType == ObjectType::Bush) {
+            currentActionCooldown = actionCooldownTime;
+            return ActionType::GatherBush;
+        }
+    }
+
     if (getInventorySize() >= getMaxInventorySize()) {
+        currentActionCooldown = actionCooldownTime;
         return ActionType::StoreItem;
     }
 
-    return ActionType::Explore; // Default fallback
+    currentActionCooldown = actionCooldownTime;
+    return ActionType::Explore;
 }
 
 

@@ -69,7 +69,7 @@ private:
     sf::RectangleShape debugButton;
     sf::RectangleShape sliderKnob;
     bool sliderDragging = false;         // Whether the slider is being dragged
-    float currentSpeed = 0.5f;  
+    float currentSpeed = 1.0f;  
 
 
 
@@ -130,6 +130,7 @@ public:
 
     void updateNPCEntityList(const std::vector<NPCEntity>& npcs);
     void handleNPCEntityPanel(sf::RenderWindow& window, sf::Event& event, const std::vector<NPCEntity>& npcs);
+    void updateSliderValue(float newValue, Game& game);
 
     // Responsive Layout
     void adjustLayout(sf::RenderWindow& window);

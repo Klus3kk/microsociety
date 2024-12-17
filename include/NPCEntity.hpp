@@ -27,6 +27,9 @@ private:
     int deathPenalty = -100;                        // Penalty for NPC death
     int currentReward = 0;                          // Reward balance
     int currentPenalty = 0;                         // Penalty balance
+    float currentActionCooldown = 0.0f;             // Time remaining before next action
+    const float actionCooldownTime = 1.0f;          // Time between actions (adjust as needed)
+
 
 public:
     // Constructor

@@ -716,21 +716,18 @@ void UI::handleOptionsEvents(sf::RenderWindow& window, sf::Event& event, Game& g
     }
 
     // Handle slider dragging
-    if (event.type == sf::Event::MouseMoved && sliderDragging) {
+    if (sliderDragging && event.type == sf::Event::MouseMoved) {
         float sliderX = static_cast<float>(mousePos.x);
         float sliderLeft = speedSlider.getPosition().x;
         float sliderRight = speedSlider.getPosition().x + speedSlider.getSize().x;
 
-        // Constrain knob to slider bounds
+        // Constrain knob position
         sliderX = std::clamp(sliderX, sliderLeft, sliderRight);
-
-        // Update knob position
         sliderKnob.setPosition(sliderX - sliderKnob.getSize().x / 2, sliderKnob.getPosition().y);
 
-        // Calculate simulation speed
+        // Calculate new simulation speed
         float sliderProgress = (sliderKnob.getPosition().x - sliderLeft) / (sliderRight - sliderLeft);
-        currentSpeed = sliderProgress;
-        game.setSimulationSpeed(sliderProgress);
+        updateSliderValue(sliderProgress, game);
     }
 
     if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left) {
@@ -738,7 +735,15 @@ void UI::handleOptionsEvents(sf::RenderWindow& window, sf::Event& event, Game& g
     }
 }
 
-
+void UI::updateSliderValue(float newValue, Game& game) {
+    currentSpeed = std::clamp(newValue, 0.0f, 3.0f);  // Keep within range
+    sliderKnob.setPosition(
+        speedSlider.getPosition().x + currentSpeed * (speedSlider.getSize().x - sliderKnob.getSize().x),
+        sliderKnob.getPosition().y
+    );
+    game.setSimulationSpeed(currentSpeed);  // Update game simulation speed
+    getDebugConsole().log("UI", "Simulation speed updated to: " + std::to_string(currentSpeed));
+}
 
 
 
@@ -803,13 +808,36 @@ void UI::renderMarketPanel(sf::RenderWindow& window, const Market& market) {
 
 
 void UI::updateNPCEntityList(const std::vector<NPCEntity>& npcs) {
-    npcButtons.clear();
+    npcListPanel.clearChildren();  // Clear children safely
+    npcButtons.clear();            // Clear cached button references
+
+    float buttonY = npcListPanel.getBounds().top + 20;
+
     for (const auto& npc : npcs) {
         UIButton* button = new UIButton();
-        button->setProperties(100, 100, 150, 50, npc.getName(), font); // Example button properties
-        npcButtons.push_back(std::make_pair(npc.getName(), button));
+        button->setProperties(
+            npcListPanel.getBounds().left + 20,
+            buttonY,
+            npcListPanel.getBounds().width - 40,
+            40,
+            npc.getName(),
+            font
+        );
+        button->setColors(
+            sf::Color(80, 80, 150, 204),
+            sf::Color(100, 100, 200, 204),
+            sf::Color(60, 60, 120, 204),
+            sf::Color::White
+        );
+
+        npcListPanel.addChild(button);  // Add safely
+        npcButtons.emplace_back(npc.getName(), button);
+        buttonY += 50;
     }
 }
+
+
+
 
 void UI::handleNPCEntityPanel(sf::RenderWindow& window, sf::Event& event, const std::vector<NPCEntity>& npcs) {
     for (auto& [name, button] : npcButtons) {

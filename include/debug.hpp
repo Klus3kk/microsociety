@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <chrono>
 #include <fstream>
+#include <mutex>
 
 // Forward declarations
 class Game;
@@ -19,7 +20,7 @@ enum class LogLevel {
     Info,
     Warning,
     Error,
-    Critical // Added for high-priority logs
+    Critical 
 };
 
 // Debug system for in-game console
@@ -29,6 +30,7 @@ private:
     sf::Font consoleFont;                                  // Font for console
     sf::RectangleShape background;                         // Background for console UI
     sf::Text text;                                         // Text object for rendering logs
+    std::mutex debugMutex;
     const int maxLogs = 15;                                // Increased number of logs shown
     const sf::Color backgroundColor = sf::Color(0, 0, 0, 200); // Semi-transparent background
     bool enabled = false;                                  // Toggle for enabling/disabling debug

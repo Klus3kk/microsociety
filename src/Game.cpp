@@ -5,7 +5,7 @@
 #include <set>
 #include <unordered_map>
 #include <algorithm>
-
+#include <thread>
 // Constructor
 Game::Game()
     : window(sf::VideoMode(GameConfig::windowWidth, GameConfig::windowHeight), "MicroSociety", sf::Style::Titlebar | sf::Style::Close),
@@ -46,7 +46,7 @@ bool Game::detectCollision(NPCEntity& NPCEntity) {
 
 void Game::run() {
     sf::Clock clock;
-
+    window.setFramerateLimit(60);
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -63,13 +63,13 @@ void Game::run() {
         deltaTime = dt.asSeconds();
 
         // Simulate NPC behavior
-        simulateNPCEntityBehavior(deltaTime);
+        simulateNPCEntityBehavior(deltaTime * simulationSpeed);
+        simulateSocietalGrowth(deltaTime * simulationSpeed);
 
         // Other updates and rendering
         ui.updateMoney(MoneyManager::calculateTotalMoney(npcs));
         timeManager.update(deltaTime);
         clockGUI.update(timeManager.getElapsedTime());
-
         ui.updateStatus(
             timeManager.getCurrentDay(),
             timeManager.getFormattedTime(),
@@ -88,53 +88,44 @@ void Game::run() {
 
 
 void Game::simulateNPCEntityBehavior(float deltaTime) {
-    for (auto& NPCEntity : npcs) {
-        evaluateNPCEntityState(NPCEntity);
+    size_t batchSize = 10; // Process NPCs in batches
+    for (size_t i = 0; i < npcs.size(); i += batchSize) {
+        for (size_t j = i; j < std::min(i + batchSize, npcs.size()); ++j) {
+            auto& NPCEntity = npcs[j];
 
-        int x = static_cast<int>(NPCEntity.getPosition().x / GameConfig::tileSize);
-        int y = static_cast<int>(NPCEntity.getPosition().y / GameConfig::tileSize);
+            evaluateNPCEntityState(NPCEntity);
+            int x = static_cast<int>(NPCEntity.getPosition().x / GameConfig::tileSize);
+            int y = static_cast<int>(NPCEntity.getPosition().y / GameConfig::tileSize);
 
-        // Debug: Log NPC position before actions
-        getDebugConsole().log("NPC", NPCEntity.getName() + " at (" + std::to_string(x) + ", " + std::to_string(y) + ")");
+            getDebugConsole().log("NPC", NPCEntity.getName() + " at (" + std::to_string(x) + ", " + std::to_string(y) + ")");
 
-        if (x >= 0 && x < tileMap[0].size() && y >= 0 && y < tileMap.size()) {
-            Tile& targetTile = *tileMap[y][x];
-
-            // Let NPC decide the next action dynamically
-            ActionType actionType = NPCEntity.decideNextAction(tileMap);
-
-            // Debug: Log chosen action
-            getDebugConsole().log("Behavior", NPCEntity.getName() + " chose action: " + std::to_string(static_cast<int>(actionType)));
-
-            // Perform the chosen action
-            switch (actionType) {
-                case ActionType::ChopTree:
-                case ActionType::MineRock:
-                case ActionType::GatherBush:
-                    moveToResource(NPCEntity, actionType);  // Move toward the resource first
-                    break;
-                case ActionType::RegenerateEnergy:
-                    NPCEntity.performAction(std::make_unique<RegenerateEnergyAction>(), targetTile);
-                    break;
-                case ActionType::StoreItem:
-                    storeItems(NPCEntity, targetTile);
-                    break;
-                default:
-                    performPathfinding(NPCEntity); // Default fallback movement
-                    break;
+            if (x >= 0 && x < tileMap[0].size() && y >= 0 && y < tileMap.size()) {
+                Tile& targetTile = *tileMap[y][x];
+                ActionType actionType = NPCEntity.decideNextAction(tileMap);
+                switch (actionType) {
+                    case ActionType::ChopTree:
+                    case ActionType::MineRock:
+                    case ActionType::GatherBush:
+                        moveToResource(NPCEntity, actionType);
+                        break;
+                    case ActionType::RegenerateEnergy:
+                        NPCEntity.performAction(std::make_unique<RegenerateEnergyAction>(), targetTile);
+                        break;
+                    case ActionType::StoreItem:
+                        storeItems(NPCEntity, targetTile);
+                        break;
+                    default:
+                        performPathfinding(NPCEntity);
+                        break;
+                }
             }
+            NPCEntity.update(deltaTime * simulationSpeed);
         }
-
-        // Update NPC state
-        NPCEntity.update(deltaTime);
-
-        // Debug: Log NPC position after update
-        sf::Vector2f pos = NPCEntity.getPosition();
-        getDebugConsole().log("NPC Update", NPCEntity.getName() + " moved to (" +
-                              std::to_string(static_cast<int>(pos.x / GameConfig::tileSize)) + ", " +
-                              std::to_string(static_cast<int>(pos.y / GameConfig::tileSize)) + ")");
     }
 }
+
+
+
 
 void Game::moveToResource(NPCEntity& npc, ActionType actionType) {
     int currentX = static_cast<int>(npc.getPosition().x / GameConfig::tileSize);
@@ -317,6 +308,13 @@ void Game::generateMap() {
         &textureManager.getTexture("grass3", "../assets/tiles/grass/grass3.png")
     };
 
+    std::vector<const sf::Texture*> rockTextures = {
+        &textureManager.getTexture("rock1", "../assets/objects/rock1.png"),
+        &textureManager.getTexture("rock2", "../assets/objects/rock2.png"),
+        &textureManager.getTexture("rock3", "../assets/objects/rock3.png")
+    };
+
+
     std::vector<const sf::Texture*> stoneTextures = {
         &textureManager.getTexture("stone1", "../assets/tiles/stone/stone1.png"),
         &textureManager.getTexture("stone2", "../assets/tiles/stone/stone2.png"),
@@ -367,7 +365,7 @@ void Game::generateMap() {
             float noiseValue = noise.GetNoise(static_cast<float>(i), static_cast<float>(j));
             noiseValue = (noiseValue + 1.0f) / 2.0f;
 
-            if (noiseValue < 0.2f) {
+            if (noiseValue < 0.1f) {
                 tileMap[i][j] = std::make_unique<FlowerTile>(*flowerTextures[rand() % flowerTextures.size()]);
             } else if (noiseValue < 0.6f) {
                 tileMap[i][j] = std::make_unique<GrassTile>(*grassTextures[rand() % grassTextures.size()]);
@@ -381,12 +379,12 @@ void Game::generateMap() {
             if (auto grassTile = dynamic_cast<GrassTile*>(tileMap[i][j].get())) {
                 if (objectChance < 20) {
                     grassTile->placeObject(std::make_unique<Tree>(*treeTextures[rand() % treeTextures.size()]));
-                } else if (objectChance < 30) {
+                } else if (objectChance < 20) {
                     grassTile->placeObject(std::make_unique<Bush>(*bushTextures[rand() % bushTextures.size()]));
                 }
             } else if (auto stoneTile = dynamic_cast<StoneTile*>(tileMap[i][j].get())) {
-                if (objectChance < 20) {
-                    stoneTile->placeObject(std::make_unique<Rock>(*stoneTextures[rand() % stoneTextures.size()]));
+                if (objectChance < 20) { 
+                    stoneTile->placeObject(std::make_unique<Rock>(*rockTextures[rand() % rockTextures.size()]));
                 }
             }
         }
@@ -479,11 +477,32 @@ void Game::drawTileBorders() {
 }
 
 void Game::resetSimulation() {
+    // Safely clear the tileMap
+    for (auto& row : tileMap) {
+        for (auto& tile : row) {
+            tile.reset(); // Explicitly release the tile memory
+        }
+    }
+    tileMap.clear();   // Clear the map
+    tileMap.shrink_to_fit(); // Reduce capacity to zero
+
+    // Clear NPCs safely
+    npcs.clear();
+    npcs.shrink_to_fit();
+
+    // Re-generate map and NPCs
     generateMap();
     npcs = generateNPCEntitys();
+
+    // Update UI and reset simulation parameters
     ui.updateNPCEntityList(npcs);
+    simulationSpeed = 1.0f;
+
     getDebugConsole().log("Options", "Simulation reset.");
 }
+
+
+
 
 void Game::toggleTileBorders() {
     showTileBorders = !showTileBorders;
@@ -491,9 +510,10 @@ void Game::toggleTileBorders() {
 }
 
 void Game::setSimulationSpeed(float speedFactor) {
-    simulationSpeed = speedFactor;
-    getDebugConsole().log("Options", "Simulation speed set to: " + std::to_string(speedFactor));
+    simulationSpeed = std::clamp(speedFactor, 0.1f, 3.0f); // Clamp to a valid range
+    getDebugConsole().log("Options", "Simulation speed set to: " + std::to_string(simulationSpeed));
 }
+
 
 // void Game::saveGame(const std::string& saveFile);
 // void Game::loadGame(const std::string& saveFile);

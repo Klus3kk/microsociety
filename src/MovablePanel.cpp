@@ -1,25 +1,34 @@
 #include "MovablePanel.hpp"
 
-MovablePanel::MovablePanel(float width, float height, const std::string& title) {
-    panelShape.setSize({width, height});
-    panelShape.setFillColor(sf::Color(30, 30, 30, 200)); // Dark, semi-transparent
+MovablePanel::MovablePanel(float width, float height, const std::string& title)
+    : panelShape(sf::Vector2f(width, height))  // Set size safely
+    , isDragging(false)
+    , dragOffset(0.0f, 0.0f) {  // Default drag offset
+    panelShape.setPosition(0.0f, 0.0f);  // Default position
+    panelShape.setFillColor(sf::Color(30, 30, 30, 200));
     panelShape.setOutlineThickness(2.0f);
     panelShape.setOutlineColor(sf::Color::White);
 
+    // Load font safely
     if (!font.loadFromFile("../assets/fonts/font.ttf")) {
         throw std::runtime_error("Failed to load font!");
     }
 
+    // Set title safely
     panelTitle.setFont(font);
     panelTitle.setCharacterSize(18);
-    panelTitle.setString(title);
+    panelTitle.setString(title.empty() ? "Panel" : title);
     panelTitle.setFillColor(sf::Color::White);
     updateTextPosition();
 }
 
+
+
 MovablePanel::~MovablePanel() {
-    clearChildren(); // Free memory for child buttons
+    // No need for explicit clearChildren here
+    childButtons.clear();  // Safely clears the vector
 }
+
 
 void MovablePanel::handleEvent(const sf::RenderWindow& window, sf::Event& event) {
     sf::Vector2i mousePos = sf::Mouse::getPosition(window);
@@ -43,9 +52,12 @@ void MovablePanel::handleEvent(const sf::RenderWindow& window, sf::Event& event)
 }
 
 void MovablePanel::setSize(float width, float height) {
-    panelShape.setSize({width, height});
-    updateChildPositions(); // Ensure children adjust dynamically
+    panelShape.setSize(sf::Vector2f(std::max(10.0f, width), std::max(10.0f, height)));
+    updateTextPosition();
+    updateChildPositions();
 }
+
+
 
 void MovablePanel::setTitle(const std::string& title) {
     panelTitle.setString(title);
@@ -61,21 +73,32 @@ void MovablePanel::setPosition(float x, float y) {
 void MovablePanel::addChild(UIButton* button) {
     if (!button) return;
 
+    // Prevent adding duplicate pointers
+    if (std::find(childButtons.begin(), childButtons.end(), button) != childButtons.end()) {
+        return;  // Already added
+    }
+
     sf::Vector2f panelPosition = panelShape.getPosition();
     sf::Vector2f buttonPosition = button->getPosition();
     sf::Vector2f relativeOffset = buttonPosition - panelPosition;
 
     button->setRelativePosition(relativeOffset);
     childButtons.push_back(button);
-    updateChildPositions(); // Ensure layout consistency
+    updateChildPositions();
 }
 
+
 void MovablePanel::clearChildren() {
-    for (UIButton* button : childButtons) {
-        delete button; // Free memory
+    for (auto& button : childButtons) {
+        if (button) {
+            delete button;   // Safely delete
+            button = nullptr;  // Avoid dangling pointers
+        }
     }
-    childButtons.clear(); // Clear vector
+    childButtons.clear();  // Clear vector
 }
+
+
 
 void MovablePanel::render(sf::RenderWindow& window) {
     window.draw(panelShape);
