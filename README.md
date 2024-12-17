@@ -1,6 +1,9 @@
 # MicroSociety
 ![CI](https://github.com/Klus3kk/microsociety/actions/workflows/ci.yml/badge.svg)
 ![Coverage](https://codecov.io/gh/Klus3kk/microsociety/branch/main/graph/badge.svg)
+![Build Status](https://img.shields.io/github/actions/workflow/status/Klus3kk/microsociety/build.yml)
+![License](https://img.shields.io/badge/License-MIT-blue)
+![Language](https://img.shields.io/badge/C++-blue)
 
 ## Description
 
