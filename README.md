@@ -90,6 +90,4 @@ valgrind --tool=callgrind ./MicroSociety
 kcachegrind callgrind.out.<pid>
 ```
 
-### GCloud Settings
-
 
