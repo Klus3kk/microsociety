@@ -134,16 +134,11 @@ void Game::moveToResource(NPCEntity& npc, ActionType actionType) {
     int targetX = -1, targetY = -1;
     ObjectType targetType;
 
-    // Determine target object type based on action
     if (actionType == ActionType::ChopTree) targetType = ObjectType::Tree;
     else if (actionType == ActionType::MineRock) targetType = ObjectType::Rock;
     else if (actionType == ActionType::GatherBush) targetType = ObjectType::Bush;
-    else return;  // No valid target
+    else return;
 
-    // Debug: Log resource type and action
-    getDebugConsole().log("Pathfinding", npc.getName() + " searching for " + std::to_string(static_cast<int>(targetType)));
-
-    // Search for the nearest target object
     float shortestDistance = std::numeric_limits<float>::max();
     for (int y = 0; y < tileMap.size(); ++y) {
         for (int x = 0; x < tileMap[y].size(); ++x) {
@@ -158,22 +153,27 @@ void Game::moveToResource(NPCEntity& npc, ActionType actionType) {
         }
     }
 
-    // If a valid target is found, move toward it
     if (targetX != -1 && targetY != -1) {
-        int moveX = (targetX > currentX) ? 1 : (targetX < currentX) ? -1 : 0;
-        int moveY = (targetY > currentY) ? 1 : (targetY < currentY) ? -1 : 0;
+        sf::Vector2f direction(
+            targetX - currentX,
+            targetY - currentY
+        );
 
-        sf::Vector2f newPosition((currentX + moveX) * GameConfig::tileSize, (currentY + moveY) * GameConfig::tileSize);
+        float length = std::sqrt(direction.x * direction.x + direction.y * direction.y);
+        if (length > 0) direction /= length; // Normalize direction
 
-        // Update NPC position
-        npc.setPosition(newPosition.x, newPosition.y);
+        sf::Vector2f newPosition = npc.getPosition() + direction * npc.getSpeed() * deltaTime * simulationSpeed;
 
-        // Debug: Log movement
-        getDebugConsole().log("Pathfinding", npc.getName() + " moving to (" +
-                              std::to_string(currentX + moveX) + ", " + std::to_string(currentY + moveY) + ")");
+        if (newPosition.x >= 0 && newPosition.x < GameConfig::mapWidth * GameConfig::tileSize &&
+            newPosition.y >= 0 && newPosition.y < GameConfig::mapHeight * GameConfig::tileSize) {
+            npc.setPosition(newPosition.x, newPosition.y);
+        }
+
+        // Debug log
+        getDebugConsole().log("MoveToResource", npc.getName() + " moving to (" +
+                              std::to_string(targetX) + ", " + std::to_string(targetY) + ")");
     } else {
-        // Debug: Log if no target found
-        getDebugConsole().log("Pathfinding", npc.getName() + " found no valid target.");
+        getDebugConsole().log("MoveToResource", npc.getName() + " found no valid target.");
     }
 }
 
@@ -255,7 +255,7 @@ void Game::simulateSocietalGrowth(float deltaTime) {
     }
 }
 
-void Game::performPathfinding(NPCEntity& NPCEntity) {
+void Game::performPathfinding(NPCEntity& npc) {
     static std::random_device rd;
     static std::mt19937 gen(rd());
     static std::uniform_int_distribution<> dist(-1, 1);
@@ -263,21 +263,25 @@ void Game::performPathfinding(NPCEntity& NPCEntity) {
     int moveX = dist(gen);
     int moveY = dist(gen);
 
-    int currentX = static_cast<int>(NPCEntity.getPosition().x / GameConfig::tileSize);
-    int currentY = static_cast<int>(NPCEntity.getPosition().y / GameConfig::tileSize);
-
-    int newX = currentX + moveX;
-    int newY = currentY + moveY;
+    sf::Vector2f currentPos = npc.getPosition();
+    sf::Vector2f newPos = currentPos + sf::Vector2f(
+        moveX * GameConfig::tileSize * deltaTime * simulationSpeed,
+        moveY * GameConfig::tileSize * deltaTime * simulationSpeed
+    );
 
     // Ensure new position is within map bounds and not blocked
-    if (newX >= 0 && newX < GameConfig::mapWidth &&
-        newY >= 0 && newY < GameConfig::mapHeight &&
-        !tileMap[newY][newX]->hasObject()) {
+    if (newPos.x >= 0 && newPos.x < GameConfig::mapWidth * GameConfig::tileSize &&
+        newPos.y >= 0 && newPos.y < GameConfig::mapHeight * GameConfig::tileSize &&
+        !tileMap[static_cast<int>(newPos.y / GameConfig::tileSize)][static_cast<int>(newPos.x / GameConfig::tileSize)]->hasObject()) {
+        
+        npc.setPosition(newPos.x, newPos.y);
 
-        sf::Vector2f newPosition(newX * GameConfig::tileSize, newY * GameConfig::tileSize);
-        NPCEntity.setPosition(newPosition.x, newPosition.y);
+        // Debug log for movement
+        getDebugConsole().log("Pathfinding", npc.getName() + " moved to (" +
+                              std::to_string(newPos.x) + ", " + std::to_string(newPos.y) + ")");
     }
 }
+
 
 
 std::unordered_map<std::string, int> Game::aggregateResources(const std::vector<NPCEntity>& npcs) const {
