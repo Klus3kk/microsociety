@@ -19,7 +19,7 @@ class NPCEntity : public Entity {
 private:
     static constexpr float MAX_HEALTH = 100.0f;
     static constexpr float MAX_ENERGY = 100.0f;
-
+    Tile* target = nullptr;
     QLearningAgent agent; // Q-learning agent for decision-making
     bool useQLearning = false; // Toggle Q-learning behavior
     std::unordered_map<std::string, int> inventory; // Map for items and their quantities
@@ -52,8 +52,9 @@ public:
     // Modify getter to return a reference
     float& getMoney(); // For modifiable access
     const float& getMoney() const; // For read-only access
+    void setTarget(Tile* newTarget);
 
-
+    bool isAtTarget() const;
     // Inventory Management
     bool addToInventory(const std::string& item, int quantity);
     bool removeFromInventory(const std::string& item, int quantity);
@@ -72,7 +73,7 @@ public:
     std::vector<ObjectType> scanNearbyTiles(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) const;
 
     // Perform Action
-    void performAction(std::unique_ptr<Action> action, Tile& tile);
+    void performAction(std::unique_ptr<Action> action, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap);
     void update(float deltaTime);
 
     // Handle NPC Death

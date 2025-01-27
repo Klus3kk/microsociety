@@ -56,6 +56,10 @@ public:
     void removeObject() {
         object.reset();
     }
+
+    sf::Vector2f getPosition() const {
+        return sprite.getPosition();
+    }
 };
 
 class StoneTile : public Tile {

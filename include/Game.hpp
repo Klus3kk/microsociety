@@ -74,6 +74,7 @@ public:
     void simulateSocietalGrowth(float deltaTime);
     void evaluateNPCEntityState(NPCEntity& NPCEntity);
     void performPathfinding(NPCEntity& NPCEntity);
+    void handleMarketActions(NPCEntity& npc, Tile& targetTile, ActionType actionType);
     // Collision Detection  
     bool detectCollision(NPCEntity& npc);
     void generateMap();

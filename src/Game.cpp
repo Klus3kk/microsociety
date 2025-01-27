@@ -39,10 +39,13 @@ bool Game::detectCollision(NPCEntity& NPCEntity) {
 
     if (tileX >= 0 && tileX < tileMap[0].size() && tileY >= 0 && tileY < tileMap.size()) {
         Tile& targetTile = *tileMap[tileY][tileX];
-        NPCEntity.performAction(std::make_unique<RegenerateEnergyAction>(), targetTile);
+        
+        // Pass tileMap as the third argument
+        NPCEntity.performAction(std::make_unique<RegenerateEnergyAction>(), targetTile, tileMap);
     }
     return false;
 }
+
 
 void Game::run() {
     sf::Clock clock;
@@ -117,23 +120,20 @@ void Game::simulateNPCEntityBehavior(float deltaTime) {
                         case ActionType::ChopTree:
                         case ActionType::MineRock:
                         case ActionType::GatherBush:
-                            npc.performAction(std::make_unique<TreeAction>(), targetTile); // Replace with respective action type
+                            npc.performAction(std::make_unique<TreeAction>(), targetTile, tileMap); // Provide tileMap
                             npc.receiveFeedback(10.0f, tileMap); // Reward for gathering
                             break;
                         case ActionType::RegenerateEnergy:
-                            npc.performAction(std::make_unique<RegenerateEnergyAction>(), targetTile);
+                            npc.performAction(std::make_unique<RegenerateEnergyAction>(), targetTile, tileMap); // Provide tileMap
                             npc.receiveFeedback(5.0f, tileMap); // Reward for regenerating
                             break;
                         case ActionType::StoreItem:
-                            storeItems(npc, targetTile);
+                            storeItems(npc, targetTile); // Adjust if needed
                             npc.receiveFeedback(8.0f, tileMap); // Reward for managing inventory
                             break;
                         case ActionType::SellItem:
                         case ActionType::BuyItem:
                             handleMarketActions(npc, targetTile, actionType); // Handles buying/selling
-                            break;
-                        case ActionType::BuildHouse:
-                            npc.performAction(std::make_unique<BuildAction>(), targetTile);
                             break;
                         default:
                             npc.receiveFeedback(-1.0f, tileMap); // Penalty for idling
@@ -161,6 +161,20 @@ void Game::simulateNPCEntityBehavior(float deltaTime) {
 
 
 
+
+void Game::handleMarketActions(NPCEntity& npc, Tile& targetTile, ActionType actionType) {
+    if (auto market = dynamic_cast<Market*>(targetTile.getObject())) {
+        if (actionType == ActionType::BuyItem) {
+            // Example: Buy items from the market
+            market->buyItem(npc, "wood", 5); // Adjust item and quantity as needed
+        } else if (actionType == ActionType::SellItem) {
+            // Example: Sell items to the market
+            market->sellItem(npc, "stone", 3); // Adjust item and quantity as needed
+        }
+    } else {
+        getDebugConsole().logOnce("Market", "No market found at target tile.");
+    }
+}
 
 
 
@@ -205,13 +219,13 @@ void Game::moveToResource(NPCEntity& npc, ActionType actionType) {
             Tile& targetTile = *tileMap[targetY][targetX];
             switch (actionType) {
                 case ActionType::ChopTree:
-                    npc.performAction(std::make_unique<TreeAction>(), targetTile);
+                    npc.performAction(std::make_unique<TreeAction>(), targetTile, tileMap);
                     break;
                 case ActionType::MineRock:
-                    npc.performAction(std::make_unique<StoneAction>(), targetTile);
+                    npc.performAction(std::make_unique<StoneAction>(), targetTile, tileMap);
                     break;
                 case ActionType::GatherBush:
-                    npc.performAction(std::make_unique<BushAction>(), targetTile);
+                    npc.performAction(std::make_unique<BushAction>(), targetTile, tileMap);
                     break;
                 default:
                     break;
@@ -242,7 +256,7 @@ void Game::storeItems(NPCEntity& npc, Tile& tile) {
     }
 
     if (!mostAbundantResource.empty()) {
-        npc.performAction(std::make_unique<StoreItemAction>(mostAbundantResource, maxQuantity), tile);
+        npc.performAction(std::make_unique<StoreItemAction>(mostAbundantResource, maxQuantity), tile, tileMap);
     }
 }
 

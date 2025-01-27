@@ -18,7 +18,14 @@ TEST(ResourceCollectionTest, InventoryFullTest) {
     }
 
     TreeAction treeAction;
-    treeAction.perform(player, tile);
+
+    // Create a minimal tileMap with one tile
+    std::vector<std::vector<std::unique_ptr<Tile>>> tileMap(1);
+    tileMap[0].push_back(std::make_unique<Tile>());
+    tileMap[0][0]->placeObject(std::make_unique<Tree>(treeTexture)); // Place the tree object
+
+    // Perform the action with the updated tileMap
+    treeAction.perform(player, *tileMap[0][0], tileMap);
 
     // Ensure the action doesn't proceed when the inventory is full
     EXPECT_EQ(player.getInventoryItemCount("wood"), player.getMaxInventorySize());
@@ -35,7 +42,14 @@ TEST(ResourceCollectionTest, ObjectRemovedOnCollection) {
     tile.placeObject(std::make_unique<Bush>(bushTexture));
 
     BushAction bushAction;
-    bushAction.perform(player, tile);
+
+    // Create a minimal tileMap with one tile
+    std::vector<std::vector<std::unique_ptr<Tile>>> tileMap(1);
+    tileMap[0].push_back(std::make_unique<Tile>());
+    tileMap[0][0]->placeObject(std::make_unique<Bush>(bushTexture)); // Place the bush object
+
+    // Perform the action with the updated tileMap
+    bushAction.perform(player, *tileMap[0][0], tileMap);
 
     // Ensure the bush is removed after collection
     EXPECT_EQ(player.getInventoryItemCount("food"), 1);

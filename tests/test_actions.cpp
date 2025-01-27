@@ -4,7 +4,7 @@
 #include "Tile.hpp"
 
 TEST(ActionTest, TreeActionTest) {
-    NPCEntity player("Player1",100, 50, 50, 150.0f, 10, 100);
+    NPCEntity player("Player1", 100, 50, 50, 150.0f, 10, 100);
 
     TreeAction treeAction;
 
@@ -14,8 +14,13 @@ TEST(ActionTest, TreeActionTest) {
     Tile tile;
     tile.placeObject(std::make_unique<Tree>(treeTexture)); // Place a tree on the tile
 
-    // Perform the action
-    treeAction.perform(player, tile);
+    // Create a minimal tileMap with a single Tile
+    std::vector<std::vector<std::unique_ptr<Tile>>> tileMap(1);
+    tileMap[0].push_back(std::make_unique<Tile>());
+    tileMap[0][0]->placeObject(std::make_unique<Tree>(treeTexture));  // Place the tree object in the new tile
+
+    // Perform the action with the updated tileMap
+    treeAction.perform(player, *tileMap[0][0], tileMap);
 
     // Check if "wood" was added to the inventory
     EXPECT_EQ(player.getInventoryItemCount("wood"), 1);  
@@ -26,7 +31,7 @@ TEST(ActionTest, TreeActionTest) {
 
 // Unit test for StoneAction
 TEST(ActionTest, StoneActionTest) {
-    NPCEntity player("Player1",100, 50, 50, 150.0f, 10, 100);
+    NPCEntity player("Player1", 100, 50, 50, 150.0f, 10, 100);
 
     StoneAction stoneAction;
 
@@ -36,8 +41,13 @@ TEST(ActionTest, StoneActionTest) {
     Tile tile;
     tile.placeObject(std::make_unique<Rock>(stoneTexture)); // Place a rock on the tile
 
-    // Perform the action
-    stoneAction.perform(player, tile);
+    // Create a minimal tileMap with a single Tile
+    std::vector<std::vector<std::unique_ptr<Tile>>> tileMap(1);
+    tileMap[0].push_back(std::make_unique<Tile>());
+    tileMap[0][0]->placeObject(std::make_unique<Rock>(stoneTexture));  // Place the rock object in the new tile
+
+    // Perform the action with the updated tileMap
+    stoneAction.perform(player, *tileMap[0][0], tileMap);
 
     // Check if "stone" was added to the inventory
     EXPECT_EQ(player.getInventoryItemCount("stone"), 1); 
@@ -47,7 +57,7 @@ TEST(ActionTest, StoneActionTest) {
 }
 
 TEST(ActionTest, BushActionTest) {
-    NPCEntity player("Player1",100, 50, 50, 150.0f, 10, 100);
+    NPCEntity player("Player1", 100, 50, 50, 150.0f, 10, 100);
 
     BushAction bushAction;
 
@@ -57,8 +67,13 @@ TEST(ActionTest, BushActionTest) {
     Tile tile;
     tile.placeObject(std::make_unique<Bush>(bushTexture)); // Place a bush on the tile
 
-    // Perform the action
-    bushAction.perform(player, tile);
+    // Create a minimal tileMap with a single Tile
+    std::vector<std::vector<std::unique_ptr<Tile>>> tileMap(1);
+    tileMap[0].push_back(std::make_unique<Tile>());
+    tileMap[0][0]->placeObject(std::make_unique<Bush>(bushTexture));  // Place the bush object in the new tile
+
+    // Perform the action with the updated tileMap
+    bushAction.perform(player, *tileMap[0][0], tileMap);
 
     // Check if "food" was added to the inventory
     EXPECT_EQ(player.getInventoryItemCount("food"), 1);  
@@ -66,8 +81,3 @@ TEST(ActionTest, BushActionTest) {
     // Verify that the object was removed from the tile
     EXPECT_FALSE(tile.hasObject());
 }
-
-// int main(int argc, char **argv) {
-//     ::testing::InitGoogleTest(&argc, argv);
-//     return RUN_ALL_TESTS();
-// }

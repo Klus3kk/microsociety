@@ -79,10 +79,22 @@ void NPCEntity::regenerateEnergy(float rate) {
 }
 
 // Perform Action
-void NPCEntity::performAction(std::unique_ptr<Action> action, Tile& tile) {
+void NPCEntity::performAction(std::unique_ptr<Action> action, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
     if (action) {
-        action->perform(*this, tile);
+        action->perform(*this, tile, tileMap);  // Pass tileMap as the third argument
     }
+}
+
+void NPCEntity::setTarget(Tile* newTarget) {
+    target = newTarget;
+}
+
+
+bool NPCEntity::isAtTarget() const {
+    if (target == nullptr) {
+        return false;
+    }
+    return position == target->getPosition();
 }
 
 float& NPCEntity::getMoney() {

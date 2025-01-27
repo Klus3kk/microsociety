@@ -14,10 +14,6 @@ enum class ActionType {
     BuyItem,
     SellItem,
     Rest,
-    EvaluateState,
-    Explore,
-    Build,
-    SpecialAction,
     Idle
 };
 
