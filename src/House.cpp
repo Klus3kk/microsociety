@@ -77,21 +77,21 @@ bool House::takeFromStorage(const std::string& item, int quantity, NPCEntity& np
 
 // Upgrade the house
 bool House::upgrade(float& npcMoney, NPCEntity& npc) {
-    int upgradeCost = level * 50 + 25; // Dynamic cost scaling
-    int woodRequired = level * 15;    // Linear scaling
+    float upgradeCost = getUpgradeCost(); // Use the getter for dynamic cost
+    int woodRequired = level * 15;
     int stoneRequired = level * 10;
-    int bushRequired = level * 5;     // Added bushes as a requirement
+    int bushRequired = level * 5;
 
-    // Check if the NPC has enough money and resources
     if (npcMoney >= upgradeCost &&
         storage["wood"] >= woodRequired &&
         storage["stone"] >= stoneRequired &&
         storage["bush"] >= bushRequired) {
-        
+
         npcMoney -= upgradeCost;
         storage["wood"] -= woodRequired;
         storage["stone"] -= stoneRequired;
-        storage["bush"] -= bushRequired; // Deduct bushes
+        storage["bush"] -= bushRequired;
+
         level++;
         maxStorageCapacity += 10;
         energyRegenRate += 1.0f;
@@ -99,7 +99,6 @@ bool House::upgrade(float& npcMoney, NPCEntity& npc) {
         strengthBonus += 2;
         speedBonus += 1;
 
-        // Update NPC stats
         npc.setHealth(npc.getHealth() + healthBonus);
         npc.setStrength(npc.getStrength() + strengthBonus);
         npc.setSpeed(npc.getSpeed() + speedBonus);
@@ -108,22 +107,23 @@ bool House::upgrade(float& npcMoney, NPCEntity& npc) {
         return true;
     }
 
-    // Log missing requirements
+    // Log missing resources and money
     if (npcMoney < upgradeCost) {
-        getDebugConsole().log("House", npc.getName() + " needs " + std::to_string(upgradeCost - npcMoney) + " more money.");
+        getDebugConsole().log("House", "Insufficient money. Missing: " + std::to_string(upgradeCost - npcMoney));
     }
     if (storage["wood"] < woodRequired) {
-        getDebugConsole().log("House", "You need " + std::to_string(woodRequired - storage["wood"]) + " more wood.");
+        getDebugConsole().log("House", "Insufficient wood. Missing: " + std::to_string(woodRequired - storage["wood"]));
     }
     if (storage["stone"] < stoneRequired) {
-        getDebugConsole().log("House", "You need " + std::to_string(stoneRequired - storage["stone"]) + " more stone.");
+        getDebugConsole().log("House", "Insufficient stone. Missing: " + std::to_string(stoneRequired - storage["stone"]));
     }
     if (storage["bush"] < bushRequired) {
-        getDebugConsole().log("House", "You need " + std::to_string(bushRequired - storage["bush"]) + " more bush(es).");
+        getDebugConsole().log("House", "Insufficient bushes. Missing: " + std::to_string(bushRequired - storage["bush"]));
     }
 
     return false;
 }
+
 
 // Log upgrade details
 void House::logUpgradeDetails() const {
@@ -134,6 +134,11 @@ void House::logUpgradeDetails() const {
                                          ", Strength Bonus: +" + std::to_string(strengthBonus) +
                                          ", Speed Bonus: +" + std::to_string(speedBonus));
 }
+
+float House::getUpgradeCost() const {
+    return level * 50 + 25; // Dynamic calculation based on the current level
+}
+
 
 // Display the storage contents
 void House::displayStorage() const {

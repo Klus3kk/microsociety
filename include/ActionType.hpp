@@ -21,4 +21,4 @@ enum class ActionType {
     Idle
 };
 
-#endif // ACTION_TYPE_HPP
+#endif 

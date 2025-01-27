@@ -18,13 +18,13 @@ public:
     virtual ~Action() = default;
 
     // Perform action
-    virtual void perform(NPCEntity& player, Tile& tile) = 0; 
+    virtual void perform(NPCEntity& player, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) = 0;
 
     // Name of the action
     virtual std::string getActionName() const = 0;
 
     // Reward for performing this action
-    virtual float getReward() const { return 0.0f; } 
+    virtual float getReward() const { return 0.0f; }
 
     // Penalty for this action if applicable
     virtual float getPenalty() const { return 0.0f; }
@@ -33,7 +33,7 @@ public:
 // TreeAction
 class TreeAction : public Action {
 public:
-    void perform(NPCEntity& player, Tile& tile) override;
+    void perform(NPCEntity& player, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
     std::string getActionName() const override { return "Chop Tree"; }
     float getReward() const override { return 10.0f; }
 };
@@ -41,7 +41,7 @@ public:
 // StoneAction
 class StoneAction : public Action {
 public:
-    void perform(NPCEntity& player, Tile& tile) override;
+    void perform(NPCEntity& player, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
     std::string getActionName() const override { return "Mine Rock"; }
     float getReward() const override { return 8.0f; }
 };
@@ -49,7 +49,7 @@ public:
 // BushAction
 class BushAction : public Action {
 public:
-    void perform(NPCEntity& player, Tile& tile) override;
+    void perform(NPCEntity& player, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
     std::string getActionName() const override { return "Gather Bush"; }
     float getReward() const override { return 5.0f; }
 };
@@ -57,7 +57,7 @@ public:
 // MoveAction
 class MoveAction : public Action {
 public:
-    void perform(NPCEntity& player, Tile&) override;
+    void perform(NPCEntity& player, Tile&, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
     std::string getActionName() const override { return "Move"; }
     float getPenalty() const override { return -1.0f; }
 };
@@ -65,7 +65,7 @@ public:
 // TradeAction
 class TradeAction : public Action {
 public:
-    void perform(NPCEntity& player, Tile&) override;
+    void perform(NPCEntity& player, Tile&, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
     std::string getActionName() const override { return "Trade"; }
     float getReward() const override { return 15.0f; }
 };
@@ -73,7 +73,7 @@ public:
 // RegenerateEnergyAction
 class RegenerateEnergyAction : public Action {
 public:
-    void perform(NPCEntity& player, Tile& tile) override;
+    void perform(NPCEntity& player, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
     std::string getActionName() const override { return "Regenerate Energy"; }
     float getReward() const override { return 5.0f; }
 };
@@ -81,7 +81,7 @@ public:
 // UpgradeHouseAction
 class UpgradeHouseAction : public Action {
 public:
-    void perform(NPCEntity& player, Tile& tile) override;
+    void perform(NPCEntity& player, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
     std::string getActionName() const override { return "Upgrade House"; }
     float getReward() const override { return 20.0f; }
 };
@@ -94,7 +94,7 @@ private:
 
 public:
     StoreItemAction(const std::string& item, int quantity);
-    void perform(NPCEntity& player, Tile& tile) override;
+    void perform(NPCEntity& player, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
     std::string getActionName() const override;
     float getReward() const override { return 5.0f; }
 };
@@ -107,7 +107,7 @@ private:
 
 public:
     TakeOutItemsAction(const std::string& item, int quantity);
-    void perform(NPCEntity& player, Tile& tile) override;
+    void perform(NPCEntity& player, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
     std::string getActionName() const override;
     float getPenalty() const override { return -2.0f; }
 };
@@ -120,7 +120,7 @@ private:
 
 public:
     BuyItemAction(const std::string& item, int quantity);
-    void perform(NPCEntity& player, Tile& tile) override;
+    void perform(NPCEntity& player, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
     std::string getActionName() const override;
     float getReward() const override { return 10.0f; }
 };
@@ -133,7 +133,7 @@ private:
 
 public:
     SellItemAction(const std::string& item, int quantity);
-    void perform(NPCEntity& player, Tile& tile) override;
+    void perform(NPCEntity& player, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
     std::string getActionName() const override;
     float getReward() const override { return 12.0f; }
 };
@@ -141,7 +141,7 @@ public:
 // RestAction
 class RestAction : public Action {
 public:
-    void perform(NPCEntity& player, Tile&) override;
+    void perform(NPCEntity& player, Tile&, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
     std::string getActionName() const override { return "Rest"; }
     float getPenalty() const override { return -5.0f; }
 };
@@ -149,7 +149,7 @@ public:
 // EvaluateStateAction
 class EvaluateStateAction : public Action {
 public:
-    void perform(NPCEntity& player, Tile&) override;
+    void perform(NPCEntity& player, Tile&, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
     std::string getActionName() const override { return "Evaluate State"; }
     float getReward() const override { return 0.0f; }
 };
@@ -157,7 +157,7 @@ public:
 // ExploreAction
 class ExploreAction : public Action {
 public:
-    void perform(NPCEntity& player, Tile&) override;
+    void perform(NPCEntity& player, Tile&, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
     std::string getActionName() const override { return "Explore"; }
     float getReward() const override { return 5.0f; }
 };
@@ -165,7 +165,7 @@ public:
 // BuildAction
 class BuildAction : public Action {
 public:
-    void perform(NPCEntity& player, Tile& tile) override;
+    void perform(NPCEntity& player, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
     std::string getActionName() const override { return "Build"; }
     float getReward() const override { return 20.0f; }
 };
@@ -179,7 +179,7 @@ private:
 
 public:
     SpecialAction(const std::string& description, float reward, float penalty);
-    void perform(NPCEntity& player, Tile&) override;
+    void perform(NPCEntity& player, Tile&, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
     std::string getActionName() const override { return "Special Action"; }
     float getReward() const override { return reward; }
     float getPenalty() const override { return penalty; }
@@ -188,19 +188,18 @@ public:
 // IdleAction
 class IdleAction : public Action {
 public:
-    void perform(NPCEntity& player, Tile&) override;
+    void perform(NPCEntity& player, Tile&, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
     std::string getActionName() const override { return "Idle"; }
     float getPenalty() const override { return -20.0f; }
 };
 
+// PrioritizeAction
 class PrioritizeAction : public Action {
 public:
-    void perform(NPCEntity& player, Tile&) override;
+    void perform(NPCEntity& player, Tile&, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
     std::string getActionName() const override { return "Prioritize"; }
     float getReward() const override { return 10.0f; }
-    float getPenalty() const override { return -10.0f; } // Adjust as needed
+    float getPenalty() const override { return -10.0f; }
 };
-
-
 
 #endif

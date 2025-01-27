@@ -3,14 +3,15 @@
 
 #include "Entity.hpp"
 #include "debug.hpp"
-#include "Tile.hpp" // Include only for Tile reference
+#include "Tile.hpp"
 #include <unordered_map>
 #include <string>
 #include <sstream>
 #include <algorithm>
 #include <numeric>
-#include <memory> // For std::unique_ptr
+#include <memory>
 #include "ActionType.hpp"
+#include "QLearningAgent.hpp"
 
 class Action; // Forward declaration of Action class
 
@@ -19,6 +20,8 @@ private:
     static constexpr float MAX_HEALTH = 100.0f;
     static constexpr float MAX_ENERGY = 100.0f;
 
+    QLearningAgent agent; // Q-learning agent for decision-making
+    bool useQLearning = false; // Toggle Q-learning behavior
     std::unordered_map<std::string, int> inventory; // Map for items and their quantities
     int inventoryCapacity = 10;                     // Max inventory capacity
     std::string name;                               // NPC's name
@@ -28,13 +31,15 @@ private:
     int currentReward = 0;                          // Reward balance
     int currentPenalty = 0;                         // Penalty balance
     float currentActionCooldown = 0.0f;             // Time remaining before next action
-    const float actionCooldownTime = 1.0f;          // Time between actions (adjust as needed)
+    const float actionCooldownTime = 2.0f;          // Time between actions (adjust as needed)
 
+    ActionType lastAction;                          // Last action performed by NPC
+    State currentState;                             // Current state for Q-learning
 
 public:
     // Constructor
     NPCEntity(const std::string& npcName, float initHealth, float initHunger, float initEnergy,
-              float initSpeed, float initStrength, float initMoney);
+              float initSpeed, float initStrength, float initMoney, bool enableQLearning = false);
 
     // Getters
     const std::string& getName() const;
@@ -44,6 +49,10 @@ public:
     const std::unordered_map<std::string, int>& getInventory() const;
     int getMaxInventorySize() const;
     int getInventorySize() const;
+    // Modify getter to return a reference
+    float& getMoney(); // For modifiable access
+    const float& getMoney() const; // For read-only access
+
 
     // Inventory Management
     bool addToInventory(const std::string& item, int quantity);
@@ -61,10 +70,10 @@ public:
     // Decision-Making Hook (AI will override this)
     ActionType decideNextAction(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap);
     std::vector<ObjectType> scanNearbyTiles(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) const;
-    // Perform Action
-    void performAction(std::unique_ptr<Action> action, Tile& tile); // No changes needed as it modifies the entity
-    void update(float deltaTime); // Ensure this modifies the entity
 
+    // Perform Action
+    void performAction(std::unique_ptr<Action> action, Tile& tile);
+    void update(float deltaTime);
 
     // Handle NPC Death
     bool isDead() const;
@@ -75,6 +84,12 @@ public:
     void setHealth(float newHealth);
     void setStrength(float newStrength);
     void setSpeed(float newSpeed);
+
+    // Q-learning integration
+    int countNearbyObjects(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap, ObjectType type) const;
+    void receiveFeedback(float reward, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap); // Update Q-table after action
+    void enableQLearning(bool enable); // Toggle Q-learning behavior
+    State extractState(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) const; // State representation
 };
 
 #endif

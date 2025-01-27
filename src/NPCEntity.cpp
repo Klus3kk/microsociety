@@ -1,12 +1,15 @@
 #include "NPCEntity.hpp"
-#include "Actions.hpp" // Include full definition of Action
+#include "Actions.hpp"
 #include <algorithm>
 #include <numeric>
+#include <cmath>
 
 // Constructor
 NPCEntity::NPCEntity(const std::string& npcName, float initHealth, float initHunger, float initEnergy,
-                     float initSpeed, float initStrength, float initMoney)
-    : Entity(initHealth, initHunger, initEnergy, initSpeed, initStrength, initMoney), 
+                     float initSpeed, float initStrength, float initMoney, bool enableQLearning)
+    : Entity(initHealth, initHunger, initEnergy, initSpeed, initStrength, initMoney),
+      agent(0.1f, 0.9f, 0.1f), // Initialize Q-learning agent
+      useQLearning(enableQLearning), // Enable/disable Q-learning
       name(npcName) {}
 
 // Getters
@@ -74,6 +77,7 @@ void NPCEntity::regenerateEnergy(float rate) {
         getDebugConsole().log(name, name + "'s energy regenerated to " + std::to_string(energy));
     }
 }
+
 // Perform Action
 void NPCEntity::performAction(std::unique_ptr<Action> action, Tile& tile) {
     if (action) {
@@ -81,10 +85,27 @@ void NPCEntity::performAction(std::unique_ptr<Action> action, Tile& tile) {
     }
 }
 
+float& NPCEntity::getMoney() {
+    return money; // Allow modification
+}
+
+const float& NPCEntity::getMoney() const {
+    return money; // Read-only access
+}
+
+
 // Handle NPC Death
 bool NPCEntity::isDead() const {
     return energy == 0.0f || health == 0.0f;
 }
+
+void NPCEntity::receiveFeedback(float reward, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
+    if (useQLearning) {
+        State nextState = agent.extractState(tileMap, getPosition(), getEnergy(), getInventorySize(), getMaxInventorySize());
+        agent.updateQValue(currentState, lastAction, reward, nextState);
+    }
+}
+
 
 void NPCEntity::handleDeath() {
     getDebugConsole().log(name, name + " has died.");
@@ -108,10 +129,9 @@ void NPCEntity::setStrength(float newStrength) { strength = newStrength; }
 void NPCEntity::setSpeed(float newSpeed) { speed = newSpeed; }
 
 void NPCEntity::update(float deltaTime) {
-    // Ensure cooldown decrements properly
     if (currentActionCooldown > 0) {
         currentActionCooldown -= deltaTime;
-        currentActionCooldown = std::max(0.0f, currentActionCooldown); // Clamp to 0
+        currentActionCooldown = std::max(0.0f, currentActionCooldown);
     }
 
     if (energy > 0) {
@@ -125,20 +145,13 @@ void NPCEntity::update(float deltaTime) {
     getDebugConsole().log(name, "Updated NPC state for " + name);
 }
 
-
-// Brain of the AI
+// AI Decision-Making
 ActionType NPCEntity::decideNextAction(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
-    // Debug log cooldown
-    getDebugConsole().log("AI Cooldown", getName() + " cooldown: " + std::to_string(currentActionCooldown));
-
-    if (currentActionCooldown > 0) {
-        return ActionType::Idle; // Skip actions during cooldown
-    }
-
     auto nearbyObjects = scanNearbyTiles(tileMap);
 
+    // Log nearby objects
     for (ObjectType obj : nearbyObjects) {
-        getDebugConsole().log("AI Decision", getName() + " sees nearby object of type: " + std::to_string(static_cast<int>(obj)));
+        getDebugConsole().log("AI Vision", getName() + " sees object of type: " + std::to_string(static_cast<int>(obj)));
     }
 
     if (getEnergy() < 20.0f) {
@@ -150,16 +163,16 @@ ActionType NPCEntity::decideNextAction(const std::vector<std::vector<std::unique
         return ActionType::GatherBush;
     }
 
-    for (ObjectType objType : nearbyObjects) {
-        if (objType == ObjectType::Tree) {
+    for (ObjectType obj : nearbyObjects) {
+        if (obj == ObjectType::Tree) {
             currentActionCooldown = actionCooldownTime;
             return ActionType::ChopTree;
         }
-        if (objType == ObjectType::Rock) {
+        if (obj == ObjectType::Rock) {
             currentActionCooldown = actionCooldownTime;
             return ActionType::MineRock;
         }
-        if (objType == ObjectType::Bush) {
+        if (obj == ObjectType::Bush) {
             currentActionCooldown = actionCooldownTime;
             return ActionType::GatherBush;
         }
@@ -175,10 +188,23 @@ ActionType NPCEntity::decideNextAction(const std::vector<std::vector<std::unique
 }
 
 
+// Extract State for Q-Learning
+State NPCEntity::extractState(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) const {
+    State state;
+    state.posX = static_cast<int>(getPosition().x / GameConfig::tileSize);
+    state.posY = static_cast<int>(getPosition().y / GameConfig::tileSize);
+    state.nearbyTrees = countNearbyObjects(tileMap, ObjectType::Tree);
+    state.nearbyRocks = countNearbyObjects(tileMap, ObjectType::Rock);
+    state.nearbyBushes = countNearbyObjects(tileMap, ObjectType::Bush);
+    state.energyLevel = agent.quantize(getEnergy(), 0, 100, 3);
+    state.inventoryLevel = agent.quantize(getInventorySize(), 0, getMaxInventorySize(), 3);
+    return state;
+}
+
+// Scan Nearby Tiles
 std::vector<ObjectType> NPCEntity::scanNearbyTiles(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) const {
     std::vector<ObjectType> nearbyObjects;
 
-    // Scan surrounding tiles
     int npcX = static_cast<int>(getPosition().x / GameConfig::tileSize);
     int npcY = static_cast<int>(getPosition().y / GameConfig::tileSize);
 
@@ -193,4 +219,24 @@ std::vector<ObjectType> NPCEntity::scanNearbyTiles(const std::vector<std::vector
     }
 
     return nearbyObjects;
+}
+
+// Count Nearby Objects
+int NPCEntity::countNearbyObjects(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap, ObjectType type) const {
+    int count = 0;
+
+    int npcX = static_cast<int>(getPosition().x / GameConfig::tileSize);
+    int npcY = static_cast<int>(getPosition().y / GameConfig::tileSize);
+
+    for (int y = npcY - 1; y <= npcY + 1; ++y) {
+        for (int x = npcX - 1; x <= npcX + 1; ++x) {
+            if (y >= 0 && y < tileMap.size() && x >= 0 && x < tileMap[0].size()) {
+                if (tileMap[y][x]->hasObject() && tileMap[y][x]->getObject()->getType() == type) {
+                    count++;
+                }
+            }
+        }
+    }
+
+    return count;
 }

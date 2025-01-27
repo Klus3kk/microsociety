@@ -27,7 +27,7 @@ public:
     int getLevel() const { return level; }
     int getMaxStorageCapacity() const { return maxStorageCapacity; }
     float getEnergyRegenRate() const { return energyRegenRate; }
-
+    float getUpgradeCost() const; 
     // Actions
     void regenerateEnergy(NPCEntity& npc);  // Energy regeneration for NPC
     bool storeItem(const std::string& item, int quantity); // Store resources

@@ -88,41 +88,78 @@ void Game::run() {
 
 
 void Game::simulateNPCEntityBehavior(float deltaTime) {
-    size_t batchSize = 10; // Process NPCs in batches
+    size_t batchSize = 10;
+
     for (size_t i = 0; i < npcs.size(); i += batchSize) {
         for (size_t j = i; j < std::min(i + batchSize, npcs.size()); ++j) {
-            auto& NPCEntity = npcs[j];
+            auto& npc = npcs[j];
 
-            evaluateNPCEntityState(NPCEntity);
-            int x = static_cast<int>(NPCEntity.getPosition().x / GameConfig::tileSize);
-            int y = static_cast<int>(NPCEntity.getPosition().y / GameConfig::tileSize);
+            // Step 1: Evaluate NPC state
+            evaluateNPCEntityState(npc);
 
-            getDebugConsole().log("NPC", NPCEntity.getName() + " at (" + std::to_string(x) + ", " + std::to_string(y) + ")");
+            // Determine current position
+            int x = static_cast<int>(npc.getPosition().x / GameConfig::tileSize);
+            int y = static_cast<int>(npc.getPosition().y / GameConfig::tileSize);
 
+            getDebugConsole().log("NPC", npc.getName() + " at (" + std::to_string(x) + ", " + std::to_string(y) + ")");
+
+            // Step 2: Ensure position is valid within the map bounds
             if (x >= 0 && x < tileMap[0].size() && y >= 0 && y < tileMap.size()) {
                 Tile& targetTile = *tileMap[y][x];
-                ActionType actionType = NPCEntity.decideNextAction(tileMap);
-                switch (actionType) {
-                    case ActionType::ChopTree:
-                    case ActionType::MineRock:
-                    case ActionType::GatherBush:
-                        moveToResource(NPCEntity, actionType);
-                        break;
-                    case ActionType::RegenerateEnergy:
-                        NPCEntity.performAction(std::make_unique<RegenerateEnergyAction>(), targetTile);
-                        break;
-                    case ActionType::StoreItem:
-                        storeItems(NPCEntity, targetTile);
-                        break;
-                    default:
-                        performPathfinding(NPCEntity);
-                        break;
+
+                // Step 3: Check if NPC has reached a target and perform an action
+                if (npc.isAtTarget()) {
+                    ActionType actionType = npc.decideNextAction(tileMap);
+
+                    getDebugConsole().log("Q-Learning", npc.getName() + " chose action: " + std::to_string(static_cast<int>(actionType)));
+
+                    switch (actionType) {
+                        case ActionType::ChopTree:
+                        case ActionType::MineRock:
+                        case ActionType::GatherBush:
+                            npc.performAction(std::make_unique<TreeAction>(), targetTile); // Replace with respective action type
+                            npc.receiveFeedback(10.0f, tileMap); // Reward for gathering
+                            break;
+                        case ActionType::RegenerateEnergy:
+                            npc.performAction(std::make_unique<RegenerateEnergyAction>(), targetTile);
+                            npc.receiveFeedback(5.0f, tileMap); // Reward for regenerating
+                            break;
+                        case ActionType::StoreItem:
+                            storeItems(npc, targetTile);
+                            npc.receiveFeedback(8.0f, tileMap); // Reward for managing inventory
+                            break;
+                        case ActionType::SellItem:
+                        case ActionType::BuyItem:
+                            handleMarketActions(npc, targetTile, actionType); // Handles buying/selling
+                            break;
+                        case ActionType::BuildHouse:
+                            npc.performAction(std::make_unique<BuildAction>(), targetTile);
+                            break;
+                        default:
+                            npc.receiveFeedback(-1.0f, tileMap); // Penalty for idling
+                            break;
+                    }
+
+                    // Re-evaluate state and decide next step
+                    npc.setTarget(nullptr); // Clear target after action
+                    npc.update(deltaTime * simulationSpeed);
+                    continue; // Skip further processing
+                } else {
+                    // Step 4: If not at target, move toward it
+                    performPathfinding(npc);
                 }
+            } else {
+                getDebugConsole().log("NPC", npc.getName() + " is out of bounds.");
             }
-            NPCEntity.update(deltaTime * simulationSpeed);
+
+            // Step 5: Update NPC for the current frame
+            npc.update(deltaTime * simulationSpeed);
         }
     }
 }
+
+
+
 
 
 
@@ -131,6 +168,7 @@ void Game::moveToResource(NPCEntity& npc, ActionType actionType) {
     int currentX = static_cast<int>(npc.getPosition().x / GameConfig::tileSize);
     int currentY = static_cast<int>(npc.getPosition().y / GameConfig::tileSize);
 
+    // Locate the target resource
     int targetX = -1, targetY = -1;
     ObjectType targetType;
 
@@ -153,29 +191,40 @@ void Game::moveToResource(NPCEntity& npc, ActionType actionType) {
         }
     }
 
+    // If target is found, move or act
     if (targetX != -1 && targetY != -1) {
-        sf::Vector2f direction(
-            targetX - currentX,
-            targetY - currentY
-        );
-
+        sf::Vector2f direction(targetX - currentX, targetY - currentY);
         float length = std::sqrt(direction.x * direction.x + direction.y * direction.y);
-        if (length > 0) direction /= length; // Normalize direction
+        if (length > 0) direction /= length;
 
         sf::Vector2f newPosition = npc.getPosition() + direction * npc.getSpeed() * deltaTime * simulationSpeed;
 
-        if (newPosition.x >= 0 && newPosition.x < GameConfig::mapWidth * GameConfig::tileSize &&
-            newPosition.y >= 0 && newPosition.y < GameConfig::mapHeight * GameConfig::tileSize) {
-            npc.setPosition(newPosition.x, newPosition.y);
+        if (std::abs(newPosition.x - targetX * GameConfig::tileSize) < 5.0f &&
+            std::abs(newPosition.y - targetY * GameConfig::tileSize) < 5.0f) {
+            // Trigger action
+            Tile& targetTile = *tileMap[targetY][targetX];
+            switch (actionType) {
+                case ActionType::ChopTree:
+                    npc.performAction(std::make_unique<TreeAction>(), targetTile);
+                    break;
+                case ActionType::MineRock:
+                    npc.performAction(std::make_unique<StoneAction>(), targetTile);
+                    break;
+                case ActionType::GatherBush:
+                    npc.performAction(std::make_unique<BushAction>(), targetTile);
+                    break;
+                default:
+                    break;
+            }
+        } else {
+            npc.setPosition(newPosition.x, newPosition.y); // Keep moving
         }
-
-        // Debug log
-        getDebugConsole().log("MoveToResource", npc.getName() + " moving to (" +
-                              std::to_string(targetX) + ", " + std::to_string(targetY) + ")");
     } else {
         getDebugConsole().log("MoveToResource", npc.getName() + " found no valid target.");
     }
 }
+
+
 
 
 
@@ -422,6 +471,7 @@ void Game::generateMap() {
         occupiedPositions.insert({marketX, marketY});
         tileMap[marketY][marketX]->placeObject(std::make_unique<Market>(*marketTextures[m % marketTextures.size()]));
     }
+    
 }
 
 std::vector<NPCEntity> Game::generateNPCEntitys() const {
@@ -444,7 +494,8 @@ std::vector<NPCEntity> Game::generateNPCEntitys() const {
         occupiedPositions.insert({x, y});
 
         sf::Color NPCEntityColor(rand() % 256, rand() % 256, rand() % 256);
-        NPCEntity NPCEntity("NPCEntity" + std::to_string(i + 1), statDist(gen), statDist(gen), statDist(gen), 150.0f, 10, statDist(gen));
+        bool enableQLearning = (i % 2 == 0); // Enable Q-learning for every other NPC
+        NPCEntity NPCEntity("NPC" + std::to_string(i + 1), statDist(gen), statDist(gen), statDist(gen), 150.0f, 10, statDist(gen), enableQLearning);
         NPCEntity.setTexture(playerTexture, NPCEntityColor);
         NPCEntity.setPosition(x * GameConfig::tileSize, y * GameConfig::tileSize);
 
@@ -452,6 +503,7 @@ std::vector<NPCEntity> Game::generateNPCEntitys() const {
     }
     return npcs;
 }
+
 
 void Game::render() {
     for (const auto& row : tileMap) {
