@@ -261,35 +261,36 @@ void NPCEntity::performAction(ActionType action, Tile& tile,
                     return;
                 }
 
-                std::vector<std::string> itemsToSell = {"wood", "stone", "bush"};
-                bool soldSomething = false;
-
-                for (const auto& item : itemsToSell) {
-                    int inventoryCount = getInventoryItemCount(item);
-                    int requiredForHouse = house.getRequirementForItem(item);
-
-                    if (inventoryCount > requiredForHouse) {  // Only sell excess items
-                        int quantityToSell = std::min(inventoryCount - requiredForHouse, 3); // Sell max 3 per action
-                        if (marketObj->sellItem(*this, item, quantityToSell)) {
-                            actionReward = 10.0f * quantityToSell;
-                            soldSomething = true;
-                            getDebugConsole().log("MARKET", getName() + " sold " + std::to_string(quantityToSell) + " " + item);
-                            break;  // Sell only one item per action
-                        }
+                std::vector<std::string> itemsToSell;
+                for (const auto& [item, quantity] : inventory) {
+                    if (quantity > 1) { // Keep at least 1 in inventory
+                        itemsToSell.push_back(item);
                     }
                 }
 
-                if (!soldSomething) {
-                    getDebugConsole().log("ERROR", getName() + " has nothing to sell or is saving resources.");
-                    actionReward = -5.0f;
-                }
+                if (!itemsToSell.empty()) {
+                    static std::mt19937 rng(std::random_device{}());
+                    std::shuffle(itemsToSell.begin(), itemsToSell.end(), rng);
 
-                actionSuccess = soldSomething;
+                    std::uniform_int_distribution<int> sellQuantityDist(1, 3); // Random 1-3 items per sale
+                    std::string selectedItem = itemsToSell.front();
+                    int sellQuantity = std::min(sellQuantityDist(rng), getInventoryItemCount(selectedItem));
+
+                    if (marketObj->sellItem(*this, selectedItem, sellQuantity)) {
+                        actionReward = 10.0f * sellQuantity;
+                        getDebugConsole().log("MARKET", getName() + " sold " + std::to_string(sellQuantity) + " " + selectedItem);
+                        actionSuccess = true;
+                    }
+                } else {
+                    actionReward = -5.0f;
+                    getDebugConsole().log("ERROR", getName() + " has nothing to sell.");
+                }
             } else {
-                getDebugConsole().log("ERROR", "Market tile is NULL or invalid.");
                 actionReward = -5.0f;
+                getDebugConsole().log("ERROR", "Market tile is NULL or invalid.");
             }
             break;
+
 
 
 

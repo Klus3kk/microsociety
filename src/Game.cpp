@@ -282,35 +282,56 @@ void Game::regenerateResources() {
     std::uniform_int_distribution<int> distY(0, GameConfig::mapHeight - 1);
     std::uniform_int_distribution<int> resourceTypeDist(0, 2); // 0 = Tree, 1 = Rock, 2 = Bush
 
+    auto& textureManager = TextureManager::getInstance();
+
+    std::vector<const sf::Texture*> rockTextures = {
+        &textureManager.getTexture("rock1", "../assets/objects/rock1.png"),
+        &textureManager.getTexture("rock2", "../assets/objects/rock2.png"),
+        &textureManager.getTexture("rock3", "../assets/objects/rock3.png")
+    };
+
+    std::vector<const sf::Texture*> bushTextures = {
+        &textureManager.getTexture("bush1", "../assets/objects/bush1.png"),
+        &textureManager.getTexture("bush2", "../assets/objects/bush2.png")
+    };
+
+    std::vector<const sf::Texture*> treeTextures = {
+        &textureManager.getTexture("tree1", "../assets/objects/tree1.png"),
+        &textureManager.getTexture("tree2", "../assets/objects/tree2.png"),
+        &textureManager.getTexture("tree3", "../assets/objects/tree3.png")
+    };
+
     int numResourcesToRegenerate = GameConfig::mapWidth * GameConfig::mapHeight * 0.02; // Regenerate 2% of map tiles
 
     for (int i = 0; i < numResourcesToRegenerate; ++i) {
         int x = distX(gen);
         int y = distY(gen);
 
-        // Ensure the tile is grass or stone and does not have an object already
-        if (!tileMap[y][x]->hasObject() && dynamic_cast<GrassTile*>(tileMap[y][x].get())) {
+        if (!tileMap[y][x]->hasObject()) {
             int resourceType = resourceTypeDist(gen);
 
-            if (resourceType == 0) {
-                tileMap[y][x]->placeObject(std::make_unique<Tree>(
-                    TextureManager::getInstance().getTexture("tree1", "../assets/objects/tree1.png")
-                ));
-                getDebugConsole().log("Resource Regen", "New tree spawned at (" + std::to_string(x) + ", " + std::to_string(y) + ")");
-            } else if (resourceType == 1) {
-                tileMap[y][x]->placeObject(std::make_unique<Rock>(
-                    TextureManager::getInstance().getTexture("rock1", "../assets/objects/rock1.png")
-                ));
-                getDebugConsole().log("Resource Regen", "New rock spawned at (" + std::to_string(x) + ", " + std::to_string(y) + ")");
-            } else {
-                tileMap[y][x]->placeObject(std::make_unique<Bush>(
-                    TextureManager::getInstance().getTexture("bush1", "../assets/objects/bush1.png")
-                ));
-                getDebugConsole().log("Resource Regen", "New bush spawned at (" + std::to_string(x) + ", " + std::to_string(y) + ")");
+            // 🌳 Trees & Bushes regenerate only on GrassTile
+            if (auto grassTile = dynamic_cast<GrassTile*>(tileMap[y][x].get())) {
+                if (resourceType == 0) {
+                    grassTile->placeObject(std::make_unique<Tree>(*treeTextures[rand() % treeTextures.size()]));
+                    getDebugConsole().log("Resource Regen", "New tree spawned at (" + std::to_string(x) + ", " + std::to_string(y) + ")");
+                } else {
+                    grassTile->placeObject(std::make_unique<Bush>(*bushTextures[rand() % bushTextures.size()]));
+                    getDebugConsole().log("Resource Regen", "New bush spawned at (" + std::to_string(x) + ", " + std::to_string(y) + ")");
+                }
+            }
+
+            // 🪨 Rocks regenerate only on StoneTile
+            else if (auto stoneTile = dynamic_cast<StoneTile*>(tileMap[y][x].get())) {
+                if (resourceType == 1) {
+                    stoneTile->placeObject(std::make_unique<Rock>(*rockTextures[rand() % rockTextures.size()]));
+                    getDebugConsole().log("Resource Regen", "New rock spawned at (" + std::to_string(x) + ", " + std::to_string(y) + ")");
+                }
             }
         }
     }
 }
+
 
 
 void Game::simulateSocietalGrowth(float deltaTime) {
