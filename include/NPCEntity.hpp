@@ -43,7 +43,7 @@ private:
     int currentPenalty = 0;                         // Penalty balance
     float currentActionCooldown = 0.0f;             // Time remaining before next action
     const float actionCooldownTime = 2.0f;          // Time between actions (adjust as needed)
-
+    House* house;
     ActionType lastAction;                          // Last action performed by NPC
     State currentQLearningState;  
 
@@ -64,6 +64,8 @@ public:
     float& getMoney(); // For modifiable access
     const float& getMoney() const; // For read-only access
     void setTarget(Tile* newTarget);
+    void setHouse(House* assignedHouse); // Setter for house
+    House* getHouse();
 
     bool isAtTarget() const;
     // Inventory Management
@@ -80,7 +82,7 @@ public:
     void regenerateEnergy(float rate);
 
     // Decision-Making Hook (AI will override this)
-    ActionType decideNextAction(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap, const House& house);
+    ActionType decideNextAction(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap, const House& house, Market& market);
     std::vector<ObjectType> scanNearbyTiles(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) const;
     Tile* findNearestTile(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap, ObjectType type) const;
     Tile* getTarget() const; // Getter for the target tile

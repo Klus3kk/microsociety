@@ -1,5 +1,5 @@
 #include "MovablePanel.hpp"
-
+#include "debug.hpp"
 MovablePanel::MovablePanel(float width, float height, const std::string& title)
     : panelShape(sf::Vector2f(width, height))  // Set size safely
     , isDragging(false)
@@ -20,6 +20,10 @@ MovablePanel::MovablePanel(float width, float height, const std::string& title)
     panelTitle.setString(title.empty() ? "Panel" : title);
     panelTitle.setFillColor(sf::Color::White);
     updateTextPosition();
+
+    if (width <= 0 || height <= 0) {
+        getDebugConsole().log("ERROR", "Invalid size for MovablePanel: " + std::to_string(width) + "x" + std::to_string(height));
+    }
 }
 
 

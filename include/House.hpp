@@ -24,6 +24,10 @@ public:
 
     // Getters
     const std::unordered_map<std::string, int>& getStorage() const;
+    int getWoodRequirement() const;
+    int getStoneRequirement() const;
+    int getBushRequirement() const;
+    int getRequirementForItem(const std::string& item) const;
     int getLevel() const { return level; }
     int getMaxStorageCapacity() const { return maxStorageCapacity; }
     float getEnergyRegenRate() const { return energyRegenRate; }
@@ -48,4 +52,4 @@ public:
     ObjectType getType() const override;         // Return object type
 };
 
-#endif // HOUSE_HPP
+#endif 

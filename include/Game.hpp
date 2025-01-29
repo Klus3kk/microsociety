@@ -58,6 +58,10 @@ private:
     void render();
     void drawTileBorders();
 
+    float resourceRegenerationTimer = 0.0f;
+    const float regenerationInterval = 7.0f; // Regenerate every 3 seconds
+    void regenerateResources();
+
 
 public:
     // Constructor

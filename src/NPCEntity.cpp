@@ -57,6 +57,7 @@ bool NPCEntity::removeFromInventory(const std::string& item, int quantity) {
         return false;
     }
 
+    std::string itemCopy = item;
     it->second -= quantity;
     if (it->second <= 0) inventory.erase(it); // Remove if quantity reaches zero
 
@@ -158,6 +159,50 @@ void NPCEntity::performAction(ActionType action, Tile& tile,
             }
             break;
 
+        case ActionType::UpgradeHouse:
+            if (getMoney() >= house.getUpgradeCost()) {
+                bool hasAllItems = true;
+
+                // Store required resources before upgrading
+                for (const std::string& item : {"wood", "stone", "bush"}) {
+                    int requiredAmount = house.getRequirementForItem(item);
+                    int inventoryAmount = getInventoryItemCount(item);
+                    int storageAmount = house.getStoredItemCount(item);
+
+                    if (inventoryAmount + storageAmount < requiredAmount) {
+                        hasAllItems = false;
+                        getDebugConsole().log("HOUSE", getName() + " is missing " +
+                                            std::to_string(requiredAmount - (inventoryAmount + storageAmount)) +
+                                            " " + item + " for upgrade.");
+                    } else {
+                        // Store items to house if they are still in NPC's inventory
+                        if (inventoryAmount > 0) {
+                            int toStore = std::min(inventoryAmount, requiredAmount - storageAmount);
+                            removeFromInventory(item, toStore);
+                            house.storeItem(item, toStore);
+                            getDebugConsole().log("HOUSE", getName() + " stored " + std::to_string(toStore) + " " + item + " in house.");
+                        }
+                    }
+                }
+
+                if (hasAllItems) {
+                    if (house.upgrade(money, *this)) {
+                        actionReward = 20.0f;
+                        actionSuccess = true;
+                        getDebugConsole().log("HOUSE", getName() + " successfully upgraded the house!");
+                    } else {
+                        actionReward = -5.0f;
+                        getDebugConsole().log("HOUSE", getName() + " upgrade failed.");
+                    }
+                } else {
+                    actionReward = -10.0f; // Higher penalty for missing items
+                }
+            } else {
+                actionReward = -10.0f; // Higher penalty for not having enough money
+                getDebugConsole().log("HOUSE", getName() + " lacks money to upgrade!");
+            }
+            break;
+
 
         case ActionType::RegenerateEnergy:
             if (auto houseObj = dynamic_cast<House*>(tile.getObject())) {
@@ -170,39 +215,82 @@ void NPCEntity::performAction(ActionType action, Tile& tile,
             break;
 
         case ActionType::BuyItem:
-            if (auto marketObj = dynamic_cast<Market*>(tile.getObject())) {
-                if (getMoney() >= 10.0f) { // Example check
-                    marketObj->buyItem(*this, "wood", 5);
-                    actionReward = 5.0f;
-                    actionSuccess = true;
-                } else {
-                    actionReward = -5.0f; // Not enough money penalty
+            if (tile.hasObject() && tile.getObject()->getType() == ObjectType::Market) {
+                auto* marketObj = dynamic_cast<Market*>(tile.getObject());
+                if (!marketObj) {
+                    getDebugConsole().log("ERROR", "Market object is NULL. Skipping trade action.");
+                    return;
                 }
+
+                std::vector<std::string> itemsToBuy = {"wood", "stone", "bush"};
+                std::shuffle(itemsToBuy.begin(), itemsToBuy.end(), std::mt19937(std::random_device{}()));
+
+                bool boughtSomething = false;
+                for (const auto& item : itemsToBuy) {
+                    float itemPrice = marketObj->calculateBuyPrice(item);
+                    if (getMoney() >= itemPrice) {
+                        int maxAffordable = static_cast<int>(getMoney() / itemPrice);
+                        int quantityToBuy = std::min(maxAffordable, 3); // Limit purchases to 3 per transaction
+
+                        if (marketObj->buyItem(*this, item, quantityToBuy)) {
+                            actionReward = 5.0f * quantityToBuy;
+                            boughtSomething = true;
+                            getDebugConsole().log("MARKET", getName() + " bought " + std::to_string(quantityToBuy) + " " + item);
+                            break;  // Buy only one item per action
+                        }
+                    }
+                }
+
+                if (!boughtSomething) {
+                    getDebugConsole().log("ERROR", getName() + " could not afford anything.");
+                    actionReward = -5.0f;
+                }
+
+                actionSuccess = boughtSomething;
             } else {
+                getDebugConsole().log("ERROR", "Market tile is NULL or invalid.");
                 actionReward = -5.0f;
             }
             break;
 
         case ActionType::SellItem:
-            if (auto marketObj = dynamic_cast<Market*>(tile.getObject())) {
-                if (!inventory.empty()) {
-                    for (const auto& [item, quantity] : inventory) {
-                        if (item.empty()) {
-                            getDebugConsole().log("ERROR", getName() + " has an EMPTY inventory item name.");
-                            continue; // Skip invalid items
+            if (tile.hasObject() && tile.getObject()->getType() == ObjectType::Market) {
+                auto* marketObj = dynamic_cast<Market*>(tile.getObject());
+                if (!marketObj) {
+                    getDebugConsole().log("ERROR", "Market object is NULL. Skipping trade action.");
+                    return;
+                }
+
+                std::vector<std::string> itemsToSell = {"wood", "stone", "bush"};
+                bool soldSomething = false;
+
+                for (const auto& item : itemsToSell) {
+                    int inventoryCount = getInventoryItemCount(item);
+                    int requiredForHouse = house.getRequirementForItem(item);
+
+                    if (inventoryCount > requiredForHouse) {  // Only sell excess items
+                        int quantityToSell = std::min(inventoryCount - requiredForHouse, 3); // Sell max 3 per action
+                        if (marketObj->sellItem(*this, item, quantityToSell)) {
+                            actionReward = 10.0f * quantityToSell;
+                            soldSomething = true;
+                            getDebugConsole().log("MARKET", getName() + " sold " + std::to_string(quantityToSell) + " " + item);
+                            break;  // Sell only one item per action
                         }
-                        marketObj->sellItem(*this, item, quantity);
                     }
-                    actionReward = 5.0f;
-                    actionSuccess = true;
-                } else {
-                    getDebugConsole().log("ERROR", getName() + " tried to sell but inventory is EMPTY.");
+                }
+
+                if (!soldSomething) {
+                    getDebugConsole().log("ERROR", getName() + " has nothing to sell or is saving resources.");
                     actionReward = -5.0f;
                 }
+
+                actionSuccess = soldSomething;
             } else {
+                getDebugConsole().log("ERROR", "Market tile is NULL or invalid.");
                 actionReward = -5.0f;
             }
             break;
+
 
 
         case ActionType::Rest:
@@ -231,8 +319,24 @@ void NPCEntity::performAction(ActionType action, Tile& tile,
 }
 
 void NPCEntity::setTarget(Tile* newTarget) {
+    if (newTarget == nullptr || !newTarget->hasObject()) {
+        getDebugConsole().log("ERROR", getName() + " tried to target a NULL or empty tile.");
+        target = nullptr;
+        return;
+    }
+
+    if (newTarget->getObject()->getType() == ObjectType::Market) {
+        auto* marketObj = dynamic_cast<Market*>(newTarget->getObject());
+        if (!marketObj) {
+            getDebugConsole().log("ERROR", "Market object is NULL. Preventing invalid assignment.");
+            target = nullptr;
+            return;
+        }
+    }
+    
     target = newTarget;
 }
+
 
 
 bool NPCEntity::isAtTarget() const {
@@ -258,17 +362,18 @@ bool NPCEntity::isDead() const {
 
 void NPCEntity::receiveFeedback(float reward, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
     if (useQLearning) {
-        // Extract correct Q-learning state
+        if (lastAction == ActionType::None) {
+            lastAction = ActionType::Rest; // Default fallback action.
+        }
+        
         State previousState = currentQLearningState;  
         State nextState = agent.extractState(tileMap, getPosition(), getEnergy(), getInventorySize(), getMaxInventorySize());
-        
-        // Update Q-learning table
-        agent.updateQValue(previousState, lastAction, reward, nextState);
 
-        // Update the current state
+        agent.updateQValue(previousState, lastAction, reward, nextState);
         currentQLearningState = nextState;
     }
 }
+
 
 
 
@@ -314,124 +419,110 @@ void NPCEntity::update(float deltaTime) {
 Tile* NPCEntity::findNearestTile(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap, ObjectType type) const {
     Tile* nearestTile = nullptr;
     float shortestDistance = std::numeric_limits<float>::max();
+    int fallbackX = -1, fallbackY = -1;
 
     for (int y = 0; y < tileMap.size(); ++y) {
         for (int x = 0; x < tileMap[y].size(); ++x) {
             if (tileMap[y][x]->hasObject() && tileMap[y][x]->getObject()->getType() == type) {
-                float distance = std::hypot(
-                    tileMap[y][x]->getPosition().x - getPosition().x,
-                    tileMap[y][x]->getPosition().y - getPosition().y
-                );
+                float distance = std::hypot(tileMap[y][x]->getPosition().x - getPosition().x,
+                                            tileMap[y][x]->getPosition().y - getPosition().y);
                 if (distance < shortestDistance) {
                     shortestDistance = distance;
                     nearestTile = tileMap[y][x].get();
                 }
+                fallbackX = x;
+                fallbackY = y;
             }
         }
     }
 
+    if (!nearestTile && fallbackX != -1) {
+        getDebugConsole().log("ERROR", getName() + " could not find target. Using fallback tile.");
+        return tileMap[fallbackY][fallbackX].get();
+    }
+
     return nearestTile;
 }
-
-
-
 
 Tile* NPCEntity::getTarget() const {
     return target;
 }
 
 // AI Decision-Making
-ActionType NPCEntity::decideNextAction(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap, const House& house) {
-    // Step 0: Use Q-Learning if enabled
+ActionType NPCEntity::decideNextAction(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap, 
+                                       const House& house, Market& market) {
+    ActionType action = ActionType::None;  
+
     if (useQLearning) {
         currentQLearningState = agent.extractState(tileMap, getPosition(), getEnergy(), getInventorySize(), getMaxInventorySize());
-        lastAction = agent.decideAction(currentQLearningState);
-        getDebugConsole().log("Decision", name + " (Q-Learning) decided: " + std::to_string(static_cast<int>(lastAction)));
-        return lastAction;
-    }
-
-    // Step 1: Check if NPC has **Critical Needs** 
-    if (getEnergy() < 15.0f) {
-        getDebugConsole().log("Decision", name + " has critically low energy! Going to rest.");
-        return ActionType::RegenerateEnergy;
-    }
-
-    if (getHunger() < 20.0f) {
-        getDebugConsole().log("Decision", name + " is starving! Gathering bush.");
-        return ActionType::GatherBush;
-    }
-
-    if (getInventorySize() >= getMaxInventorySize()) {
-        getDebugConsole().log("Decision", name + " inventory full, storing items.");
-        return ActionType::StoreItem;
-    }
-
-    // Step 2: Check for the **Nearest Gatherable Resource**
-    auto nearbyObjects = scanNearbyTiles(tileMap);
-    std::shuffle(nearbyObjects.begin(), nearbyObjects.end(), std::mt19937{std::random_device{}()});
-
-    for (ObjectType obj : nearbyObjects) {
-        if (obj == ObjectType::Tree) {
-            getDebugConsole().log("Decision", name + " chopping tree.");
-            return ActionType::ChopTree;
+        action = agent.decideAction(currentQLearningState);
+    } else {
+        if (getEnergy() < 15.0f) {
+            action = ActionType::RegenerateEnergy;
+        } 
+        else if (getInventorySize() >= getMaxInventorySize()) {
+            if (house.isStorageFull()) {
+                // If house storage is also full, randomly sell items
+                action = ActionType::SellItem;
+            } else {
+                action = ActionType::StoreItem;
+            }
         }
-        if (obj == ObjectType::Rock) {
-            getDebugConsole().log("Decision", name + " mining rock.");
-            return ActionType::MineRock;
+        else if (getInventoryItemCount("wood") >= house.getWoodRequirement() &&
+                getInventoryItemCount("stone") >= house.getStoneRequirement() &&
+                getInventoryItemCount("bush") >= house.getBushRequirement()) {
+            action = ActionType::StoreItem; // Store before upgrading
+        } 
+        else if (house.isUpgradeAvailable(getMoney())) {  
+            action = ActionType::UpgradeHouse; 
         }
-        if (obj == ObjectType::Bush) {
-            getDebugConsole().log("Decision", name + " gathering bush.");
-            return ActionType::GatherBush;
-        }
-    }
-
-    // Step 3: **Check for Market - Trade Items if Possible**
-    Tile* nearestMarket = findNearestTile(tileMap, ObjectType::Market);
-    if (nearestMarket) {
-        if (!inventory.empty()) {
-            int woodCount = getInventoryItemCount("wood");
-            int stoneCount = getInventoryItemCount("stone");
-            int bushCount = getInventoryItemCount("bush");
-
-            // Ensure NPC keeps at least some wood, stone, and bushes before selling
-            if (woodCount > 5 || stoneCount > 3 || bushCount > 2) {
-                getDebugConsole().log("Decision", name + " selling surplus resources.");
-                return ActionType::SellItem;
+        else {
+            std::string bestItemToSell = market.suggestBestResourceToSell();
+            if (!bestItemToSell.empty() && getInventoryItemCount(bestItemToSell) > 2) {
+                action = ActionType::SellItem;
+            } 
+            else {
+                std::string bestItemToBuy = market.suggestBestResourceToBuy();
+                if (!bestItemToBuy.empty() && getMoney() >= market.calculateBuyPrice(bestItemToBuy)) {
+                    action = ActionType::BuyItem;
+                } 
+                else {
+                    auto nearbyObjects = scanNearbyTiles(tileMap);
+                    for (ObjectType obj : nearbyObjects) {
+                        if (obj == ObjectType::Tree) action = ActionType::ChopTree;
+                        if (obj == ObjectType::Rock) action = ActionType::MineRock;
+                        if (obj == ObjectType::Bush) action = ActionType::GatherBush;
+                    }
+                }
             }
         }
     }
 
-
-    // Step 4: **Check for House - Retrieve Stored Items**
-    Tile* nearestHouse = findNearestTile(tileMap, ObjectType::House);
-    if (nearestHouse) {
-        if (getInventorySize() < getMaxInventorySize()) {
-            getDebugConsole().log("Decision", name + " retrieving stored items.");
-            return ActionType::TakeOutItems;
-        }
-
-        // Step 5: **House Upgrade Logic**
-        if (house.isUpgradeAvailable(getMoney())) {
-            getDebugConsole().log("Decision", name + " upgrading house.");
-            return ActionType::UpgradeHouse;
-        }
+    if (action == ActionType::None) {
+        static std::mt19937 rng(std::random_device{}()); 
+        std::uniform_int_distribution<int> actionDist(1, static_cast<int>(ActionType::SellItem));
+        action = static_cast<ActionType>(actionDist(rng));  // Randomize actions
+        getDebugConsole().log("DEBUG", getName() + " was stuck, randomizing action to: " + std::to_string(static_cast<int>(action)));
     }
 
-    // Step 6: **Rest if energy is below 40**
-    if (getEnergy() < 40.0f) {
-        getDebugConsole().log("Decision", name + " slightly low energy, resting.");
-        return ActionType::Rest;
-    }
 
-    // Step 7: **Final Fallback: Exploration**
-    getDebugConsole().log("Decision", name + " no immediate action available, exploring.");
-    return ActionType::Move;
+
+    return action;
 }
 
 
 
 
+void NPCEntity::setHouse(House* assignedHouse) {
+    house = assignedHouse;
+}
 
+House* NPCEntity::getHouse() {
+    if (!house) {
+        getDebugConsole().log("ERROR", name + " has no house assigned!");
+    }
+    return house;
+}
 
 
 // Extract State for Q-Learning

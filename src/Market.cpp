@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <cmath>
 #include <numeric>
-
+#include "House.hpp"
 // Default constructor
 Market::Market() {
     sf::Texture defaultTexture;
@@ -46,6 +46,7 @@ float Market::getPrice(const std::string& item) const {
     return it != prices.end() ? it->second : 0.0f;
 }
 
+
 // Calculate buy price
 float Market::calculateBuyPrice(const std::string& item) const {
     return std::round(getPrice(item) * buyMargin * 10) / 10.0f;
@@ -57,96 +58,72 @@ float Market::calculateSellPrice(const std::string& item) const {
 }
 
 // Player buys an item
-bool Market::buyItem(NPCEntity& player, const std::string& item, int quantity) {
-    getDebugConsole().log("DEBUG", player.getName() + " is trying to buy " + std::to_string(quantity) + " " + item);
+bool Market::buyItem(NPCEntity& npc, const std::string& item, int quantity) {
+    if (quantity <= 0 || item.empty()) return false;
+    if (prices.find(item) == prices.end()) setPrice(item, 10.0f);
 
-    if (prices.find(item) == prices.end()) {
-        getDebugConsole().log("Market", "Item not found in price list. Setting default price: " + item);
-        setPrice(item, 10.0f);
+    float itemPrice = calculateBuyPrice(item);
+    float totalCost = itemPrice * quantity;
+
+    if (npc.getMoney() < totalCost) {  // Ensure NPC can afford purchase
+        getDebugConsole().log("ERROR", npc.getName() + " cannot afford " + std::to_string(quantity) + " " + item);
+        return false;
     }
 
-    float cost = calculateBuyPrice(item) * quantity;
-    getDebugConsole().log("DEBUG", "Total cost for " + std::to_string(quantity) + " " + item + " is $" + std::to_string(cost));
-
-    if (player.getMoney() >= cost) {
-        player.setMoney(player.getMoney() - cost);
-        player.addToInventory(item, quantity);
-
-        demand[item] += quantity;
-        supply[item] = std::max(0, supply[item] - quantity);
-        prices[item] = adjustPriceOnBuy(prices[item], demand[item], supply[item], priceAdjustmentFactor);
-
-        trackPriceHistory(item);
-        totalBuyTransactions[item] += quantity;
-        totalExpenditure[item] += cost;
-
-        player.addReward(10.0f * quantity);
-        getDebugConsole().log("MARKET", player.getName() + " bought " + std::to_string(quantity) + " " + item + " for $" + std::to_string(cost));
-        return true;
+    if (!npc.addToInventory(item, quantity)) {
+        getDebugConsole().log("ERROR", npc.getName() + " inventory FULL. Cannot buy " + item);
+        return false;
     }
 
-    getDebugConsole().log("ERROR", player.getName() + " does not have enough money to buy " + item);
-    player.addPenalty(5.0f);
-    return false;
+    npc.setMoney(npc.getMoney() - totalCost);
+    demand[item] += quantity;
+    supply[item] = std::max(0, supply[item] - quantity);
+    prices[item] = adjustPriceOnBuy(prices[item], demand[item], supply[item], priceAdjustmentFactor);
+
+    totalBuyTransactions[item] += quantity;
+    totalExpenditure[item] += totalCost;
+    npc.addReward(5.0f * quantity);
+
+    getDebugConsole().log("MARKET", npc.getName() + " successfully bought " + std::to_string(quantity) + " " + item);
+    return true;
 }
 
 
+
+
+
 // Player sells an item
-bool Market::sellItem(NPCEntity& player, const std::string& item, int quantity) {
-    getDebugConsole().log("DEBUG", "Sell attempt: " + player.getName() + " selling " + std::to_string(quantity) + " " + item);
+bool Market::sellItem(NPCEntity& npc, const std::string& item, int quantity) {
+    if (item.empty() || quantity <= 0) return false;
+    if (prices.find(item) == prices.end()) setPrice(item, 10.0f);
 
-    if (item.empty()) {
-        getDebugConsole().log("ERROR", "Market::sellItem() received an EMPTY item name from " + player.getName());
+    int inventoryCount = npc.getInventoryItemCount(item);
+    if (inventoryCount < quantity) {
+        getDebugConsole().log("ERROR", npc.getName() + " tried to sell more than they have.");
         return false;
     }
 
-    if (prices.find(item) == prices.end()) {
-        getDebugConsole().log("Market", "Item not found in price list. Setting default price for: " + item);
-        setPrice(item, 10.0f);
-    }
-
-    int playerItemCount = player.getInventoryItemCount(item);
-    getDebugConsole().log("DEBUG", player.getName() + " has " + std::to_string(playerItemCount) + " " + item);
-
-    if (playerItemCount < quantity) {
-        getDebugConsole().log("ERROR", player.getName() + " tried to sell " + std::to_string(quantity) +
-                            " " + item + "(s) but only has " + std::to_string(playerItemCount));
+    if (!npc.removeFromInventory(item, quantity)) {
+        getDebugConsole().log("ERROR", "Failed to remove " + std::to_string(quantity) + " " + item);
         return false;
     }
-
-    // Prevent selling all essential resources
-    if ((item == "wood" && playerItemCount - quantity < 1) || 
-        (item == "stone" && playerItemCount - quantity < 1) ||
-        (item == "bush" && playerItemCount - quantity < 1)) {
-        getDebugConsole().log("Market", player.getName() + " blocked from selling " + item + " to avoid depletion");
-        return false;
-    }
-
-
 
     float revenue = calculateSellPrice(item) * quantity;
-    
-    if (!player.removeFromInventory(item, quantity)) {
-        getDebugConsole().log("ERROR", "Failed to remove " + std::to_string(quantity) + " " + item + "(s) from inventory.");
-        return false;
-    }
-
-    player.setMoney(player.getMoney() + revenue);
-
+    npc.setMoney(npc.getMoney() + revenue);
     supply[item] += quantity;
     demand[item] = std::max(0, demand[item] - quantity);
     prices[item] = adjustPriceOnSell(prices[item], demand[item], supply[item], priceAdjustmentFactor);
 
-    trackPriceHistory(item);
     totalSellTransactions[item] += quantity;
     totalRevenue[item] += revenue;
+    npc.addReward(10.0f * quantity);
 
-    player.addReward(15.0f * quantity);
-    getDebugConsole().log("Market", player.getName() + " sold " + std::to_string(quantity) +
-                          " " + item + "(s) for $" + std::to_string(revenue));
-
+    getDebugConsole().log("MARKET", npc.getName() + " successfully sold " + std::to_string(quantity) + " " + item);
     return true;
 }
+
+
+
 
 
 
@@ -166,33 +143,43 @@ float Market::adjustPriceOnSell(float currentPrice, int demand, int supply, floa
     return std::clamp(currentPrice * (1.0f + adjustmentFactor), minimumPrice, currentPrice * 2.0f);
 }
 
-// Suggest the best resource to buy
 std::string Market::suggestBestResourceToBuy() const {
-    std::string bestItem;
-    float maxProfitMargin = -1.0f;
+    if (prices.empty()) return "wood"; // Default to wood if somehow empty.
 
-    for (const auto& [item, price] : prices) {
-        float profitMargin = calculateSellPrice(item) - calculateBuyPrice(item);
-        if (profitMargin > maxProfitMargin) {
-            maxProfitMargin = profitMargin;
-            bestItem = item;
+    std::vector<std::string> essentialItems = {"wood", "stone", "bush"};
+    std::string bestItem = "";
+    float minPrice = std::numeric_limits<float>::max();
+
+    for (const auto& item : essentialItems) {
+        if (prices.find(item) != prices.end() && demand.at(item) > 5) { // Buy if in demand
+            float price = calculateBuyPrice(item);
+            if (price < minPrice) {
+                minPrice = price;
+                bestItem = item;
+            }
         }
     }
 
-    return bestItem;
+    return bestItem.empty() ? "wood" : bestItem;  // Still defaults if no items qualify
 }
 
-// Suggest the best resource to sell
-std::string Market::suggestBestResourceToSell() const {
-    std::string bestItem;
-    float maxProfit = -1.0f;
 
-    for (const auto& [item, price] : prices) {
+std::string Market::suggestBestResourceToSell() const {
+    if (prices.empty() || supply.empty()) {
+        getDebugConsole().log("ERROR", "Market::suggestBestResourceToSell() - Prices or supply list is EMPTY.");
+        return "";
+    }
+
+    std::vector<std::string> essentialItems = {"wood", "stone", "bush"};
+    std::string bestItem = "";
+    float highestPrice = 0.0f;
+
+    for (const auto& item : essentialItems) {
         auto supplyIt = supply.find(item);
-        if (supplyIt != supply.end()) {
-            float revenue = calculateSellPrice(item) * supplyIt->second;
-            if (revenue > maxProfit) {
-                maxProfit = revenue;
+        if (supplyIt != supply.end() && supplyIt->second > 0) {
+            float sellPrice = calculateSellPrice(item);
+            if (sellPrice > highestPrice) {
+                highestPrice = sellPrice;
                 bestItem = item;
             }
         }
@@ -200,6 +187,7 @@ std::string Market::suggestBestResourceToSell() const {
 
     return bestItem;
 }
+
 
 
 // Simulate market dynamics

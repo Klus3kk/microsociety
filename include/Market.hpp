@@ -63,8 +63,6 @@ public:
     // Market Intelligence for AI
     std::string suggestBestResourceToBuy() const;         // Suggest resource with the highest ROI
     std::string suggestBestResourceToSell() const;        // Suggest resource with the best profit margin
-    bool isResourceAvailable(const std::string& item, int quantity) const; // Check if a resource is available
-
     // Dynamic Market Adjustments
     void stabilizePrices(float deltaTime);               // Adjust prices to stabilize market
     void simulateMarketDynamics(float deltaTime);        // Simulate changes in demand and supply over time

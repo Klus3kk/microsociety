@@ -9,7 +9,9 @@
 // Constructor
 Game::Game()
     : window(sf::VideoMode(GameConfig::windowWidth, GameConfig::windowHeight), "MicroSociety", sf::Style::Titlebar | sf::Style::Close),
-      house(TextureManager::getInstance().getTexture("house1", "../assets/objects/house1.png"), 1) ,clockGUI(700, 100) {
+      house(TextureManager::getInstance().getTexture("house1", "../assets/objects/house1.png"), 1),
+      market(), 
+      clockGUI(700, 100) {
 #ifdef _WIN32
     ui.adjustLayout(window);
 #endif
@@ -69,6 +71,13 @@ void Game::run() {
         sf::Time dt = clock.restart();
         deltaTime = dt.asSeconds();
 
+        // Update resource regeneration timer
+        resourceRegenerationTimer += deltaTime;
+        if (resourceRegenerationTimer >= regenerationInterval) {
+            regenerateResources();
+            resourceRegenerationTimer = 0.0f;
+        }
+
         // Simulate NPC behavior
         simulateNPCEntityBehavior(deltaTime * simulationSpeed);
         simulateSocietalGrowth(deltaTime * simulationSpeed);
@@ -95,11 +104,13 @@ void Game::run() {
 
 void Game::simulateNPCEntityBehavior(float deltaTime) {
     for (auto& npc : npcs) {
+        getDebugConsole().log("DEBUG", "Processing " + npc.getName());
+
         switch (npc.getState()) {
             case NPCState::Idle: {
-                ActionType actionType = npc.decideNextAction(tileMap, house);
+                ActionType actionType = npc.decideNextAction(tileMap, house, market);
                 npc.setCurrentAction(actionType);
-
+                
                 Tile* nearestTile = nullptr;
                 switch (actionType) {
                     case ActionType::ChopTree:
@@ -122,6 +133,7 @@ void Game::simulateNPCEntityBehavior(float deltaTime) {
                         nearestTile = npc.findNearestTile(tileMap, ObjectType::Market);
                         break;
                     default:
+                        getDebugConsole().log("DEBUG", npc.getName() + " did not pick a valid action.");
                         break;
                 }
 
@@ -131,7 +143,7 @@ void Game::simulateNPCEntityBehavior(float deltaTime) {
                     getDebugConsole().log("NPC", npc.getName() + " is walking to " + std::to_string(static_cast<int>(actionType)));
                 } else {
                     npc.setState(NPCState::Idle);
-                    getDebugConsole().log("NPC", npc.getName() + " has no valid target.");
+                    getDebugConsole().log("ERROR", npc.getName() + " has no valid target.");
                 }
                 break;
             }
@@ -149,37 +161,58 @@ void Game::simulateNPCEntityBehavior(float deltaTime) {
                 if (npc.getTarget()) {
                     npc.performAction(npc.getCurrentAction(), *npc.getTarget(), tileMap, market, house);
                     npc.setTarget(nullptr);
+                } else {
+                    getDebugConsole().log("ERROR", npc.getName() + " tried to perform action but target is NULL.");
                 }
+                npc.setState(NPCState::Idle);
+                break;
             }
-            npc.setState(NPCState::Idle);
-            break;
         }
     }
 }
-
-
-
-
-
-
-
 
 
 void Game::handleMarketActions(NPCEntity& npc, Tile& targetTile, ActionType actionType) {
-    if (auto market = dynamic_cast<Market*>(targetTile.getObject())) {
-        if (actionType == ActionType::BuyItem) {
-            // Example: Buy items from the market
-            market->buyItem(npc, "wood", 5); // Adjust item and quantity as needed
-        } else if (actionType == ActionType::SellItem) {
-            // Example: Sell items to the market
-            market->sellItem(npc, "stone", 3); // Adjust item and quantity as needed
+    if (!targetTile.hasObject()) {
+        getDebugConsole().log("ERROR", npc.getName() + " tried to access a NON-EXISTENT market.");
+        return;
+    }
+
+    auto* market = dynamic_cast<Market*>(targetTile.getObject());
+    if (!market) {
+        getDebugConsole().log("ERROR", "Market reference is NULL. NPC cannot trade.");
+        return;
+    }
+
+    // Prevent market interaction if no prices are initialized
+    if (market->getPrices().empty()) {
+        getDebugConsole().log("ERROR", "Market has no prices set. Aborting trade.");
+        return;
+    }
+
+    if (actionType == ActionType::BuyItem) {
+        std::string bestItemToBuy = market->suggestBestResourceToBuy();
+        if (bestItemToBuy.empty()) {
+            getDebugConsole().log("MARKET", npc.getName() + " found nothing worth buying.");
+            return;
         }
-    } else {
-        getDebugConsole().logOnce("Market", "No market found at target tile.");
+
+        float itemPrice = market->calculateBuyPrice(bestItemToBuy);
+        if (npc.getMoney() >= itemPrice) {
+            market->buyItem(npc, bestItemToBuy, 5);
+            getDebugConsole().log("MARKET", npc.getName() + " bought 5 " + bestItemToBuy);
+        }
+    } else if (actionType == ActionType::SellItem) {
+        std::string bestItemToSell = market->suggestBestResourceToSell();
+        if (bestItemToSell.empty()) {
+            getDebugConsole().log("MARKET", npc.getName() + " has nothing to sell.");
+            return;
+        }
+
+        market->sellItem(npc, bestItemToSell, 5);
+        getDebugConsole().log("MARKET", npc.getName() + " sold 5 " + bestItemToSell);
     }
 }
-
-
 
 void Game::moveToResource(NPCEntity& npc, ActionType actionType) {
     int currentX = static_cast<int>(npc.getPosition().x / GameConfig::tileSize);
@@ -216,11 +249,6 @@ void Game::moveToResource(NPCEntity& npc, ActionType actionType) {
     }
 }
 
-
-
-
-
-
 void Game::storeItems(NPCEntity& npc, Tile& tile) {
     auto inventory = npc.getInventory();
     std::string mostAbundantResource;
@@ -240,45 +268,50 @@ void Game::storeItems(NPCEntity& npc, Tile& tile) {
     }
 }
 
-
-
-
-    //         int targetTileX = static_cast<int>(std::round(player.getPosition().x / GameConfig::tileSize));
-    //     int targetTileY = static_cast<int>(std::round(player.getPosition().y / GameConfig::tileSize));
-
-    //     // Declare a raw pointer to the tile for use throughout the logic
-    //     Tile* targetTile = nullptr;
-
-    //     if (targetTileX >= 0 && targetTileX < tileMap[0].size() &&
-    //         targetTileY >= 0 && targetTileY < tileMap.size()) {
-            
-    //         targetTile = tileMap[targetTileY][targetTileX].get();
-    // if (player.getEnergy() > 0) {
-    //         float energyFactor = player.getEnergyPercentage();
-
-    //         if (targetTile) {
-    //             if (auto stoneTile = dynamic_cast<StoneTile*>(targetTile)) {
-    //                 player.setSpeed(player.getBaseSpeed() * 0.2f * energyFactor); // Slower on stone tiles
-    //             } else {
-    //                 player.setSpeed(player.getBaseSpeed() * energyFactor); // Normal speed elsewhere
-    //             }
-    //         } else {
-    //             player.setSpeed(player.getBaseSpeed() * energyFactor); // Fallback if no tile detected
-    //         }
-
-    //         player.consumeEnergy(deltaTime * 0.5f); // Energy drains over time
-    //     } else {
-    //         player.setSpeed(0.0f); // Prevent movement if out of energy
-    //         // No additional regeneration logic here; it's handled by H action.
-    //     }
-// }
-
 void Game::evaluateNPCEntityState(NPCEntity& NPCEntity) {
     if (NPCEntity.getEnergy() <= 0.0f) {
         getDebugConsole().log("NPCEntity", NPCEntity.getName() + " ran out of energy and died.");
         // Handle NPCEntity death (remove or reset state)
     }
 }
+
+void Game::regenerateResources() {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<int> distX(0, GameConfig::mapWidth - 1);
+    std::uniform_int_distribution<int> distY(0, GameConfig::mapHeight - 1);
+    std::uniform_int_distribution<int> resourceTypeDist(0, 2); // 0 = Tree, 1 = Rock, 2 = Bush
+
+    int numResourcesToRegenerate = GameConfig::mapWidth * GameConfig::mapHeight * 0.02; // Regenerate 2% of map tiles
+
+    for (int i = 0; i < numResourcesToRegenerate; ++i) {
+        int x = distX(gen);
+        int y = distY(gen);
+
+        // Ensure the tile is grass or stone and does not have an object already
+        if (!tileMap[y][x]->hasObject() && dynamic_cast<GrassTile*>(tileMap[y][x].get())) {
+            int resourceType = resourceTypeDist(gen);
+
+            if (resourceType == 0) {
+                tileMap[y][x]->placeObject(std::make_unique<Tree>(
+                    TextureManager::getInstance().getTexture("tree1", "../assets/objects/tree1.png")
+                ));
+                getDebugConsole().log("Resource Regen", "New tree spawned at (" + std::to_string(x) + ", " + std::to_string(y) + ")");
+            } else if (resourceType == 1) {
+                tileMap[y][x]->placeObject(std::make_unique<Rock>(
+                    TextureManager::getInstance().getTexture("rock1", "../assets/objects/rock1.png")
+                ));
+                getDebugConsole().log("Resource Regen", "New rock spawned at (" + std::to_string(x) + ", " + std::to_string(y) + ")");
+            } else {
+                tileMap[y][x]->placeObject(std::make_unique<Bush>(
+                    TextureManager::getInstance().getTexture("bush1", "../assets/objects/bush1.png")
+                ));
+                getDebugConsole().log("Resource Regen", "New bush spawned at (" + std::to_string(x) + ", " + std::to_string(y) + ")");
+            }
+        }
+    }
+}
+
 
 void Game::simulateSocietalGrowth(float deltaTime) {
     // Example societal growth logic: increase market prices as demand rises
@@ -302,19 +335,18 @@ void Game::simulateSocietalGrowth(float deltaTime) {
 void Game::performPathfinding(NPCEntity& npc) {
     Tile* targetTile = npc.getTarget();
     if (!targetTile) {
-        getDebugConsole().log("Pathfinding", npc.getName() + " has no target.");
+        getDebugConsole().log("ERROR", npc.getName() + " has no target. Staying idle.");
         return;
     }
 
-    sf::Vector2f targetPos = targetTile->getPosition(); // Target position
+    sf::Vector2f targetPos = targetTile->getPosition();
     sf::Vector2f direction = targetPos - npc.getPosition();
     float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
 
     if (distance > GameConfig::tileSize / 2.0f) {
-        direction /= distance; // Normalize direction
+        direction /= distance;
         sf::Vector2f newPosition = npc.getPosition() + direction * npc.getSpeed() * deltaTime * simulationSpeed;
 
-        // Ensure the new position is within map bounds
         if (newPosition.x >= 0 && newPosition.x < GameConfig::mapWidth * GameConfig::tileSize &&
             newPosition.y >= 0 && newPosition.y < GameConfig::mapHeight * GameConfig::tileSize) {
             npc.setPosition(newPosition.x, newPosition.y);
@@ -322,12 +354,11 @@ void Game::performPathfinding(NPCEntity& npc) {
                                 std::to_string(newPosition.x) + ", " + std::to_string(newPosition.y) + ")");
         }
     } else {
-        // NPC has reached the target
         npc.setState(NPCState::PerformingAction);
         getDebugConsole().log("Pathfinding", npc.getName() + " reached the target.");
     }
-
 }
+
 
 
 
@@ -471,7 +502,6 @@ void Game::generateMap() {
         occupiedPositions.insert({marketX, marketY});
         tileMap[marketY][marketX]->placeObject(std::make_unique<Market>(*marketTextures[m % marketTextures.size()]));
     }
-    
 }
 
 std::vector<NPCEntity> Game::generateNPCEntitys() const {
@@ -495,11 +525,19 @@ std::vector<NPCEntity> Game::generateNPCEntitys() const {
 
         sf::Color NPCEntityColor(rand() % 256, rand() % 256, rand() % 256);
         bool enableQLearning = (i % 2 == 0); // Enable Q-learning for every other NPC
-        NPCEntity NPCEntity("NPC" + std::to_string(i + 1), statDist(gen), statDist(gen), statDist(gen), 150.0f, 10, statDist(gen), enableQLearning);
-        NPCEntity.setTexture(playerTexture, NPCEntityColor);
-        NPCEntity.setPosition(x * GameConfig::tileSize, y * GameConfig::tileSize);
 
-        npcs.push_back(NPCEntity);
+        NPCEntity npc("NPC" + std::to_string(i + 1), statDist(gen), statDist(gen), statDist(gen),
+                      150.0f, 10, statDist(gen), enableQLearning);
+        npc.setTexture(playerTexture, NPCEntityColor);
+        npc.setPosition(x * GameConfig::tileSize, y * GameConfig::tileSize);
+
+        if (enableQLearning) {
+            getDebugConsole().log("DEBUG", npc.getName() + " has Q-Learning enabled.");
+        } else {
+            getDebugConsole().log("DEBUG", npc.getName() + " uses simple behavior.");
+        }
+
+        npcs.push_back(npc);
     }
     return npcs;
 }
@@ -557,9 +595,6 @@ void Game::resetSimulation() {
     getDebugConsole().log("Options", "Simulation reset.");
 }
 
-
-
-
 void Game::toggleTileBorders() {
     showTileBorders = !showTileBorders;
     getDebugConsole().log("Options", "Tile borders toggled: " + std::string(showTileBorders ? "ON" : "OFF"));
@@ -569,12 +604,3 @@ void Game::setSimulationSpeed(float speedFactor) {
     simulationSpeed = std::clamp(speedFactor, 0.1f, 3.0f); // Clamp to a valid range
     getDebugConsole().log("Options", "Simulation speed set to: " + std::to_string(simulationSpeed));
 }
-
-
-// void Game::saveGame(const std::string& saveFile);
-// void Game::loadGame(const std::string& saveFile);
-
-
-// void Game::setAIDifficulty(int level);
-
-// void Game::applySeason(const std::string& season);

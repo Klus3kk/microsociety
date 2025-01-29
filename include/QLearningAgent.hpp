@@ -4,6 +4,7 @@
 #include "State.hpp"
 #include "Tile.hpp"
 #include <vector>
+#include <random>
 #include <unordered_map>
 #include <memory>
 #include <ActionType.hpp>
@@ -13,6 +14,9 @@ private:
     float discountFactor;  // Discount factor (gamma)
     float epsilon;         // Exploration rate
     std::unordered_map<State, std::unordered_map<ActionType, float>, StateHasher> QTable;
+    std::mt19937 rng;
+    std::uniform_int_distribution<int> actionDist;
+
 
 public:
     QLearningAgent(float learningRate, float discountFactor, float epsilon);

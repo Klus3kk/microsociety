@@ -10,6 +10,11 @@ struct GameConfig {
     
     static constexpr int mapWidth = windowWidth / tileSize;  // Number of tiles horizontally
     static constexpr int mapHeight = windowHeight / tileSize; // Number of tiles vertically
+
+    static constexpr int BASE_WOOD_REQUIREMENT = 3;
+    static constexpr int BASE_STONE_REQUIREMENT = 3;
+    static constexpr int BASE_BUSH_REQUIREMENT = 3;
+    static constexpr float BASE_UPGRADE_COST = 100.0f;
 };
 
 #endif
