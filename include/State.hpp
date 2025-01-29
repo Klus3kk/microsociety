@@ -39,4 +39,4 @@ struct StateHasher {
     }
 };
 
-#endif // STATE_HPP
+#endif 

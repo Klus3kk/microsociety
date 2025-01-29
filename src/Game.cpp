@@ -9,7 +9,7 @@
 // Constructor
 Game::Game()
     : window(sf::VideoMode(GameConfig::windowWidth, GameConfig::windowHeight), "MicroSociety", sf::Style::Titlebar | sf::Style::Close),
-      clockGUI(700, 100) {
+      house(TextureManager::getInstance().getTexture("house1", "../assets/objects/house1.png"), 1) ,clockGUI(700, 100) {
 #ifdef _WIN32
     ui.adjustLayout(window);
 #endif
@@ -40,11 +40,12 @@ bool Game::detectCollision(NPCEntity& NPCEntity) {
     if (tileX >= 0 && tileX < tileMap[0].size() && tileY >= 0 && tileY < tileMap.size()) {
         Tile& targetTile = *tileMap[tileY][tileX];
         
-        // Pass tileMap as the third argument
-        NPCEntity.performAction(std::make_unique<RegenerateEnergyAction>(), targetTile, tileMap);
+        // Pass Market and House references
+        NPCEntity.performAction(ActionType::RegenerateEnergy, targetTile, tileMap, market, house);
     }
     return false;
 }
+
 
 
 void Game::run() {
@@ -53,7 +54,10 @@ void Game::run() {
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed || sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) window.close();
+            if (event.type == sf::Event::Closed || sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
+                window.close();
+                getDebugConsole().saveLogsToFile("logs/simulation_log.txt"); 
+            }
             if (event.type == sf::Event::Resized) ui.adjustLayout(window);
 
             ui.handleButtonClicks(window, event, npcs, timeManager, market);
@@ -86,77 +90,76 @@ void Game::run() {
         getDebugConsole().render(window);
         window.display();
     }
+    getDebugConsole().saveLogsToFile("logs/simulation_log.txt");
 }
 
-
-
 void Game::simulateNPCEntityBehavior(float deltaTime) {
-    size_t batchSize = 10;
+    for (auto& npc : npcs) {
+        switch (npc.getState()) {
+            case NPCState::Idle: {
+                ActionType actionType = npc.decideNextAction(tileMap, house);
+                npc.setCurrentAction(actionType);
 
-    for (size_t i = 0; i < npcs.size(); i += batchSize) {
-        for (size_t j = i; j < std::min(i + batchSize, npcs.size()); ++j) {
-            auto& npc = npcs[j];
-
-            // Step 1: Evaluate NPC state
-            evaluateNPCEntityState(npc);
-
-            // Determine current position
-            int x = static_cast<int>(npc.getPosition().x / GameConfig::tileSize);
-            int y = static_cast<int>(npc.getPosition().y / GameConfig::tileSize);
-
-            getDebugConsole().log("NPC", npc.getName() + " at (" + std::to_string(x) + ", " + std::to_string(y) + ")");
-
-            // Step 2: Ensure position is valid within the map bounds
-            if (x >= 0 && x < tileMap[0].size() && y >= 0 && y < tileMap.size()) {
-                Tile& targetTile = *tileMap[y][x];
-
-                // Step 3: Check if NPC has reached a target and perform an action
-                if (npc.isAtTarget()) {
-                    ActionType actionType = npc.decideNextAction(tileMap);
-
-                    getDebugConsole().log("Q-Learning", npc.getName() + " chose action: " + std::to_string(static_cast<int>(actionType)));
-
-                    switch (actionType) {
-                        case ActionType::ChopTree:
-                        case ActionType::MineRock:
-                        case ActionType::GatherBush:
-                            npc.performAction(std::make_unique<TreeAction>(), targetTile, tileMap); // Provide tileMap
-                            npc.receiveFeedback(10.0f, tileMap); // Reward for gathering
-                            break;
-                        case ActionType::RegenerateEnergy:
-                            npc.performAction(std::make_unique<RegenerateEnergyAction>(), targetTile, tileMap); // Provide tileMap
-                            npc.receiveFeedback(5.0f, tileMap); // Reward for regenerating
-                            break;
-                        case ActionType::StoreItem:
-                            storeItems(npc, targetTile); // Adjust if needed
-                            npc.receiveFeedback(8.0f, tileMap); // Reward for managing inventory
-                            break;
-                        case ActionType::SellItem:
-                        case ActionType::BuyItem:
-                            handleMarketActions(npc, targetTile, actionType); // Handles buying/selling
-                            break;
-                        default:
-                            npc.receiveFeedback(-1.0f, tileMap); // Penalty for idling
-                            break;
-                    }
-
-                    // Re-evaluate state and decide next step
-                    npc.setTarget(nullptr); // Clear target after action
-                    npc.update(deltaTime * simulationSpeed);
-                    continue; // Skip further processing
-                } else {
-                    // Step 4: If not at target, move toward it
-                    performPathfinding(npc);
+                Tile* nearestTile = nullptr;
+                switch (actionType) {
+                    case ActionType::ChopTree:
+                        nearestTile = npc.findNearestTile(tileMap, ObjectType::Tree);
+                        break;
+                    case ActionType::MineRock:
+                        nearestTile = npc.findNearestTile(tileMap, ObjectType::Rock);
+                        break;
+                    case ActionType::GatherBush:
+                        nearestTile = npc.findNearestTile(tileMap, ObjectType::Bush);
+                        break;
+                    case ActionType::StoreItem:
+                    case ActionType::RegenerateEnergy:
+                    case ActionType::TakeOutItems:
+                    case ActionType::UpgradeHouse:
+                        nearestTile = npc.findNearestTile(tileMap, ObjectType::House);
+                        break;
+                    case ActionType::BuyItem:
+                    case ActionType::SellItem:
+                        nearestTile = npc.findNearestTile(tileMap, ObjectType::Market);
+                        break;
+                    default:
+                        break;
                 }
-            } else {
-                getDebugConsole().log("NPC", npc.getName() + " is out of bounds.");
+
+                if (nearestTile) {
+                    npc.setTarget(nearestTile);
+                    npc.setState(NPCState::Walking);
+                    getDebugConsole().log("NPC", npc.getName() + " is walking to " + std::to_string(static_cast<int>(actionType)));
+                } else {
+                    npc.setState(NPCState::Idle);
+                    getDebugConsole().log("NPC", npc.getName() + " has no valid target.");
+                }
+                break;
             }
 
-            // Step 5: Update NPC for the current frame
-            npc.update(deltaTime * simulationSpeed);
+            case NPCState::Walking: {
+                if (npc.getTarget() && !npc.isAtTarget()) {
+                    performPathfinding(npc);
+                } else {
+                    npc.setState(NPCState::PerformingAction);
+                }
+                break;
+            }
+
+            case NPCState::PerformingAction: {
+                if (npc.getTarget()) {
+                    npc.performAction(npc.getCurrentAction(), *npc.getTarget(), tileMap, market, house);
+                    npc.setTarget(nullptr);
+                }
+            }
+            npc.setState(NPCState::Idle);
+            break;
         }
     }
 }
+
+
+
+
 
 
 
@@ -205,38 +208,14 @@ void Game::moveToResource(NPCEntity& npc, ActionType actionType) {
         }
     }
 
-    // If target is found, move or act
     if (targetX != -1 && targetY != -1) {
-        sf::Vector2f direction(targetX - currentX, targetY - currentY);
-        float length = std::sqrt(direction.x * direction.x + direction.y * direction.y);
-        if (length > 0) direction /= length;
+        Tile& targetTile = *tileMap[targetY][targetX];
 
-        sf::Vector2f newPosition = npc.getPosition() + direction * npc.getSpeed() * deltaTime * simulationSpeed;
-
-        if (std::abs(newPosition.x - targetX * GameConfig::tileSize) < 5.0f &&
-            std::abs(newPosition.y - targetY * GameConfig::tileSize) < 5.0f) {
-            // Trigger action
-            Tile& targetTile = *tileMap[targetY][targetX];
-            switch (actionType) {
-                case ActionType::ChopTree:
-                    npc.performAction(std::make_unique<TreeAction>(), targetTile, tileMap);
-                    break;
-                case ActionType::MineRock:
-                    npc.performAction(std::make_unique<StoneAction>(), targetTile, tileMap);
-                    break;
-                case ActionType::GatherBush:
-                    npc.performAction(std::make_unique<BushAction>(), targetTile, tileMap);
-                    break;
-                default:
-                    break;
-            }
-        } else {
-            npc.setPosition(newPosition.x, newPosition.y); // Keep moving
-        }
-    } else {
-        getDebugConsole().log("MoveToResource", npc.getName() + " found no valid target.");
+        // Use ActionType for actions instead of std::make_unique
+        npc.performAction(actionType, targetTile, tileMap, market, house);
     }
 }
+
 
 
 
@@ -256,9 +235,11 @@ void Game::storeItems(NPCEntity& npc, Tile& tile) {
     }
 
     if (!mostAbundantResource.empty()) {
-        npc.performAction(std::make_unique<StoreItemAction>(mostAbundantResource, maxQuantity), tile, tileMap);
+        // Use ActionType::StoreItem
+        npc.performAction(ActionType::StoreItem, tile, tileMap, market, house);
     }
 }
+
 
 
 
@@ -319,31 +300,36 @@ void Game::simulateSocietalGrowth(float deltaTime) {
 }
 
 void Game::performPathfinding(NPCEntity& npc) {
-    static std::random_device rd;
-    static std::mt19937 gen(rd());
-    static std::uniform_int_distribution<> dist(-1, 1);
-
-    int moveX = dist(gen);
-    int moveY = dist(gen);
-
-    sf::Vector2f currentPos = npc.getPosition();
-    sf::Vector2f newPos = currentPos + sf::Vector2f(
-        moveX * GameConfig::tileSize * deltaTime * simulationSpeed,
-        moveY * GameConfig::tileSize * deltaTime * simulationSpeed
-    );
-
-    // Ensure new position is within map bounds and not blocked
-    if (newPos.x >= 0 && newPos.x < GameConfig::mapWidth * GameConfig::tileSize &&
-        newPos.y >= 0 && newPos.y < GameConfig::mapHeight * GameConfig::tileSize &&
-        !tileMap[static_cast<int>(newPos.y / GameConfig::tileSize)][static_cast<int>(newPos.x / GameConfig::tileSize)]->hasObject()) {
-        
-        npc.setPosition(newPos.x, newPos.y);
-
-        // Debug log for movement
-        getDebugConsole().log("Pathfinding", npc.getName() + " moved to (" +
-                              std::to_string(newPos.x) + ", " + std::to_string(newPos.y) + ")");
+    Tile* targetTile = npc.getTarget();
+    if (!targetTile) {
+        getDebugConsole().log("Pathfinding", npc.getName() + " has no target.");
+        return;
     }
+
+    sf::Vector2f targetPos = targetTile->getPosition(); // Target position
+    sf::Vector2f direction = targetPos - npc.getPosition();
+    float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
+
+    if (distance > GameConfig::tileSize / 2.0f) {
+        direction /= distance; // Normalize direction
+        sf::Vector2f newPosition = npc.getPosition() + direction * npc.getSpeed() * deltaTime * simulationSpeed;
+
+        // Ensure the new position is within map bounds
+        if (newPosition.x >= 0 && newPosition.x < GameConfig::mapWidth * GameConfig::tileSize &&
+            newPosition.y >= 0 && newPosition.y < GameConfig::mapHeight * GameConfig::tileSize) {
+            npc.setPosition(newPosition.x, newPosition.y);
+            getDebugConsole().log("Pathfinding", npc.getName() + " moved to (" +
+                                std::to_string(newPosition.x) + ", " + std::to_string(newPosition.y) + ")");
+        }
+    } else {
+        // NPC has reached the target
+        npc.setState(NPCState::PerformingAction);
+        getDebugConsole().log("Pathfinding", npc.getName() + " reached the target.");
+    }
+
 }
+
+
 
 
 
@@ -444,7 +430,7 @@ void Game::generateMap() {
 
             int objectChance = rand() % 100;
             if (auto grassTile = dynamic_cast<GrassTile*>(tileMap[i][j].get())) {
-                if (objectChance < 20) {
+                if (objectChance < 10) {
                     grassTile->placeObject(std::make_unique<Tree>(*treeTextures[rand() % treeTextures.size()]));
                 } else if (objectChance < 20) {
                     grassTile->placeObject(std::make_unique<Bush>(*bushTextures[rand() % bushTextures.size()]));

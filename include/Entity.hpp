@@ -4,6 +4,8 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include "Configuration.hpp"
+#include <cfloat>
+#include <cmath>
 
 enum class AnimationState { Idle, Walking, Interacting, Dead, Exhausted };
 
@@ -57,7 +59,13 @@ public:
     float getEnergy() const { return energy; }
     float getSpeed() const { return speed; }
     float getStrength() const { return strength; }
-    float getMoney() const { return money; }
+    float getMoney() const { 
+        if (std::isnan(money) || money < 0) {
+            std::cerr << "ERROR: " << "Invalid money value detected for entity: " << money << std::endl;
+            return 0.0f; 
+        }
+        return money; 
+    }
     AnimationState getState() const { return state; }
     bool isDead() const { return dead; }
 

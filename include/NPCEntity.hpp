@@ -14,12 +14,23 @@
 #include "QLearningAgent.hpp"
 
 class Action; // Forward declaration of Action class
+class Market;
+class House;
+
+enum class NPCState {
+    Idle,
+    Walking,
+    PerformingAction,
+    EvaluatingState
+};
 
 class NPCEntity : public Entity {
 private:
     static constexpr float MAX_HEALTH = 100.0f;
     static constexpr float MAX_ENERGY = 100.0f;
+    NPCState currentState = NPCState::Idle; 
     Tile* target = nullptr;
+    ActionType currentAction = ActionType::None; 
     QLearningAgent agent; // Q-learning agent for decision-making
     bool useQLearning = false; // Toggle Q-learning behavior
     std::unordered_map<std::string, int> inventory; // Map for items and their quantities
@@ -34,7 +45,7 @@ private:
     const float actionCooldownTime = 2.0f;          // Time between actions (adjust as needed)
 
     ActionType lastAction;                          // Last action performed by NPC
-    State currentState;                             // Current state for Q-learning
+    State currentQLearningState;  
 
 public:
     // Constructor
@@ -69,11 +80,12 @@ public:
     void regenerateEnergy(float rate);
 
     // Decision-Making Hook (AI will override this)
-    ActionType decideNextAction(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap);
+    ActionType decideNextAction(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap, const House& house);
     std::vector<ObjectType> scanNearbyTiles(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) const;
-
+    Tile* findNearestTile(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap, ObjectType type) const;
+    Tile* getTarget() const; // Getter for the target tile
     // Perform Action
-    void performAction(std::unique_ptr<Action> action, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap);
+    void performAction(ActionType action, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap, Market& market, House& house);
     void update(float deltaTime);
 
     // Handle NPC Death
@@ -91,6 +103,14 @@ public:
     void receiveFeedback(float reward, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap); // Update Q-table after action
     void enableQLearning(bool enable); // Toggle Q-learning behavior
     State extractState(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) const; // State representation
+    void updateQLearningState(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap);
+    // State management
+    void setState(NPCState newState) { currentState = newState; }
+    NPCState getState() const { return currentState; }
+
+    // Current action accessors
+    void setCurrentAction(ActionType action) { currentAction = action; }
+    ActionType getCurrentAction() const { return currentAction; }
 };
 
 #endif

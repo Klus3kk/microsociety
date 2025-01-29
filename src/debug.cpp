@@ -6,6 +6,7 @@
 #include <chrono>
 #include <iomanip>
 #include <algorithm>
+#include <filesystem>
 
 // Constructor for DebugConsole
 DebugConsole::DebugConsole(float windowWidth, float windowHeight) {
@@ -32,16 +33,65 @@ void DebugConsole::setLogLevel(LogLevel level) {
     filterLevel = level;
 }
 
+void DebugConsole::saveLogToFile(const std::string& filename, const std::string& logEntry) {
+    std::ofstream outFile(filename, std::ios::app);
+    if (!outFile.is_open()) {
+        std::cerr << "Failed to save logs to " << filename << std::endl;
+        return;
+    }
+    outFile << logEntry << "\n";
+}
+
+void DebugConsole::saveAllLogs(const std::string& filename) {
+    std::ofstream outFile(filename, std::ios::app);
+    if (!outFile.is_open()) {
+        std::cerr << "Failed to save logs to " << filename << std::endl;
+        return;
+    }
+
+    for (const auto& [category, message] : logs) {
+        outFile << message << "\n";
+    }
+
+    std::cout << "All logs saved to " << filename << std::endl;
+}
+
+
+std::string DebugConsole::getLogFilename() const {
+    auto now = std::chrono::system_clock::now();
+    auto timeT = std::chrono::system_clock::to_time_t(now);
+    std::tm localTime = *std::localtime(&timeT);
+
+    std::ostringstream filename;
+    filename << "logs/" << std::put_time(&localTime, "%Y-%m-%d") << "_log.txt";
+    return filename.str();
+}
+
+
+
 // Log a message
 void DebugConsole::log(const std::string& category, const std::string& message, LogLevel level) {
     if (level < filterLevel) return;
 
     std::ostringstream formattedMessage;
+    
+    auto now = std::chrono::system_clock::now();
+    auto timeT = std::chrono::system_clock::to_time_t(now);
+    std::tm localTime = *std::localtime(&timeT);
+
+    formattedMessage << "[" << std::put_time(&localTime, "%Y-%m-%d %H:%M:%S") << "] ";
     formattedMessage << "[" << category << "] " << message;
 
-    logs.emplace_back(category, formattedMessage.str());
-    trimLogs();
+    {
+        std::lock_guard<std::mutex> lock(debugMutex);
+        logs.emplace_back(category, formattedMessage.str());
+        trimLogs();
+    }
+
+    saveLogToFile(getLogFilename(), formattedMessage.str());
 }
+
+
 
 // Log a throttled message
 void DebugConsole::logThrottled(const std::string& category, const std::string& message, int throttleMs) {
@@ -83,15 +133,22 @@ void DebugConsole::logResourceStats(const std::unordered_map<std::string, int>& 
 }
 
 // Save logs to a file
-void DebugConsole::saveLogsToFile(const std::string& filename) const {
-    std::ofstream outFile(filename);
+void DebugConsole::saveLogsToFile(const std::string& filename) {
+    std::filesystem::path logDir = "logs";
+    if (!std::filesystem::exists(logDir)) {
+        std::filesystem::create_directory(logDir);  // Create logs folder if missing
+    }
+
+    std::ofstream outFile(filename, std::ios::app);
     if (!outFile.is_open()) {
-        std::cerr << "Failed to save logs to " << filename << std::endl;
         return;
     }
+
+    std::lock_guard<std::mutex> lock(debugMutex); // Ensure thread safety
     for (const auto& [category, message] : logs) {
         outFile << message << "\n";
     }
+
     std::cout << "Logs saved to " << filename << std::endl;
 }
 

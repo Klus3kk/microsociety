@@ -1,0 +1,659 @@
+[2025-01-29 14:27:38] [Decision] NPC1 (Q-Learning) decided: 4
+[2025-01-29 14:27:38] [NPC] NPC1 is walking to 4
+[2025-01-29 14:27:38] [Decision] NPC2 mining rock.
+[2025-01-29 14:27:38] [NPC] NPC2 is walking to 3
+[2025-01-29 14:27:38] [Decision] NPC3 (Q-Learning) decided: 8
+[2025-01-29 14:27:38] [NPC] NPC3 is walking to 8
+[2025-01-29 14:27:38] [Decision] NPC4 gathering food.
+[2025-01-29 14:27:38] [NPC] NPC4 is walking to 4
+[2025-01-29 14:27:38] [Decision] NPC5 (Q-Learning) decided: 8
+[2025-01-29 14:27:38] [NPC] NPC5 is walking to 8
+[2025-01-29 14:27:38] [Decision] NPC6 gathering food.
+[2025-01-29 14:27:38] [NPC] NPC6 is walking to 4
+[2025-01-29 14:27:38] [Decision] NPC7 (Q-Learning) decided: 7
+[2025-01-29 14:27:38] [NPC] NPC7 is walking to 7
+[2025-01-29 14:27:38] [Decision] NPC8 chopping tree.
+[2025-01-29 14:27:38] [NPC] NPC8 is walking to 2
+[2025-01-29 14:27:38] [Decision] NPC9 (Q-Learning) decided: 7
+[2025-01-29 14:27:38] [NPC] NPC9 is walking to 7
+[2025-01-29 14:27:38] [Decision] NPC10 mining rock.
+[2025-01-29 14:27:38] [NPC] NPC10 is walking to 3
+[2025-01-29 14:27:38] [Pathfinding] NPC1 moved to (159.393112, 190.786224)
+[2025-01-29 14:27:38] [Pathfinding] NPC2 moved to (480.000000, 33.357048)
+[2025-01-29 14:27:38] [Pathfinding] NPC3 moved to (639.040405, 544.959595)
+[2025-01-29 14:27:38] [Pathfinding] NPC4 moved to (545.357056, 352.000000)
+[2025-01-29 14:27:38] [Pathfinding] NPC5 moved to (321.213776, 447.393097)
+[2025-01-29 14:27:38] [Pathfinding] NPC7 moved to (63.393108, 417.213776)
+[2025-01-29 14:27:38] [Pathfinding] NPC8 moved to (608.959595, 703.040405)
+[2025-01-29 14:27:38] [Pathfinding] NPC9 moved to (545.213806, 640.606873)
+[2025-01-29 14:27:38] [Pathfinding] NPC10 moved to (478.642944, 192.000000)
+[2025-01-29 14:27:38] [Pathfinding] NPC1 moved to (158.254196, 188.508392)
+[2025-01-29 14:27:38] [Pathfinding] NPC2 moved to (480.000000, 35.903748)
+[2025-01-29 14:27:38] [Pathfinding] NPC3 moved to (637.239624, 546.760376)
+[2025-01-29 14:27:38] [Pathfinding] NPC4 moved to (547.903748, 352.000000)
+[2025-01-29 14:27:38] [Pathfinding] NPC5 moved to (323.491608, 446.254181)
+[2025-01-29 14:27:38] [Inventory] NPC6 added 1 food(s) to inventory.
+[2025-01-29 14:27:38] [Tile] Object removed from tile.
+[2025-01-29 14:27:38] [BushAction] Food gathered from bush!
+[2025-01-29 14:27:38] [Action] NPC6 performed: Gather Bush
+[2025-01-29 14:27:38] [Pathfinding] NPC7 moved to (62.254189, 419.491608)
+[2025-01-29 14:27:38] [Pathfinding] NPC8 moved to (610.760376, 701.239624)
+[2025-01-29 14:27:38] [Pathfinding] NPC9 moved to (547.491638, 641.745789)
+[2025-01-29 14:27:38] [Pathfinding] NPC10 moved to (476.096252, 192.000000)
+[2025-01-29 14:27:38] [Pathfinding] NPC1 moved to (157.135742, 186.271469)
+[2025-01-29 14:27:38] [Pathfinding] NPC2 moved to (480.000000, 38.404697)
+[2025-01-29 14:27:38] [Pathfinding] NPC3 moved to (635.471191, 548.528809)
+[2025-01-29 14:27:38] [Pathfinding] NPC4 moved to (550.404724, 352.000000)
+[2025-01-29 14:27:38] [Pathfinding] NPC5 moved to (325.728516, 445.135712)
+[2025-01-29 14:27:38] [Decision] NPC6 mining rock.
+[2025-01-29 14:27:38] [NPC] NPC6 is walking to 3
+[2025-01-29 14:27:38] [Pathfinding] NPC7 moved to (61.135731, 421.728516)
+[2025-01-29 14:27:38] [Pathfinding] NPC8 moved to (612.528809, 699.471191)
+[2025-01-29 14:27:38] [Pathfinding] NPC9 moved to (549.728577, 642.864258)
+[2025-01-29 14:27:38] [Pathfinding] NPC10 moved to (473.595306, 192.000000)
+[2025-01-29 14:27:38] [Pathfinding] NPC1 moved to (156.008896, 184.017776)
+[2025-01-29 14:27:38] [Pathfinding] NPC2 moved to (480.000000, 40.924397)
+[2025-01-29 14:27:38] [Pathfinding] NPC3 moved to (633.689514, 550.310486)
+[2025-01-29 14:27:38] [Pathfinding] NPC4 moved to (552.924438, 352.000000)
+[2025-01-29 14:27:38] [Pathfinding] NPC5 moved to (327.982208, 444.008881)
+[2025-01-29 14:27:38] [Pathfinding] NPC6 moved to (510.218292, 513.781677)
+[2025-01-29 14:27:38] [Pathfinding] NPC7 moved to (60.008888, 423.982208)
+[2025-01-29 14:27:38] [Pathfinding] NPC8 moved to (614.310486, 697.689514)
+[2025-01-29 14:27:38] [Pathfinding] NPC9 moved to (551.982239, 643.991089)
+[2025-01-29 14:27:38] [Pathfinding] NPC10 moved to (471.075592, 192.000000)
+[2025-01-29 14:27:38] [Pathfinding] NPC1 moved to (154.871124, 181.742218)
+[2025-01-29 14:27:38] [Pathfinding] NPC2 moved to (480.000000, 43.468548)
+[2025-01-29 14:27:38] [Pathfinding] NPC3 moved to (631.890503, 552.109497)
+[2025-01-29 14:27:38] [Pathfinding] NPC4 moved to (555.468567, 352.000000)
+[2025-01-29 14:27:38] [Pathfinding] NPC5 moved to (330.257751, 442.871094)
+[2025-01-29 14:27:38] [Pathfinding] NPC6 moved to (508.419312, 515.580688)
+[2025-01-29 14:27:38] [Pathfinding] NPC7 moved to (58.871109, 426.257751)
+[2025-01-29 14:27:38] [Pathfinding] NPC8 moved to (616.109497, 695.890503)
+[2025-01-29 14:27:38] [Pathfinding] NPC9 moved to (554.257812, 645.128845)
+[2025-01-29 14:27:38] [Pathfinding] NPC10 moved to (468.531433, 192.000000)
+[2025-01-29 14:27:38] [Pathfinding] NPC1 moved to (153.743073, 179.486115)
+[2025-01-29 14:27:38] [Pathfinding] NPC2 moved to (480.000000, 45.990948)
+[2025-01-29 14:27:38] [Pathfinding] NPC3 moved to (630.106873, 553.893127)
+[2025-01-29 14:27:38] [Pathfinding] NPC4 moved to (557.990967, 352.000000)
+[2025-01-29 14:27:38] [Pathfinding] NPC5 moved to (332.513855, 441.743042)
+[2025-01-29 14:27:38] [Pathfinding] NPC6 moved to (506.635712, 517.364319)
+[2025-01-29 14:27:38] [Pathfinding] NPC7 moved to (57.743057, 428.513855)
+[2025-01-29 14:27:38] [Pathfinding] NPC8 moved to (617.893127, 694.106873)
+[2025-01-29 14:27:38] [Pathfinding] NPC9 moved to (556.513916, 646.256897)
+[2025-01-29 14:27:38] [Pathfinding] NPC10 moved to (466.009033, 192.000000)
+[2025-01-29 14:27:38] [Pathfinding] NPC1 moved to (152.619247, 177.238464)
+[2025-01-29 14:27:38] [Pathfinding] NPC2 moved to (480.000000, 48.503899)
+[2025-01-29 14:27:38] [Pathfinding] NPC3 moved to (628.329956, 555.670044)
+[2025-01-29 14:27:38] [Pathfinding] NPC4 moved to (560.503906, 352.000000)
+[2025-01-29 14:27:38] [Pathfinding] NPC5 moved to (334.761505, 440.619232)
+[2025-01-29 14:27:38] [Pathfinding] NPC6 moved to (504.858795, 519.141235)
+[2025-01-29 14:27:38] [Pathfinding] NPC7 moved to (56.619232, 430.761505)
+[2025-01-29 14:27:38] [Pathfinding] NPC8 moved to (619.670044, 692.329956)
+[2025-01-29 14:27:38] [Pathfinding] NPC9 moved to (558.761536, 647.380737)
+[2025-01-29 14:27:38] [Pathfinding] NPC10 moved to (463.496094, 192.000000)
+[2025-01-29 14:27:38] [Pathfinding] NPC1 moved to (151.494812, 174.989609)
+[2025-01-29 14:27:38] [Pathfinding] NPC2 reached the target.
+[2025-01-29 14:27:38] [Pathfinding] NPC3 moved to (626.552063, 557.447937)
+[2025-01-29 14:27:38] [Pathfinding] NPC4 reached the target.
+[2025-01-29 14:27:38] [Pathfinding] NPC5 moved to (337.010376, 439.494812)
+[2025-01-29 14:27:38] [Pathfinding] NPC6 moved to (503.080902, 520.919128)
+[2025-01-29 14:27:38] [Pathfinding] NPC7 moved to (55.494804, 433.010376)
+[2025-01-29 14:27:38] [Pathfinding] NPC8 moved to (621.447937, 690.552063)
+[2025-01-29 14:27:38] [Pathfinding] NPC9 moved to (561.010376, 648.505188)
+[2025-01-29 14:27:38] [Pathfinding] NPC10 reached the target.
+[2025-01-29 14:27:38] [Pathfinding] NPC1 moved to (150.362869, 172.725723)
+[2025-01-29 14:27:38] [Inventory] NPC2 added 1 stone(s) to inventory.
+[2025-01-29 14:27:38] [Tile] Object removed from tile.
+[2025-01-29 14:27:38] [StoneAction] Rock mined! Stone added to inventory.
+[2025-01-29 14:27:38] [Action] NPC2 performed: Mine Rock
+[2025-01-29 14:27:38] [Pathfinding] NPC3 moved to (624.762329, 559.237671)
+[2025-01-29 14:27:38] [Inventory] NPC4 added 1 food(s) to inventory.
+[2025-01-29 14:27:38] [Tile] Object removed from tile.
+[2025-01-29 14:27:38] [BushAction] Food gathered from bush!
+[2025-01-29 14:27:38] [Action] NPC4 performed: Gather Bush
+[2025-01-29 14:27:38] [Pathfinding] NPC5 moved to (339.274261, 438.362885)
+[2025-01-29 14:27:38] [Pathfinding] NPC6 moved to (501.291138, 522.708862)
+[2025-01-29 14:27:38] [Pathfinding] NPC7 moved to (54.362862, 435.274261)
+[2025-01-29 14:27:38] [Pathfinding] NPC8 moved to (623.237671, 688.762329)
+[2025-01-29 14:27:38] [Pathfinding] NPC9 moved to (563.274231, 649.637146)
+[2025-01-29 14:27:38] [Inventory] NPC10 added 1 stone(s) to inventory.
+[2025-01-29 14:27:38] [Tile] Object removed from tile.
+[2025-01-29 14:27:38] [StoneAction] Rock mined! Stone added to inventory.
+[2025-01-29 14:27:38] [Action] NPC10 performed: Mine Rock
+[2025-01-29 14:27:38] [Pathfinding] NPC1 moved to (149.229721, 170.459427)
+[2025-01-29 14:27:38] [Decision] NPC2 mining rock.
+[2025-01-29 14:27:38] [NPC] NPC2 is walking to 3
+[2025-01-29 14:27:38] [Pathfinding] NPC3 moved to (622.970642, 561.029358)
+[2025-01-29 14:27:38] [Decision] NPC4 selling items.
+[2025-01-29 14:27:38] [NPC] NPC4 is walking to 10
+[2025-01-29 14:27:38] [Pathfinding] NPC5 moved to (341.540558, 437.229736)
+[2025-01-29 14:27:38] [Pathfinding] NPC6 moved to (499.499481, 524.500549)
+[2025-01-29 14:27:38] [Pathfinding] NPC7 moved to (53.229713, 437.540558)
+[2025-01-29 14:27:38] [Pathfinding] NPC8 moved to (625.029358, 686.970642)
+[2025-01-29 14:27:38] [Pathfinding] NPC9 moved to (565.540527, 650.770325)
+[2025-01-29 14:27:38] [Decision] NPC10 mining rock.
+[2025-01-29 14:27:38] [NPC] NPC10 is walking to 3
+[2025-01-29 14:27:38] [Pathfinding] NPC1 moved to (148.092941, 168.185883)
+[2025-01-29 14:27:38] [Pathfinding] NPC2 moved to (482.287781, 49.611759)
+[2025-01-29 14:27:38] [Pathfinding] NPC3 moved to (621.173218, 562.826782)
+[2025-01-29 14:27:38] [Pathfinding] NPC4 moved to (560.178833, 349.478973)
+[2025-01-29 14:27:38] [Pathfinding] NPC5 moved to (343.814087, 436.092957)
+[2025-01-29 14:27:38] [Pathfinding] NPC6 moved to (497.702087, 526.297913)
+[2025-01-29 14:27:38] [Pathfinding] NPC7 moved to (52.092941, 439.814087)
+[2025-01-29 14:27:38] [Pathfinding] NPC8 moved to (626.826782, 685.173218)
+[2025-01-29 14:27:38] [Pathfinding] NPC9 moved to (567.814087, 651.907104)
+[2025-01-29 14:27:38] [Pathfinding] NPC10 moved to (462.388245, 189.712234)
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (146.969727, 165.939438)
+[2025-01-29 14:27:39] [Pathfinding] NPC2 moved to (484.548279, 50.706413)
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (619.397278, 564.602722)
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (559.857666, 346.988007)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (346.060516, 434.969727)
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (495.926117, 528.073853)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (50.969719, 442.060516)
+[2025-01-29 14:27:39] [Pathfinding] NPC8 moved to (628.602722, 683.397278)
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (570.060547, 653.030334)
+[2025-01-29 14:27:39] [Pathfinding] NPC10 moved to (461.293579, 187.451736)
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (145.839264, 163.678497)
+[2025-01-29 14:27:39] [Pathfinding] NPC2 moved to (486.823364, 51.808128)
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (617.609863, 566.390137)
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (559.534424, 344.480957)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (348.321442, 433.839264)
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (494.138702, 529.861267)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (49.839252, 444.321442)
+[2025-01-29 14:27:39] [Pathfinding] NPC8 moved to (630.390137, 681.609863)
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (572.321472, 654.160828)
+[2025-01-29 14:27:39] [Pathfinding] NPC10 moved to (460.191864, 185.176651)
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (144.715836, 161.431656)
+[2025-01-29 14:27:39] [Pathfinding] NPC2 moved to (489.084259, 52.902981)
+[2025-01-29 14:27:39] [Pathfinding] NPC3 reached the target.
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (559.213196, 341.989532)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (350.568298, 432.715851)
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (492.362427, 531.637573)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (48.715832, 446.568298)
+[2025-01-29 14:27:39] [Pathfinding] NPC8 reached the target.
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (574.568298, 655.284241)
+[2025-01-29 14:27:39] [Pathfinding] NPC10 moved to (459.097015, 182.915741)
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (143.575104, 159.150192)
+[2025-01-29 14:27:39] [Pathfinding] NPC2 moved to (491.380005, 54.014698)
+[2025-01-29 14:27:39] [Action] NPC3 attempted action but it failed.
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (558.887024, 339.459717)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (352.849762, 431.575134)
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (490.558777, 533.441223)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (47.575104, 448.849762)
+[2025-01-29 14:27:39] [TreeAction] Object exists on tile.
+[2025-01-29 14:27:39] [Inventory] NPC8 added 1 wood(s) to inventory.
+[2025-01-29 14:27:39] [Tile] Object removed from tile.
+[2025-01-29 14:27:39] [TreeAction] Tree chopped! Wood added to inventory.
+[2025-01-29 14:27:39] [Action] NPC8 performed: Chop Tree
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (576.849731, 656.424988)
+[2025-01-29 14:27:39] [Pathfinding] NPC10 moved to (457.985291, 180.620010)
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (142.447784, 156.895569)
+[2025-01-29 14:27:39] [Pathfinding] NPC2 moved to (493.648743, 55.113342)
+[2025-01-29 14:27:39] [Decision] NPC3 (Q-Learning) decided: 1
+[2025-01-29 14:27:39] [NPC] NPC3 has no valid target.
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (558.564697, 336.959656)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (355.104401, 430.447815)
+[2025-01-29 14:27:39] [Pathfinding] NPC6 reached the target.
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (46.447792, 451.104401)
+[2025-01-29 14:27:39] [Decision] NPC8 gathering food.
+[2025-01-29 14:27:39] [NPC] NPC8 is walking to 4
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (579.104370, 657.552307)
+[2025-01-29 14:27:39] [Pathfinding] NPC10 moved to (456.886658, 178.351273)
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (141.323151, 154.646301)
+[2025-01-29 14:27:39] [Pathfinding] NPC2 moved to (495.912079, 56.209370)
+[2025-01-29 14:27:39] [Decision] NPC3 (Q-Learning) decided: 3
+[2025-01-29 14:27:39] [NPC] NPC3 is walking to 3
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (558.243103, 334.465546)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (357.353668, 429.323181)
+[2025-01-29 14:27:39] [Inventory] NPC6 added 1 stone(s) to inventory.
+[2025-01-29 14:27:39] [Tile] Object removed from tile.
+[2025-01-29 14:27:39] [StoneAction] Rock mined! Stone added to inventory.
+[2025-01-29 14:27:39] [Action] NPC6 performed: Mine Rock
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (45.323162, 453.353668)
+[2025-01-29 14:27:39] [Pathfinding] NPC8 moved to (629.198547, 679.395386)
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (581.353638, 658.676941)
+[2025-01-29 14:27:39] [Pathfinding] NPC10 moved to (455.790619, 176.087936)
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (140.192551, 152.385101)
+[2025-01-29 14:27:39] [Pathfinding] NPC2 moved to (498.187439, 57.311218)
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (615.103027, 566.717407)
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (557.919800, 331.958191)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (359.614868, 428.192566)
+[2025-01-29 14:27:39] [Decision] NPC6 selling items.
+[2025-01-29 14:27:39] [NPC] NPC6 is walking to 10
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (44.192562, 455.614868)
+[2025-01-29 14:27:39] [Pathfinding] NPC8 moved to (628.000610, 677.169128)
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (583.614868, 659.807556)
+[2025-01-29 14:27:39] [Pathfinding] NPC10 moved to (454.688782, 173.812592)
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (139.065033, 150.130066)
+[2025-01-29 14:27:39] [Pathfinding] NPC2 reached the target.
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (612.603027, 567.043762)
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (557.597412, 329.457703)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (361.869904, 427.065063)
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (488.130768, 534.120361)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (43.065048, 457.869904)
+[2025-01-29 14:27:39] [Pathfinding] NPC8 moved to (626.805908, 674.948975)
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (585.869873, 660.935059)
+[2025-01-29 14:27:39] [Pathfinding] NPC10 reached the target.
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (137.938324, 147.876648)
+[2025-01-29 14:27:39] [Inventory] NPC2 added 1 stone(s) to inventory.
+[2025-01-29 14:27:39] [Tile] Object removed from tile.
+[2025-01-29 14:27:39] [StoneAction] Rock mined! Stone added to inventory.
+[2025-01-29 14:27:39] [Action] NPC2 performed: Mine Rock
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (610.104797, 567.369934)
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (557.275208, 326.958984)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (364.123322, 425.938354)
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (485.704498, 534.799011)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (41.938339, 460.123322)
+[2025-01-29 14:27:39] [Pathfinding] NPC8 moved to (625.612061, 672.730408)
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (588.123291, 662.061768)
+[2025-01-29 14:27:39] [Inventory] NPC10 added 1 stone(s) to inventory.
+[2025-01-29 14:27:39] [Tile] Object removed from tile.
+[2025-01-29 14:27:39] [StoneAction] Rock mined! Stone added to inventory.
+[2025-01-29 14:27:39] [Action] NPC10 performed: Mine Rock
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (136.805573, 145.611160)
+[2025-01-29 14:27:39] [Decision] NPC2 mining rock.
+[2025-01-29 14:27:39] [NPC] NPC2 is walking to 3
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (607.593201, 567.697815)
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (556.951294, 324.446869)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (366.388824, 424.805603)
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (483.265228, 535.481323)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (40.805592, 462.388824)
+[2025-01-29 14:27:39] [Pathfinding] NPC8 moved to (624.411865, 670.499939)
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (590.388794, 663.194519)
+[2025-01-29 14:27:39] [Decision] NPC10 mining rock.
+[2025-01-29 14:27:39] [NPC] NPC10 is walking to 3
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (135.679199, 143.358414)
+[2025-01-29 14:27:39] [Pathfinding] NPC2 moved to (500.391998, 56.093212)
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (605.095764, 568.023865)
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (556.629211, 321.948883)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (368.641571, 423.679230)
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (480.839661, 536.159790)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (39.679218, 464.641571)
+[2025-01-29 14:27:39] [Pathfinding] NPC8 moved to (623.218384, 668.281982)
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (592.641541, 664.320862)
+[2025-01-29 14:27:39] [Pathfinding] NPC10 moved to (453.063721, 171.888321)
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (134.553497, 141.107010)
+[2025-01-29 14:27:39] [Pathfinding] NPC2 moved to (502.595245, 54.875931)
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (602.599792, 568.349731)
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (556.307312, 319.452393)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (370.892975, 422.553528)
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (478.415558, 536.837830)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (38.553513, 466.892975)
+[2025-01-29 14:27:39] [Pathfinding] NPC8 moved to (622.025635, 666.065369)
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (594.892944, 665.446533)
+[2025-01-29 14:27:39] [Pathfinding] NPC10 moved to (451.439636, 169.965195)
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (133.426056, 138.852112)
+[2025-01-29 14:27:39] [Pathfinding] NPC2 moved to (504.801910, 53.656765)
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (600.099976, 568.676086)
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (555.984924, 316.952026)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (373.147858, 421.426086)
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (475.987701, 537.516907)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (37.426064, 469.147858)
+[2025-01-29 14:27:39] [Pathfinding] NPC8 moved to (620.831055, 663.845337)
+[2025-01-29 14:27:39] [Pathfinding] NPC9 reached the target.
+[2025-01-29 14:27:39] [Pathfinding] NPC10 moved to (449.813049, 168.039093)
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (132.303040, 136.606064)
+[2025-01-29 14:27:39] [Pathfinding] NPC2 moved to (506.999908, 52.442387)
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (597.609985, 569.001160)
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (555.663818, 314.461487)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (375.393890, 420.303070)
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (473.569366, 538.193359)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (36.303043, 471.393890)
+[2025-01-29 14:27:39] [Pathfinding] NPC8 moved to (619.641174, 661.634033)
+[2025-01-29 14:27:39] [House] NPC9's energy capped at maximum.
+[2025-01-29 14:27:39] [Action] NPC9 attempted action but it failed.
+[2025-01-29 14:27:39] [Pathfinding] NPC10 moved to (448.192841, 166.120560)
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (131.177536, 134.355057)
+[2025-01-29 14:27:39] [Pathfinding] NPC2 moved to (509.202759, 51.225323)
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (595.114441, 569.326965)
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (555.341980, 311.965454)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (377.644897, 419.177582)
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (471.145691, 538.871277)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (35.177540, 473.644897)
+[2025-01-29 14:27:39] [Pathfinding] NPC8 moved to (618.448608, 659.417786)
+[2025-01-29 14:27:39] [Decision] NPC9 (Q-Learning) decided: 9
+[2025-01-29 14:27:39] [NPC] NPC9 is walking to 9
+[2025-01-29 14:27:39] [Pathfinding] NPC10 moved to (446.569061, 164.197784)
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (130.050552, 132.101105)
+[2025-01-29 14:27:39] [Pathfinding] NPC2 moved to (511.408508, 50.006664)
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (592.615662, 569.653198)
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (555.019714, 309.466156)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (379.898865, 418.050598)
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (468.718842, 539.550110)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (34.050560, 475.898865)
+[2025-01-29 14:27:39] [Pathfinding] NPC8 moved to (617.254517, 657.198669)
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (592.402649, 665.060791)
+[2025-01-29 14:27:39] [Pathfinding] NPC10 moved to (444.943146, 162.272476)
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (128.922897, 129.845810)
+[2025-01-29 14:27:39] [Pathfinding] NPC2 moved to (513.615540, 48.787277)
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (590.115356, 569.979614)
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (554.697266, 306.965363)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (382.154175, 416.922943)
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (466.290558, 540.229309)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (32.922913, 478.154175)
+[2025-01-29 14:27:39] [Pathfinding] NPC8 moved to (616.059692, 654.978210)
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (589.910889, 664.674866)
+[2025-01-29 14:27:39] [Pathfinding] NPC10 moved to (443.316254, 160.346024)
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (127.796593, 127.593193)
+[2025-01-29 14:27:39] [Pathfinding] NPC2 moved to (515.819946, 47.569344)
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (587.618042, 570.305664)
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (554.375183, 304.467529)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (384.406799, 415.796631)
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (463.865143, 540.907715)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (31.796604, 480.406799)
+[2025-01-29 14:27:39] [Pathfinding] NPC8 moved to (614.866333, 652.760376)
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (587.422058, 664.289368)
+[2025-01-29 14:27:39] [Pathfinding] NPC10 moved to (441.691315, 158.421875)
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (126.674179, 125.348358)
+[2025-01-29 14:27:39] [Pathfinding] NPC2 moved to (518.016724, 46.355618)
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (585.129333, 570.630554)
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (554.054260, 301.978333)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (386.651642, 414.674225)
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (461.448120, 541.583801)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (30.674187, 482.651642)
+[2025-01-29 14:27:39] [Pathfinding] NPC8 reached the target.
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (584.941833, 663.905212)
+[2025-01-29 14:27:39] [Pathfinding] NPC10 moved to (440.071991, 156.504364)
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (125.548676, 123.097351)
+[2025-01-29 14:27:39] [Pathfinding] NPC2 moved to (520.219543, 45.138557)
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (582.633789, 570.956360)
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (553.732422, 299.482300)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (388.902649, 413.548706)
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (459.024445, 542.261719)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (29.548683, 484.902649)
+[2025-01-29 14:27:39] [Inventory] NPC8 added 1 food(s) to inventory.
+[2025-01-29 14:27:39] [Tile] Object removed from tile.
+[2025-01-29 14:27:39] [BushAction] Food gathered from bush!
+[2025-01-29 14:27:39] [Action] NPC8 performed: Gather Bush
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (582.454773, 663.520020)
+[2025-01-29 14:27:39] [Pathfinding] NPC10 moved to (438.448212, 154.581589)
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (124.424713, 120.849434)
+[2025-01-29 14:27:39] [Pathfinding] NPC2 moved to (522.419373, 43.923164)
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (580.141663, 571.281677)
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (553.411011, 296.989685)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (391.150574, 412.424744)
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (456.604095, 542.938721)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (28.424723, 487.150574)
+[2025-01-29 14:27:39] [Decision] NPC8 gathering food.
+[2025-01-29 14:27:39] [NPC] NPC8 is walking to 4
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (579.971130, 663.135315)
+[2025-01-29 14:27:39] [Pathfinding] NPC10 moved to (436.826660, 152.661438)
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (123.287804, 118.575623)
+[2025-01-29 14:27:39] [Pathfinding] NPC2 moved to (524.644531, 42.693771)
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (577.620850, 571.610779)
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (553.085938, 294.468353)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (393.424377, 411.287842)
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (454.155853, 543.623535)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (27.287815, 489.424377)
+[2025-01-29 14:27:39] [Pathfinding] NPC8 moved to (614.480835, 650.247559)
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (577.458862, 662.746216)
+[2025-01-29 14:27:39] [Pathfinding] NPC10 moved to (435.186401, 150.719177)
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (122.158478, 116.316971)
+[2025-01-29 14:27:39] [Pathfinding] NPC2 moved to (526.854858, 41.472576)
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (575.116821, 571.937683)
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (552.763000, 291.963837)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (395.683044, 410.158508)
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (451.723938, 544.303772)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (26.158489, 491.683044)
+[2025-01-29 14:27:39] [Pathfinding] NPC8 moved to (614.097961, 647.751526)
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (574.963379, 662.359680)
+[2025-01-29 14:27:39] [Pathfinding] NPC10 moved to (433.557098, 148.789871)
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (121.033310, 114.066635)
+[2025-01-29 14:27:39] [Pathfinding] NPC2 moved to (529.057068, 40.255878)
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (572.622070, 572.263367)
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (552.441284, 289.468536)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (397.933380, 409.033325)
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (449.300995, 544.981506)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (25.033321, 493.933380)
+[2025-01-29 14:27:39] [Pathfinding] NPC8 moved to (613.716492, 645.264648)
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (572.477051, 661.974609)
+[2025-01-29 14:27:39] [Pathfinding] NPC10 moved to (431.933777, 146.867661)
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (119.909012, 111.818047)
+[2025-01-29 14:27:39] [Pathfinding] NPC2 moved to (531.257568, 39.040123)
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (570.129211, 572.588806)
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (552.119812, 286.975189)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (400.181976, 407.909027)
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (446.879913, 545.658691)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (23.909025, 496.181976)
+[2025-01-29 14:27:39] [Pathfinding] NPC8 moved to (613.335327, 642.779724)
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (569.992676, 661.589783)
+[2025-01-29 14:27:39] [Pathfinding] NPC10 moved to (430.311737, 144.946945)
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (118.786125, 109.572273)
+[2025-01-29 14:27:39] [Pathfinding] NPC2 reached the target.
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (567.639465, 572.913818)
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (551.798706, 284.484955)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (402.427734, 406.786133)
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (444.461884, 546.335022)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (22.786139, 498.427734)
+[2025-01-29 14:27:39] [Pathfinding] NPC8 moved to (612.954590, 640.297913)
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (567.511414, 661.205444)
+[2025-01-29 14:27:39] [Pathfinding] NPC10 moved to (428.691711, 143.028641)
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (117.660759, 107.321533)
+[2025-01-29 14:27:39] [Inventory] NPC2 added 1 stone(s) to inventory.
+[2025-01-29 14:27:39] [Tile] Object removed from tile.
+[2025-01-29 14:27:39] [StoneAction] Rock mined! Stone added to inventory.
+[2025-01-29 14:27:39] [Action] NPC2 performed: Mine Rock
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (565.144226, 573.239563)
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (551.476929, 281.989227)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (404.678467, 405.660767)
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (442.038483, 547.012878)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (21.660770, 500.678467)
+[2025-01-29 14:27:39] [Pathfinding] NPC8 moved to (612.573059, 637.810608)
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (565.024658, 660.820251)
+[2025-01-29 14:27:39] [Pathfinding] NPC10 moved to (427.068115, 141.106094)
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (116.535255, 105.070526)
+[2025-01-29 14:27:39] [Decision] NPC2 gathering food.
+[2025-01-29 14:27:39] [NPC] NPC2 is walking to 4
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (562.648682, 573.565369)
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (551.155090, 279.493195)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (406.929474, 404.535278)
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (439.614807, 547.690796)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (20.535267, 502.929474)
+[2025-01-29 14:27:39] [Pathfinding] NPC8 moved to (612.191467, 635.322998)
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (562.537598, 660.435059)
+[2025-01-29 14:27:39] [Pathfinding] NPC10 moved to (425.444336, 139.183319)
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (115.410828, 102.821671)
+[2025-01-29 14:27:39] [Pathfinding] NPC2 moved to (532.037720, 36.649918)
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (560.155518, 573.890869)
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (550.833557, 276.999542)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (409.178345, 403.410858)
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (437.193451, 548.368042)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (19.410837, 505.178345)
+[2025-01-29 14:27:39] [Pathfinding] NPC8 moved to (611.810242, 632.837769)
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (560.052917, 660.050232)
+[2025-01-29 14:27:39] [Pathfinding] NPC10 reached the target.
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (114.285660, 100.571335)
+[2025-01-29 14:27:39] [Pathfinding] NPC2 moved to (532.818359, 34.258144)
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (557.660767, 574.216553)
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (550.511841, 274.504242)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (411.428680, 402.285675)
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (434.770508, 549.045776)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (18.285669, 507.428680)
+[2025-01-29 14:27:39] [Pathfinding] NPC8 moved to (611.428772, 630.350891)
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (557.566589, 659.665161)
+[2025-01-29 14:27:39] [Inventory] NPC10 added 1 stone(s) to inventory.
+[2025-01-29 14:27:39] [Tile] Object removed from tile.
+[2025-01-29 14:27:39] [StoneAction] Rock mined! Stone added to inventory.
+[2025-01-29 14:27:39] [Action] NPC10 performed: Mine Rock
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (113.151703, 98.303429)
+[2025-01-29 14:27:39] [Pathfinding] NPC2 moved to (533.605103, 31.847692)
+[2025-01-29 14:27:39] [Pathfinding] NPC3 reached the target.
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (550.187622, 271.989471)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (413.696594, 401.151733)
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (432.328644, 549.728760)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (17.151714, 509.696594)
+[2025-01-29 14:27:39] [Pathfinding] NPC8 moved to (611.044312, 627.844604)
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (555.060852, 659.277039)
+[2025-01-29 14:27:39] [Decision] NPC10 mining rock.
+[2025-01-29 14:27:39] [NPC] NPC10 is walking to 3
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (112.022781, 96.045578)
+[2025-01-29 14:27:39] [Pathfinding] NPC2 moved to (534.388367, 29.447935)
+[2025-01-29 14:27:39] [Inventory] NPC3 added 1 stone(s) to inventory.
+[2025-01-29 14:27:39] [Tile] Object removed from tile.
+[2025-01-29 14:27:39] [StoneAction] Rock mined! Stone added to inventory.
+[2025-01-29 14:27:39] [Action] NPC3 performed: Mine Rock
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (549.864807, 269.485840)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (415.954437, 400.022797)
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (429.897614, 550.408752)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (16.022789, 511.954437)
+[2025-01-29 14:27:39] [Pathfinding] NPC8 moved to (610.661560, 625.349426)
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (552.566223, 658.890686)
+[2025-01-29 14:27:39] [Pathfinding] NPC10 moved to (423.007172, 138.525665)
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (110.899429, 93.798866)
+[2025-01-29 14:27:39] [Pathfinding] NPC2 moved to (535.167786, 27.060013)
+[2025-01-29 14:27:39] [Decision] NPC3 (Q-Learning) decided: 3
+[2025-01-29 14:27:39] [NPC] NPC3 is walking to 3
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (549.543579, 266.994568)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (418.201141, 398.899445)
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (427.478546, 551.085388)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (14.899433, 514.201172)
+[2025-01-29 14:27:39] [Pathfinding] NPC8 moved to (610.280640, 622.866577)
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (550.083923, 658.506226)
+[2025-01-29 14:27:39] [Pathfinding] NPC10 moved to (420.582001, 137.871262)
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (109.760574, 91.521164)
+[2025-01-29 14:27:39] [Pathfinding] NPC2 moved to (535.957947, 24.639151)
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (556.208679, 576.308533)
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (549.217957, 264.468933)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (420.478851, 397.760590)
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (425.026123, 551.771362)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (13.760580, 516.478882)
+[2025-01-29 14:27:39] [Pathfinding] NPC8 reached the target.
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (547.567383, 658.116455)
+[2025-01-29 14:27:39] [Pathfinding] NPC10 moved to (418.123383, 137.207825)
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (108.630173, 89.260368)
+[2025-01-29 14:27:39] [Pathfinding] NPC2 moved to (536.742249, 22.236256)
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (554.767395, 578.385010)
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (548.894714, 261.962036)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (422.739655, 396.630188)
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (422.591888, 552.452209)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (12.630179, 518.739685)
+[2025-01-29 14:27:39] [Inventory] NPC8 added 1 food(s) to inventory.
+[2025-01-29 14:27:39] [Tile] Object removed from tile.
+[2025-01-29 14:27:39] [BushAction] Food gathered from bush!
+[2025-01-29 14:27:39] [Action] NPC8 performed: Gather Bush
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (545.069519, 657.729553)
+[2025-01-29 14:27:39] [Pathfinding] NPC10 moved to (415.683014, 136.549316)
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (107.498299, 86.996620)
+[2025-01-29 14:27:39] [Pathfinding] NPC2 moved to (537.527588, 19.830223)
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (553.324219, 580.464172)
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (548.571045, 259.451874)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (425.003418, 395.498322)
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (420.154480, 553.133972)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (11.498302, 521.003418)
+[2025-01-29 14:27:39] [Decision] NPC8 selling items.
+[2025-01-29 14:27:39] [NPC] NPC8 is walking to 10
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (542.568420, 657.342163)
+[2025-01-29 14:27:39] [Pathfinding] NPC10 moved to (413.239471, 135.889954)
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (106.357506, 84.715027)
+[2025-01-29 14:27:39] [Pathfinding] NPC2 moved to (538.319092, 17.405224)
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (551.869690, 582.559753)
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (548.244812, 256.921906)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (427.285004, 394.357513)
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (417.697876, 553.821106)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (10.357504, 523.285034)
+[2025-01-29 14:27:39] [Pathfinding] NPC8 moved to (607.731628, 622.768494)
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (540.047607, 656.951721)
+[2025-01-29 14:27:39] [Pathfinding] NPC10 moved to (410.776672, 135.225388)
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (105.224358, 82.448730)
+[2025-01-29 14:27:39] [Pathfinding] NPC2 moved to (539.105286, 14.996481)
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (550.424866, 584.641296)
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (547.920776, 254.408905)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (429.551300, 393.224365)
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (415.257721, 554.503662)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (9.224352, 525.551331)
+[2025-01-29 14:27:39] [Pathfinding] NPC8 moved to (605.199707, 622.671021)
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (537.543640, 656.563904)
+[2025-01-29 14:27:39] [Pathfinding] NPC10 moved to (408.330383, 134.565277)
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (104.102280, 80.204567)
+[2025-01-29 14:27:39] [Pathfinding] NPC2 reached the target.
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (548.994202, 586.702454)
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (547.599915, 251.920456)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (431.795471, 392.102295)
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (412.841400, 555.179504)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (8.102269, 527.795471)
+[2025-01-29 14:27:39] [Pathfinding] NPC8 moved to (602.692505, 622.574524)
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (535.064148, 656.179871)
+[2025-01-29 14:27:39] [Pathfinding] NPC10 moved to (405.907990, 133.911621)
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (102.970001, 77.940010)
+[2025-01-29 14:27:39] [Inventory] NPC2 added 1 food(s) to inventory.
+[2025-01-29 14:27:39] [Tile] Object removed from tile.
+[2025-01-29 14:27:39] [BushAction] Food gathered from bush!
+[2025-01-29 14:27:39] [Action] NPC2 performed: Gather Bush
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (547.550537, 588.782349)
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (547.276123, 249.409393)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 moved to (434.060028, 390.970001)
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (410.403137, 555.861511)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (6.969991, 530.059998)
+[2025-01-29 14:27:39] [Pathfinding] NPC8 moved to (600.162537, 622.477173)
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (532.562134, 655.792358)
+[2025-01-29 14:27:39] [Pathfinding] NPC10 moved to (403.463562, 133.252029)
+[2025-01-29 14:27:39] [Pathfinding] NPC1 reached the target.
+[2025-01-29 14:27:39] [Decision] NPC2 selling items.
+[2025-01-29 14:27:39] [NPC] NPC2 is walking to 10
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (546.105835, 590.863770)
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (546.952148, 246.896545)
+[2025-01-29 14:27:39] [Pathfinding] NPC5 reached the target.
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (407.963135, 556.544006)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 reached the target.
+[2025-01-29 14:27:39] [Pathfinding] NPC8 moved to (597.630737, 622.379761)
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (530.058350, 655.404541)
+[2025-01-29 14:27:39] [Pathfinding] NPC10 moved to (401.017395, 132.591965)
+[2025-01-29 14:27:39] [Inventory] NPC1 added 1 food(s) to inventory.
+[2025-01-29 14:27:39] [Tile] Object removed from tile.
+[2025-01-29 14:27:39] [BushAction] Food gathered from bush!
+[2025-01-29 14:27:39] [Action] NPC1 performed: Gather Bush
+[2025-01-29 14:27:39] [Pathfinding] NPC2 moved to (539.164673, 17.532585)
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (544.659302, 592.947754)
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (546.627747, 244.380569)
+[2025-01-29 14:27:39] [Action] NPC5 attempted action but it failed.
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (405.520111, 557.227356)
+[2025-01-29 14:27:39] [House] NPC7's energy capped at maximum.
+[2025-01-29 14:27:39] [Action] NPC7 attempted action but it failed.
+[2025-01-29 14:27:39] [Pathfinding] NPC8 moved to (595.095825, 622.282227)
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (527.551453, 655.016235)
+[2025-01-29 14:27:39] [Pathfinding] NPC10 moved to (398.568207, 131.931076)
+[2025-01-29 14:27:39] [Decision] NPC1 (Q-Learning) decided: 4
+[2025-01-29 14:27:39] [NPC] NPC1 is walking to 4
+[2025-01-29 14:27:39] [Pathfinding] NPC2 moved to (539.223511, 20.044247)
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (543.226746, 595.011658)
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (546.306458, 241.888840)
+[2025-01-29 14:27:39] [Decision] NPC5 (Q-Learning) decided: 11
+[2025-01-29 14:27:39] [NPC] NPC5 has no valid target.
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (403.100616, 557.904114)
+[2025-01-29 14:27:39] [Decision] NPC7 (Q-Learning) decided: 10
+[2025-01-29 14:27:39] [NPC] NPC7 is walking to 10
+[2025-01-29 14:27:39] [Pathfinding] NPC8 moved to (592.585327, 622.185608)
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (525.068726, 654.631714)
+[2025-01-29 14:27:39] [Pathfinding] NPC10 reached the target.
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (104.923012, 76.366776)
+[2025-01-29 14:27:39] [Pathfinding] NPC2 moved to (539.282227, 22.551409)
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (541.796753, 597.071838)
+[2025-01-29 14:27:39] [Pathfinding] NPC4 moved to (545.985779, 239.401581)
+[2025-01-29 14:27:39] [Decision] NPC5 (Q-Learning) decided: 1
+[2025-01-29 14:27:39] [NPC] NPC5 has no valid target.
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (400.685455, 558.579651)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (9.330256, 530.907593)
+[2025-01-29 14:27:39] [Pathfinding] NPC8 moved to (590.079346, 622.089172)
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (522.590454, 654.247864)
+[2025-01-29 14:27:39] [Inventory] NPC10 added 1 stone(s) to inventory.
+[2025-01-29 14:27:39] [Tile] Object removed from tile.
+[2025-01-29 14:27:39] [StoneAction] Rock mined! Stone added to inventory.
+[2025-01-29 14:27:39] [Action] NPC10 performed: Mine Rock
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (106.903709, 74.771240)
+[2025-01-29 14:27:39] [Pathfinding] NPC2 moved to (539.341797, 25.094112)
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (540.346497, 599.161255)
+[2025-01-29 14:27:39] [Pathfinding] NPC4 reached the target.
+[2025-01-29 14:27:39] [Decision] NPC5 (Q-Learning) decided: 3
+[2025-01-29 14:27:39] [NPC] NPC5 is walking to 3
+[2025-01-29 14:27:39] [Pathfinding] NPC6 moved to (398.236053, 559.264771)
+[2025-01-29 14:27:39] [Pathfinding] NPC7 moved to (11.723978, 531.767212)
+[2025-01-29 14:27:39] [Pathfinding] NPC8 moved to (587.537842, 621.991333)
+[2025-01-29 14:27:39] [Pathfinding] NPC9 moved to (520.077026, 653.858582)
+[2025-01-29 14:27:39] [Decision] NPC10 mining rock.
+[2025-01-29 14:27:39] [NPC] NPC10 is walking to 3
+[2025-01-29 14:27:39] [Pathfinding] NPC1 moved to (108.850998, 73.202621)
+[2025-01-29 14:27:39] [Pathfinding] NPC2 moved to (539.400330, 27.593927)
+[2025-01-29 14:27:39] [Pathfinding] NPC3 moved to (538.920715, 601.215393)
+[2025-01-29 14:27:39] [DEBUG] Sell attempt: NPC4 selling 1 food
+[2025-01-29 14:27:39] [Market] Item not found in price list. Setting default price for: food
+[2025-01-29 14:27:39] [DEBUG] NPC4 has 1 food

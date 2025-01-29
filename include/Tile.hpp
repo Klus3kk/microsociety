@@ -3,6 +3,7 @@
 
 #include <SFML/Graphics.hpp>
 #include "Object.hpp"
+#include "debug.hpp"
 #include <memory>
 
 class Tile {
@@ -54,7 +55,10 @@ public:
     }
 
     void removeObject() {
-        object.reset();
+        if (object) {
+            object.reset(); // Release the unique_ptr managing the object
+            getDebugConsole().log("Tile", "Object removed from tile.");
+        }
     }
 
     sf::Vector2f getPosition() const {

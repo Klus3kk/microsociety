@@ -2,51 +2,60 @@
 
 // TreeAction
 void TreeAction::perform(NPCEntity& player, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
-    if (tile.hasObject() && player.addToInventory("wood", 1)) {
-        tile.removeObject();
-        player.consumeEnergy(5.0f); // Zużywa 5 energii
-        player.receiveFeedback(10.0f, tileMap); // Nagroda za zebranie drewna
-        getDebugConsole().log("Action", "Tree chopped! Wood added to inventory.");
-    } else if (!tile.hasObject()) {
-        player.receiveFeedback(-5.0f, tileMap); // Kara za nieprawidłową akcję
-        getDebugConsole().logOnce("Action", "No tree to chop on this tile.");
+    if (tile.hasObject()) {
+        getDebugConsole().log("TreeAction", "Object exists on tile.");
+        if (player.addToInventory("wood", 1)) {
+            tile.removeObject();
+            player.consumeEnergy(5.0f);
+            player.receiveFeedback(10.0f, tileMap);
+            getDebugConsole().log("TreeAction", "Tree chopped! Wood added to inventory.");
+        } else {
+            player.receiveFeedback(-2.0f, tileMap);
+            getDebugConsole().logOnce("TreeAction", "Inventory full. Cannot chop tree.");
+        }
     } else {
-        player.receiveFeedback(-2.0f, tileMap); // Kara za pełny ekwipunek
-        getDebugConsole().logOnce("Action", "Failed to chop tree. Inventory is full.");
+        player.receiveFeedback(-5.0f, tileMap);
+        getDebugConsole().logOnce("TreeAction", "No tree to chop on this tile.");
     }
 }
 
 // StoneAction
 void StoneAction::perform(NPCEntity& player, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
-    if (tile.hasObject() && tile.getObject()->getType() == ObjectType::Rock && player.addToInventory("stone", 1)) {
-        tile.removeObject();
-        player.consumeEnergy(5.0f);
-        player.receiveFeedback(10.0f, tileMap);
-        getDebugConsole().log("Action", "Rock mined! Stone added to inventory.");
-    } else if (!tile.hasObject()) {
-        player.receiveFeedback(-5.0f, tileMap);
-        getDebugConsole().logOnce("Action", "No rock to mine on this tile.");
+    if (tile.hasObject() && tile.getObject()->getType() == ObjectType::Rock) {
+        if (player.addToInventory("stone", 1)) {
+            tile.removeObject();
+            player.consumeEnergy(5.0f);
+            player.receiveFeedback(10.0f, tileMap);
+            getDebugConsole().log("StoneAction", "Rock mined! Stone added to inventory.");
+        } else {
+            player.receiveFeedback(-2.0f, tileMap);
+            getDebugConsole().logOnce("StoneAction", "Inventory full. Cannot mine rock.");
+        }
     } else {
-        player.receiveFeedback(-2.0f, tileMap);
-        getDebugConsole().logOnce("Action", "Failed to mine rock. Inventory is full.");
+        player.receiveFeedback(-5.0f, tileMap);
+        getDebugConsole().logOnce("StoneAction", "No rock to mine on this tile.");
     }
 }
 
+
 // BushAction
 void BushAction::perform(NPCEntity& player, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
-    if (tile.hasObject() && tile.getObject()->getType() == ObjectType::Bush && player.addToInventory("food", 1)) {
-        tile.removeObject();
-        player.consumeEnergy(5.0f);
-        player.receiveFeedback(10.0f, tileMap);
-        getDebugConsole().log("Action", "Food gathered from bush!");
-    } else if (!tile.hasObject()) {
-        player.receiveFeedback(-5.0f, tileMap);
-        getDebugConsole().logOnce("Action", "No bush to gather food from on this tile.");
+    if (tile.hasObject() && tile.getObject()->getType() == ObjectType::Bush) {
+        if (player.addToInventory("food", 1)) {
+            tile.removeObject();
+            player.consumeEnergy(5.0f);
+            player.receiveFeedback(10.0f, tileMap);
+            getDebugConsole().log("BushAction", "Food gathered from bush!");
+        } else {
+            player.receiveFeedback(-2.0f, tileMap);
+            getDebugConsole().logOnce("BushAction", "Inventory full. Cannot gather food.");
+        }
     } else {
-        player.receiveFeedback(-2.0f, tileMap);
-        getDebugConsole().logOnce("Action", "Failed to gather food. Inventory is full.");
+        player.receiveFeedback(-5.0f, tileMap);
+        getDebugConsole().logOnce("BushAction", "No bush to gather food from on this tile.");
     }
 }
+
 
 // MoveAction
 void MoveAction::perform(NPCEntity& player, Tile&, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
@@ -63,15 +72,21 @@ void TradeAction::perform(NPCEntity& player, Tile&, const std::vector<std::vecto
 
 // RegenerateEnergyAction
 void RegenerateEnergyAction::perform(NPCEntity& player, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
-    if (auto house = dynamic_cast<House*>(tile.getObject())) {
-        house->regenerateEnergy(player); // Regeneracja energii w domu
-        player.receiveFeedback(5.0f, tileMap); // Nagroda za regenerację energii
-        getDebugConsole().log("Action", "Energy regenerated at house.");
+    if (tile.hasObject()) {
+        if (auto house = dynamic_cast<House*>(tile.getObject())) {
+            house->regenerateEnergy(player); // Regenerate energy
+            player.receiveFeedback(5.0f, tileMap); // Reward
+            getDebugConsole().log("Action", "Energy regenerated at house.");
+        } else {
+            player.receiveFeedback(-1.0f, tileMap); // Penalty
+            getDebugConsole().logOnce("Action", "No house found to regenerate energy.");
+        }
     } else {
-        player.receiveFeedback(-1.0f, tileMap); // Kara za nieprawidłową akcję
-        getDebugConsole().logOnce("Action", "No house found to regenerate energy.");
+        player.receiveFeedback(-1.0f, tileMap); // Penalty
+        getDebugConsole().logOnce("Action", "No object found on this tile.");
     }
 }
+
 
 
 // UpgradeHouseAction

@@ -14,7 +14,6 @@ enum class ActionType {
     BuyItem,
     SellItem,
     Rest,
-    Idle
 };
 
 #endif 

@@ -9,18 +9,19 @@ QLearningAgent::QLearningAgent(float learningRate, float discountFactor, float e
 
 // Decide the next action using epsilon-greedy policy
 ActionType QLearningAgent::decideAction(const State& state) {
-    // Epsilon-greedy decision-making
     static std::random_device rd;
     static std::mt19937 gen(rd());
     std::uniform_real_distribution<> dist(0.0, 1.0);
 
     if (dist(gen) < epsilon) {
         // Explore: Random action
-        return static_cast<ActionType>(rand() % static_cast<int>(ActionType::Idle) + 1);
+        int maxActionType = static_cast<int>(ActionType::Rest); // Replace with the last valid ActionType
+        return static_cast<ActionType>(1 + rand() % maxActionType); // Exclude None
     } else {
         // Exploit: Choose the action with the highest Q-value
         if (QTable.find(state) == QTable.end()) {
-            return static_cast<ActionType>(rand() % static_cast<int>(ActionType::Idle) + 1);
+            int maxActionType = static_cast<int>(ActionType::Rest); // Replace with the last valid ActionType
+            return static_cast<ActionType>(1 + rand() % maxActionType); // Exclude None
         }
 
         auto& actions = QTable[state];

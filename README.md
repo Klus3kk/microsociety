@@ -36,7 +36,7 @@ MicroSociety offers two setup options:
    ```bash
    mkdir build && cd build
    cmake ..
-   make
+   make clean && make -j$(nproc)
    ```
 
 3. Run the executable:
@@ -89,4 +89,15 @@ valgrind --tool=callgrind ./MicroSociety
 kcachegrind callgrind.out.<pid>
 ```
 
+Or gdb:
 
+```bash
+gdb ./MicroSociety
+run
+```
+
+If the simulation crashes, write: 
+
+```bash
+bt full 
+```

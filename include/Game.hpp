@@ -24,7 +24,7 @@ private:
     // UI and Market
     UI ui;
     Market market;
-
+    House house;
     // Window and Graphics
     sf::RenderWindow window;
     ClockGUI clockGUI;

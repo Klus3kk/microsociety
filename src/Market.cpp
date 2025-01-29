@@ -47,9 +47,16 @@ float Market::calculateSellPrice(const std::string& item) const {
 
 // Player buys an item
 bool Market::buyItem(NPCEntity& player, const std::string& item, int quantity) {
-    if (prices.find(item) == prices.end()) setPrice(item, 10.0f);
+    getDebugConsole().log("DEBUG", player.getName() + " is trying to buy " + std::to_string(quantity) + " " + item);
+
+    if (prices.find(item) == prices.end()) {
+        getDebugConsole().log("Market", "Item not found in price list. Setting default price: " + item);
+        setPrice(item, 10.0f);
+    }
 
     float cost = calculateBuyPrice(item) * quantity;
+    getDebugConsole().log("DEBUG", "Total cost for " + std::to_string(quantity) + " " + item + " is $" + std::to_string(cost));
+
     if (player.getMoney() >= cost) {
         player.setMoney(player.getMoney() - cost);
         player.addToInventory(item, quantity);
@@ -62,42 +69,65 @@ bool Market::buyItem(NPCEntity& player, const std::string& item, int quantity) {
         totalBuyTransactions[item] += quantity;
         totalExpenditure[item] += cost;
 
-        // Reward for profitable transaction
-        player.addReward(10.0f * quantity); // Adjust reward value as needed
+        player.addReward(10.0f * quantity);
+        getDebugConsole().log("MARKET", player.getName() + " bought " + std::to_string(quantity) + " " + item + " for $" + std::to_string(cost));
         return true;
     }
 
-    // Penalize for insufficient funds
+    getDebugConsole().log("ERROR", player.getName() + " does not have enough money to buy " + item);
     player.addPenalty(5.0f);
     return false;
 }
+
 
 // Player sells an item
 bool Market::sellItem(NPCEntity& player, const std::string& item, int quantity) {
-    if (prices.find(item) == prices.end()) setPrice(item, 10.0f);
+    getDebugConsole().log("DEBUG", "Sell attempt: " + player.getName() + " selling " + std::to_string(quantity) + " " + item);
 
-    if (player.getInventoryItemCount(item) >= quantity) {
-        float revenue = calculateSellPrice(item) * quantity;
-        player.removeFromInventory(item, quantity);
-        player.setMoney(player.getMoney() + revenue);
-
-        supply[item] += quantity;
-        demand[item] = std::max(0, demand[item] - quantity);
-        prices[item] = adjustPriceOnSell(prices[item], demand[item], supply[item], priceAdjustmentFactor);
-
-        trackPriceHistory(item);
-        totalSellTransactions[item] += quantity;
-        totalRevenue[item] += revenue;
-
-        // Reward for profitable transaction
-        player.addReward(15.0f * quantity); // Adjust reward value as needed
-        return true;
+    if (item.empty()) {
+        getDebugConsole().log("ERROR", "Market::sellItem() received an EMPTY item name from " + player.getName());
+        return false;
     }
 
-    // Penalize for insufficient inventory
-    player.addPenalty(5.0f);
-    return false;
+    if (prices.find(item) == prices.end()) {
+        getDebugConsole().log("Market", "Item not found in price list. Setting default price for: " + item);
+        setPrice(item, 10.0f);
+    }
+
+    int playerItemCount = player.getInventoryItemCount(item);
+    getDebugConsole().log("DEBUG", player.getName() + " has " + std::to_string(playerItemCount) + " " + item);
+
+    if (playerItemCount < quantity) {
+        getDebugConsole().log("ERROR", player.getName() + " tried to sell " + std::to_string(quantity) +
+                             " " + item + "(s) but only has " + std::to_string(playerItemCount));
+        return false;
+    }
+
+    float revenue = calculateSellPrice(item) * quantity;
+    
+    if (!player.removeFromInventory(item, quantity)) {
+        getDebugConsole().log("ERROR", "Failed to remove " + std::to_string(quantity) + " " + item + "(s) from inventory.");
+        return false;
+    }
+
+    player.setMoney(player.getMoney() + revenue);
+
+    supply[item] += quantity;
+    demand[item] = std::max(0, demand[item] - quantity);
+    prices[item] = adjustPriceOnSell(prices[item], demand[item], supply[item], priceAdjustmentFactor);
+
+    trackPriceHistory(item);
+    totalSellTransactions[item] += quantity;
+    totalRevenue[item] += revenue;
+
+    player.addReward(15.0f * quantity);
+    getDebugConsole().log("Market", player.getName() + " sold " + std::to_string(quantity) +
+                          " " + item + "(s) for $" + std::to_string(revenue));
+
+    return true;
 }
+
+
 
 // Adjust price after a buy
 float Market::adjustPriceOnBuy(float currentPrice, int demand, int supply, float buyFactor) {

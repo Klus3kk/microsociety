@@ -39,7 +39,7 @@ private:
     std::unordered_map<std::string, bool> logOnceTracker;  // Tracker for `logOnce`
 
     void trimLogs();                                       // Remove excess logs
-    std::string formatLog(const std::string& category, const std::string& message, LogLevel level) const;
+    std::string getLogFilename() const;
 
 public:
     DebugConsole(float windowWidth, float windowHeight);
@@ -59,8 +59,9 @@ public:
     // System Logs
     void logSystemStats(float fps, size_t memoryUsage); // Track FPS and memory
     void logResourceStats(const std::unordered_map<std::string, int>& resources); // For resource tracking
-    void saveLogsToFile(const std::string& filename) const; // Save to file
-
+    void saveLogToFile(const std::string& filename, const std::string& logEntry); 
+    void saveLogsToFile(const std::string& filename); 
+    void saveAllLogs(const std::string& filename);  
     // Rendering
     void render(sf::RenderWindow& window);
     void clearLogs(); // Clear all logs
@@ -79,4 +80,4 @@ void debugNPCStats(const std::string& npcName, float health, float energy, float
 void debugSimulationIteration(int iteration, float elapsedTime); // Added for iteration tracking
 void debugMarketTransactions(const std::unordered_map<std::string, int>& transactions); // Added for detailed market logs
 
-#endif // DEBUG_HPP
+#endif 
