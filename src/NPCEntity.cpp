@@ -140,7 +140,13 @@ void NPCEntity::performAction(ActionType action, Tile& tile,
             if (auto houseObj = dynamic_cast<House*>(tile.getObject())) {
                 if (!inventory.empty()) {
                     for (const auto& [item, quantity] : inventory) {
-                        houseObj->storeItem(item, quantity);
+                        if (item == "wood" || item == "stone" || item == "bush") {
+                            if (quantity > 2) { // Keep at least 2 in inventory
+                                houseObj->storeItem(item, quantity - 2);
+                            }
+                        } else {
+                            houseObj->storeItem(item, quantity);
+                        }
                     }
                     actionReward = 5.0f;
                     actionSuccess = true;
@@ -151,6 +157,7 @@ void NPCEntity::performAction(ActionType action, Tile& tile,
                 actionReward = -5.0f;
             }
             break;
+
 
         case ActionType::RegenerateEnergy:
             if (auto houseObj = dynamic_cast<House*>(tile.getObject())) {
@@ -222,78 +229,6 @@ void NPCEntity::performAction(ActionType action, Tile& tile,
         getDebugConsole().log("Action", getName() + " attempted action but it failed.");
     }
 }
-
-
-
-
-
-// void NPCEntity::performAction(ActionType action, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap, Market& market, House& house) {
-//     switch (action) {
-//         case ActionType::ChopTree:
-//             if (tile.hasObject() && tile.getObject()->getType() == ObjectType::Tree) {
-//                 TreeAction treeAction;
-//                 treeAction.perform(*this, tile, tileMap);
-//             }
-//             break;
-
-//         case ActionType::MineRock:
-//             if (tile.hasObject() && tile.getObject()->getType() == ObjectType::Rock) {
-//                 StoneAction stoneAction;
-//                 stoneAction.perform(*this, tile, tileMap);
-//             }
-//             break;
-
-//         case ActionType::GatherBush:
-//             if (tile.hasObject() && tile.getObject()->getType() == ObjectType::Bush) {
-//                 BushAction bushAction;
-//                 bushAction.perform(*this, tile, tileMap);
-//             }
-//             break;
-
-//         case ActionType::StoreItem:
-//             for (const auto& item : inventory) {
-//                 house.storeItem(item.first, item.second);
-//             }
-//             break;
-
-//         case ActionType::UpgradeHouse:
-//             house.upgrade(money, *this);
-//             break;
-
-//         case ActionType::RegenerateEnergy:
-//             house.regenerateEnergy(*this);
-//             break;
-
-//         case ActionType::TakeOutItems:
-//             for (const auto& item : house.getStorage()) {
-//                 house.takeFromStorage(item.first, item.second, *this);
-//             }
-//             break;
-
-//         case ActionType::BuyItem:
-//             market.buyItem(*this, "food", 1); // Example: Buying food
-//             break;
-
-//         case ActionType::SellItem:
-//             for (const auto& item : inventory) {
-//                 market.sellItem(*this, item.first, item.second);
-//             }
-//             break;
-
-//         case ActionType::Move:
-//             position.x += speed * 0.1f; // Simple movement placeholder
-//             break;
-
-//         case ActionType::Rest:
-//             house.regenerateEnergy(*this); // Rest regenerates energy
-//             break;
-
-//         case ActionType::None:
-//         default:
-//             break; // No action or idle state
-//     }
-// }
-
 
 void NPCEntity::setTarget(Tile* newTarget) {
     target = newTarget;
@@ -422,7 +357,7 @@ ActionType NPCEntity::decideNextAction(const std::vector<std::vector<std::unique
     }
 
     if (getHunger() < 20.0f) {
-        getDebugConsole().log("Decision", name + " is starving! Gathering food.");
+        getDebugConsole().log("Decision", name + " is starving! Gathering bush.");
         return ActionType::GatherBush;
     }
 
@@ -445,7 +380,7 @@ ActionType NPCEntity::decideNextAction(const std::vector<std::vector<std::unique
             return ActionType::MineRock;
         }
         if (obj == ObjectType::Bush) {
-            getDebugConsole().log("Decision", name + " gathering food.");
+            getDebugConsole().log("Decision", name + " gathering bush.");
             return ActionType::GatherBush;
         }
     }
@@ -454,14 +389,18 @@ ActionType NPCEntity::decideNextAction(const std::vector<std::vector<std::unique
     Tile* nearestMarket = findNearestTile(tileMap, ObjectType::Market);
     if (nearestMarket) {
         if (!inventory.empty()) {
-            getDebugConsole().log("Decision", name + " selling items.");
-            return ActionType::SellItem;
-        }
-        if (getMoney() >= 15.0f) {
-            getDebugConsole().log("Decision", name + " buying resources.");
-            return ActionType::BuyItem;
+            int woodCount = getInventoryItemCount("wood");
+            int stoneCount = getInventoryItemCount("stone");
+            int bushCount = getInventoryItemCount("bush");
+
+            // Ensure NPC keeps at least some wood, stone, and bushes before selling
+            if (woodCount > 5 || stoneCount > 3 || bushCount > 2) {
+                getDebugConsole().log("Decision", name + " selling surplus resources.");
+                return ActionType::SellItem;
+            }
         }
     }
+
 
     // Step 4: **Check for House - Retrieve Stored Items**
     Tile* nearestHouse = findNearestTile(tileMap, ObjectType::House);

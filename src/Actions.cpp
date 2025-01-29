@@ -41,18 +41,18 @@ void StoneAction::perform(NPCEntity& player, Tile& tile, const std::vector<std::
 // BushAction
 void BushAction::perform(NPCEntity& player, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
     if (tile.hasObject() && tile.getObject()->getType() == ObjectType::Bush) {
-        if (player.addToInventory("food", 1)) {
+        if (player.addToInventory("bush", 1)) {
             tile.removeObject();
             player.consumeEnergy(5.0f);
             player.receiveFeedback(10.0f, tileMap);
-            getDebugConsole().log("BushAction", "Food gathered from bush!");
+            getDebugConsole().log("BushAction", "Bush gathered from bush!");
         } else {
             player.receiveFeedback(-2.0f, tileMap);
-            getDebugConsole().logOnce("BushAction", "Inventory full. Cannot gather food.");
+            getDebugConsole().logOnce("BushAction", "Inventory full. Cannot gather bush.");
         }
     } else {
         player.receiveFeedback(-5.0f, tileMap);
-        getDebugConsole().logOnce("BushAction", "No bush to gather food from on this tile.");
+        getDebugConsole().logOnce("BushAction", "No bush to gather bush from on this tile.");
     }
 }
 
@@ -300,7 +300,7 @@ void RestAction::perform(NPCEntity& player, Tile&, const std::vector<std::vector
 void EvaluateStateAction::perform(NPCEntity& player, Tile&, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
     if (player.getHunger() < 50.0f) {
         player.receiveFeedback(-2.0f, tileMap); // Kara za niski poziom głodu
-        getDebugConsole().log("Action", "NPC is hungry and should gather food.");
+        getDebugConsole().log("Action", "NPC is hungry and should gather bush.");
     } else if (player.getEnergy() < 20.0f) {
         player.receiveFeedback(-2.0f, tileMap); // Kara za niski poziom energii
         getDebugConsole().log("Action", "NPC is tired and needs to regenerate energy.");

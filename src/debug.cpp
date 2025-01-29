@@ -36,7 +36,6 @@ void DebugConsole::setLogLevel(LogLevel level) {
 void DebugConsole::saveLogToFile(const std::string& filename, const std::string& logEntry) {
     std::ofstream outFile(filename, std::ios::app);
     if (!outFile.is_open()) {
-        std::cerr << "Failed to save logs to " << filename << std::endl;
         return;
     }
     outFile << logEntry << "\n";
@@ -45,7 +44,6 @@ void DebugConsole::saveLogToFile(const std::string& filename, const std::string&
 void DebugConsole::saveAllLogs(const std::string& filename) {
     std::ofstream outFile(filename, std::ios::app);
     if (!outFile.is_open()) {
-        std::cerr << "Failed to save logs to " << filename << std::endl;
         return;
     }
 

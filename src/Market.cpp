@@ -8,7 +8,18 @@ Market::Market() {
     sf::Texture defaultTexture;
     texture = defaultTexture;
     sprite.setTexture(texture);
+
+    setPrice("wood", 10.0f);
+    setPrice("stone", 10.0f);
+    setPrice("bush", 5.0f);
+
+    // Debugging: Ensure prices are set
+    getDebugConsole().log("DEBUG", "Market initialized with prices:");
+    for (const auto& [item, price] : prices) {
+        getDebugConsole().log("DEBUG", "- " + item + ": $" + std::to_string(price));
+    }
 }
+
 
 // Constructor with texture
 Market::Market(const sf::Texture& tex) {
@@ -99,9 +110,19 @@ bool Market::sellItem(NPCEntity& player, const std::string& item, int quantity) 
 
     if (playerItemCount < quantity) {
         getDebugConsole().log("ERROR", player.getName() + " tried to sell " + std::to_string(quantity) +
-                             " " + item + "(s) but only has " + std::to_string(playerItemCount));
+                            " " + item + "(s) but only has " + std::to_string(playerItemCount));
         return false;
     }
+
+    // Prevent selling all essential resources
+    if ((item == "wood" && playerItemCount - quantity < 1) || 
+        (item == "stone" && playerItemCount - quantity < 1) ||
+        (item == "bush" && playerItemCount - quantity < 1)) {
+        getDebugConsole().log("Market", player.getName() + " blocked from selling " + item + " to avoid depletion");
+        return false;
+    }
+
+
 
     float revenue = calculateSellPrice(item) * quantity;
     
