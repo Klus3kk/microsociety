@@ -6,6 +6,8 @@
 #include <unordered_map>
 #include <algorithm>
 #include <thread>
+#include <nlohmann/json.hpp>
+
 // Constructor
 Game::Game()
     : window(sf::VideoMode(GameConfig::windowWidth, GameConfig::windowHeight), "MicroSociety", sf::Style::Titlebar | sf::Style::Close),
@@ -176,7 +178,7 @@ void Game::simulateNPCEntityBehavior(float deltaTime) {
                 break;
         }
 
-        // ✅ Enforce activity if idle too long
+        // Enforce activity if idle too long
         if (it->getState() == NPCState::Idle) {
             idleCounter[it->getName()]++;
             if (idleCounter[it->getName()] > 5) {
@@ -330,7 +332,7 @@ void Game::regenerateResources() {
         &textureManager.getTexture("tree3", "../assets/objects/tree3.png")
     };
 
-    int numResourcesToRegenerate = GameConfig::mapWidth * GameConfig::mapHeight * 0.05; // 🔥 Increased to 5% of map tiles
+    int numResourcesToRegenerate = GameConfig::mapWidth * GameConfig::mapHeight * 0.05; // Increased to 5% of map tiles
 
     for (int i = 0; i < numResourcesToRegenerate; ++i) {
         int x = distX(gen);
@@ -616,48 +618,80 @@ void Game::drawTileBorders() {
     }
 }
 
-#include <fstream>
-#include "nlohmann/json.hpp"
+void Game::logIterationStats(int iteration) {
+    nlohmann::json statsJson;
+    statsJson["iteration"] = iteration;
+    statsJson["total_npcs"] = npcs.size();
+    statsJson["total_money_spent"] = MoneyManager::getTotalMoneySpent();
+    statsJson["total_money_earned"] = MoneyManager::getTotalMoneyEarned();
+    statsJson["items_sold"] = market.getTotalItemsSold();
+    statsJson["items_bought"] = market.getTotalItemsBought();
+    statsJson["items_gathered"] = getTotalItemsGathered();
+    statsJson["market_prices"] = market.getPrices();
+    
+    std::ofstream file("stats.json", std::ios::app);
+    file << statsJson.dump(4) << std::endl;
+}
+
+int Game::getTotalItemsGathered() const {
+    int totalGathered = 0;
+    for (const auto& npc : npcs) {
+        totalGathered += npc.getGatheredResources();
+    }
+    return totalGathered;
+}
+
 
 void Game::resetSimulation() {
     static int iterationCounter = 0;
-    iterationCounter++;
+    iterationCounter++;  // Increment iteration
 
-    getDebugConsole().log("SYSTEM", "Simulation resetting... Iteration " + std::to_string(iterationCounter));
+    getDebugConsole().log("SYSTEM", "Resetting simulation... Iteration " + std::to_string(iterationCounter));
 
-    // Save previous stats before reset
-    nlohmann::json statsJson;
-    statsJson["iteration"] = iterationCounter;
-    statsJson["total_npcs"] = GameConfig::NPCEntityCount;
-    statsJson["total_resources"] = aggregateResources(npcs);
+    // Save previous iteration stats
+    logIterationStats(iterationCounter);
 
-    std::ofstream file("stats.json");
-    file << statsJson.dump(4);
-    file.close();
+    // Reset time and clock
+    clockGUI.reset();
+    timeManager.incrementSocietyIteration();
+    timeManager.reset();  // Reset time but keep iteration incremented
+    getDebugConsole().log("TIME", "Time and clock reset.");
 
-    // Clear map safely
-    for (auto& row : tileMap) {
-        for (auto& tile : row) {
-            tile.reset();
-        }
-    }
-    tileMap.clear();
-    tileMap.shrink_to_fit();
+    // Reset Market and UI
+    market.resetTransactions();  // Clear past transactions
+    market.randomizePrices();    // Refresh with new prices
+    ui.resetMarketGraph();       // Ensure graph clears before updating
+    ui.updateMarketPanel(market);
+    getDebugConsole().log("MARKET", "Market reset with new randomized prices.");
 
-    // Clear NPCs safely
+    // Reset NPCs safely
     npcs.clear();
     npcs.shrink_to_fit();
-
-    // Re-generate everything
-    generateMap();
     npcs = generateNPCEntitys();
     ui.updateNPCEntityList(npcs);
+    getDebugConsole().log("NPC", "NPCs reset with fresh random stats.");
 
-    // Reset parameters
+    // Clear and regenerate the map properly
+    tileMap.clear();
+    tileMap.shrink_to_fit();
+    generateMap();
+    getDebugConsole().log("MAP", "Map reset and regenerated.");
+
+    // Reset resources on the map
+    regenerateResources();
+    getDebugConsole().log("RESOURCES", "Resources regenerated.");
+
+    // Update UI Status with Iteration +1
+    ui.updateStatus(timeManager.getCurrentDay(), timeManager.getFormattedTime(), timeManager.getSocietyIteration());
+
+
+    // Reset simulation parameters
     simulationSpeed = 1.0f;
 
     getDebugConsole().log("SYSTEM", "Simulation reset complete.");
 }
+
+
 
 
 

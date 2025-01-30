@@ -103,9 +103,14 @@ void UI::updateStatus(int day, const std::string& time, int iteration) {
     std::ostringstream status;
     status << "Day: " << day << "\n"
            << "Time: " << time << "\n"
-           << "Iteration: " << iteration;
+           << "Iteration: " << (iteration + 1); 
 
     statusText.setString(status.str());
+}
+
+
+void UI::resetMarketGraph() {
+    marketResourceTexts.clear(); // Clear previous resource texts
 }
 
 
@@ -202,7 +207,7 @@ void UI::populateNPCDetails(const NPCEntity& npc) {
     // Update the text content for NPC details
     std::ostringstream details;
     details << "Name: " << npc.getName() << "\n"
-            << "Health: " << npc.getHealth() << " / 100\n"
+            << "Health: " << npc.getHealth() << "\n"
             // << "Hunger: " << npc.getHunger() << "\n"
             << "Energy: " << static_cast<int>(npc.getEnergyPercentage() * 100) << "%\n"
             << "Speed: " << npc.getBaseSpeed() << "\n"
@@ -810,6 +815,7 @@ void UI::drawMarketGraph(sf::RenderWindow& window, const Market& market) {
 
 
 
+
 void UI::updateAll(const std::vector<NPCEntity>& npcs, const Market& market, const TimeManager& timeManager) {
     updateStats(npcs, timeManager);
     updateMarketPanel(market);
@@ -860,9 +866,6 @@ void UI::updateNPCEntityList(const std::vector<NPCEntity>& npcs) {
         buttonY += 50;
     }
 }
-
-
-
 
 void UI::handleNPCEntityPanel(sf::RenderWindow& window, sf::Event& event, const std::vector<NPCEntity>& npcs) {
     if (showNPCDetail && selectedNPCIndex >= 0 && selectedNPCIndex < static_cast<int>(npcs.size())) {

@@ -21,7 +21,7 @@ ClockGUI::ClockGUI(float x, float y) {
     }
     hourHand.setPosition(x, y);
     minuteHand.setPosition(x, y);
-    secondHand.setPosition(x, y);
+    // secondHand.setPosition(x, y);
 }
 
 void ClockGUI::setupClockFace() {
@@ -64,9 +64,9 @@ void ClockGUI::setupHands() {
     minuteHand.setOrigin(0, minuteHand.getSize().y / 2);
 
     // Second hand
-    secondHand.setSize(sf::Vector2f(40.0f, 1.5f));
-    secondHand.setFillColor(sf::Color(255, 80, 80)); // Softer red
-    secondHand.setOrigin(0, secondHand.getSize().y / 2);
+    // secondHand.setSize(sf::Vector2f(40.0f, 1.5f));
+    // secondHand.setFillColor(sf::Color(255, 80, 80)); // Softer red
+    // secondHand.setOrigin(0, secondHand.getSize().y / 2);
 }
 
 void ClockGUI::update(float currentTime) {
@@ -83,7 +83,7 @@ void ClockGUI::update(float currentTime) {
     // Rotate the hands
     hourHand.setRotation(hourAngle);
     minuteHand.setRotation(minuteAngle);
-    secondHand.setRotation(secondAngle);
+    // secondHand.setRotation(secondAngle);
 }
 
 void ClockGUI::render(sf::RenderWindow& window, bool isVisible) {
@@ -96,5 +96,9 @@ void ClockGUI::render(sf::RenderWindow& window, bool isVisible) {
     }
     window.draw(hourHand);
     window.draw(minuteHand);
-    // window.draw(secondHand);
+}
+
+void ClockGUI::reset() {
+    hourHand.setRotation(-90.0f);
+    minuteHand.setRotation(-90.0f);
 }

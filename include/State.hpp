@@ -1,18 +1,18 @@
 #ifndef STATE_HPP
 #define STATE_HPP
 
-#include <functional>
+#include <functional> // Required for std::hash
 
-// State structure for Q-learning
+// State structure representing the environment for Q-learning
 struct State {
-    int posX, posY;         // NPC's position
-    int nearbyTrees;        // Number of nearby trees
-    int nearbyRocks;        // Number of nearby rocks
-    int nearbyBushes;       // Number of nearby bushes
-    int energyLevel;        // Energy level (low, medium, high)
-    int inventoryLevel;     // Inventory level (empty, partial, full)
+    int posX, posY;         // NPC's position on the map
+    int nearbyTrees;        // Number of trees in the vicinity
+    int nearbyRocks;        // Number of rocks in the vicinity
+    int nearbyBushes;       // Number of bushes in the vicinity
+    int energyLevel;        // NPC's energy level (e.g., low, medium, high)
+    int inventoryLevel;     // Inventory status (e.g., empty, partial, full)
 
-    // Comparison operators for unordered_map
+    // Operator Overloading: Allows direct comparison of State objects
     bool operator==(const State& other) const {
         return posX == other.posX &&
                posY == other.posY &&
@@ -24,10 +24,12 @@ struct State {
     }
 };
 
-// Hashing function for State
+// Custom hashing function for unordered_map
 struct StateHasher {
     std::size_t operator()(const State& state) const {
-        std::size_t seed = 0;
+        std::size_t seed = 0; // Initialize seed for hash calculation
+
+        // Hash each field of the state and combine them using bitwise XOR (^)
         seed ^= std::hash<int>()(state.posX) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
         seed ^= std::hash<int>()(state.posY) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
         seed ^= std::hash<int>()(state.nearbyTrees) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
@@ -35,8 +37,9 @@ struct StateHasher {
         seed ^= std::hash<int>()(state.nearbyBushes) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
         seed ^= std::hash<int>()(state.energyLevel) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
         seed ^= std::hash<int>()(state.inventoryLevel) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-        return seed;
+
+        return seed; // Return the unique hash value for the state
     }
 };
 
-#endif 
+#endif

@@ -14,6 +14,18 @@ public:
                                    return total + npc.getMoney();
                                });
     }
+
+    // Track money spent and earned
+    static void recordMoneySpent(int amount) { totalMoneySpent += amount; }
+    static void recordMoneyEarned(int amount) { totalMoneyEarned += amount; }
+
+    // Get total money spent and earned
+    static int getTotalMoneySpent() { return totalMoneySpent; }
+    static int getTotalMoneyEarned() { return totalMoneyEarned; }
+
+private:
+    static inline int totalMoneySpent = 0;  // Define inside the class with `inline`
+    static inline int totalMoneyEarned = 0; // Define inside the class with `inline`
 };
 
 #endif

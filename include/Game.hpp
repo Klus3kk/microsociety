@@ -72,6 +72,9 @@ public:
 
     // Simulation Management
     void resetSimulation();
+    void logIterationStats(int iteration);
+    int getTotalItemsGathered() const;
+    int getTotalItemsMined() const; 
     void toggleTileBorders();
     void setSimulationSpeed(float speedFactor);
     void simulateNPCEntityBehavior(float deltaTime);

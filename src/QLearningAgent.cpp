@@ -4,47 +4,52 @@
 #include <random>
 #include <Configuration.hpp>
 
+// Constructor initializes learning parameters and random number generator
 QLearningAgent::QLearningAgent(float learningRate, float discountFactor, float epsilon)
     : learningRate(learningRate), discountFactor(discountFactor), epsilon(epsilon), 
       rng(std::random_device{}()), actionDist(1, static_cast<int>(ActionType::Rest)) {}
 
+// Decides whether to explore (random action) or exploit (choose best known action)
 ActionType QLearningAgent::decideAction(const State& state) {
     std::uniform_real_distribution<> explorationDist(0.0, 1.0);
 
-    // Check if state exists in QTable
+    // If the state is new or the agent explores, pick a random action
     auto it = QTable.find(state);
     if (explorationDist(rng) < epsilon || it == QTable.end()) {
         return static_cast<ActionType>(actionDist(rng));
     }
 
-    // Exploit: Choose the action with the highest Q-value
+    // Otherwise, exploit: Choose the action with the highest Q-value
     const auto& actions = it->second;
     return std::max_element(actions.begin(), actions.end(),
                             [](const auto& a, const auto& b) { return a.second < b.second; })->first;
 }
 
+// Updates the Q-value using the Q-learning formula
 void QLearningAgent::updateQValue(const State& state, ActionType action, float reward, const State& nextState) {
     float currentQ = QTable[state][action];
     float maxNextQ = 0.0f;
 
-    // Get the best Q-value for next state
+    // Find the best Q-value for the next state
     auto it = QTable.find(nextState);
     if (it != QTable.end() && !it->second.empty()) {
         maxNextQ = std::max_element(it->second.begin(), it->second.end(),
                                     [](const auto& a, const auto& b) { return a.second < b.second; })->second;
     }
 
-    // Adjust learning update
+    // Apply a penalty factor if the reward is negative to speed up learning
     float penaltyFactor = (reward < 0) ? 1.25f : 1.0f;
     float qUpdate = reward + (discountFactor * maxNextQ) - currentQ;
     
     QTable[state][action] += learningRate * penaltyFactor * qUpdate;
 }
 
+// Converts a continuous variable into discrete levels for state representation
 int QLearningAgent::quantize(float value, float minValue, float maxValue, int levels) {
     return std::clamp(static_cast<int>(std::round((value - minValue) * (levels - 1) / (maxValue - minValue))), 0, levels - 1);
 }
 
+// Counts nearby objects of a given type in a 3x3 grid around the NPC
 int QLearningAgent::countNearbyObjects(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap,
                                        const sf::Vector2f& position, ObjectType objectType) {
     int count = 0;
@@ -68,6 +73,7 @@ int QLearningAgent::countNearbyObjects(const std::vector<std::vector<std::unique
     return count;
 }
 
+// Extracts relevant environmental information to create a Q-learning state
 State QLearningAgent::extractState(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap,
                                    const sf::Vector2f& position, float energy, int inventorySize, int maxInventorySize) const {
     State state;

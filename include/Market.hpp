@@ -11,69 +11,76 @@
 #include <cmath>
 #include <numeric>
 
+// Market class: Represents a dynamic in-game trading system
 class Market : public Object {
 private:
-    std::unordered_map<std::string, float> prices;          // Current prices for items
-    std::unordered_map<std::string, int> demand;           // Demand levels for items
-    std::unordered_map<std::string, int> supply;           // Supply levels for items
-    std::unordered_map<std::string, std::vector<float>> priceHistory; // Price history for trend analysis
-    std::unordered_map<std::string, int> totalBuyTransactions;
-    std::unordered_map<std::string, int> totalSellTransactions;
-    std::unordered_map<std::string, float> totalRevenue;
-    std::unordered_map<std::string, float> totalExpenditure;
+    std::unordered_map<std::string, float> prices;          // Stores the current market price for each item
+    std::unordered_map<std::string, int> demand;           // Tracks the demand level for each item
+    std::unordered_map<std::string, int> supply;           // Tracks the supply level for each item
+    std::unordered_map<std::string, std::vector<float>> priceHistory; // Stores historical price trends
+    std::unordered_map<std::string, int> totalBuyTransactions; // Tracks total buy transactions for each item
+    std::unordered_map<std::string, int> totalSellTransactions; // Tracks total sell transactions for each item
+    std::unordered_map<std::string, float> totalRevenue;   // Tracks total revenue generated from each item
+    std::unordered_map<std::string, float> totalExpenditure; // Tracks total expenditure on each item
 
-    const float priceAdjustmentFactor = 0.2f;              // Controls how price adjusts with supply/demand
-    const float minimumPrice = 1.0f;                       // Minimum allowed price
-    const float maximumPrice = 100.0f;                     // Maximum allowed price
-    float sellMargin = 0.9f;                               // Margin multiplier for sell prices
-    float buyMargin = 1.1f;                                // Margin multiplier for buy prices
+    const float priceAdjustmentFactor = 0.2f;              // Controls how price fluctuates with supply/demand
+    const float minimumPrice = 1.0f;                       // The lowest possible price for any item
+    const float maximumPrice = 100.0f;                     // The highest possible price for any item
+    float sellMargin = 0.9f;                               // Selling price multiplier (lower than buy price)
+    float buyMargin = 1.1f;                                // Buying price multiplier (higher than sell price)
 
 public:
+    // Constructors
     Market();
     Market(const sf::Texture& tex);
 
-    // Setters and Getters
-    void setPrice(const std::string& item, float price);
-    float getPrice(const std::string& item) const;
-    float calculateBuyPrice(const std::string& item) const;
-    float calculateSellPrice(const std::string& item) const;
+    // Set and Get Prices
+    void setPrice(const std::string& item, float price); // Sets a specific item's price
+    float getPrice(const std::string& item) const;       // Retrieves the current price of an item
+    float calculateBuyPrice(const std::string& item) const;  // Determines price when buying
+    float calculateSellPrice(const std::string& item) const; // Determines price when selling
 
-    // Core Transactions
-    bool buyItem(NPCEntity& player, const std::string& item, int quantity);
-    bool sellItem(NPCEntity& player, const std::string& item, int quantity);
+    // Core Transactions (Trading with NPCs)
+    bool buyItem(NPCEntity& player, const std::string& item, int quantity); // Handles NPC purchasing an item
+    bool sellItem(NPCEntity& player, const std::string& item, int quantity); // Handles NPC selling an item
 
-    // Price Adjustments
-    float adjustPriceOnBuy(float currentPrice, int demand, int supply, float buyFactor);
-    float adjustPriceOnSell(float currentPrice, int demand, int supply, float sellFactor);
+    // Adjust Prices Dynamically
+    float adjustPriceOnBuy(float currentPrice, int demand, int supply, float buyFactor); // Modify price on purchase
+    float adjustPriceOnSell(float currentPrice, int demand, int supply, float sellFactor); // Modify price on sale
 
-    // Price Trends and Metrics
-    void trackPriceHistory(const std::string& item);
-    float calculateVolatility(const std::string& item) const;
-    std::vector<float> getPriceTrend(const std::string& item) const;
-    const std::unordered_map<std::string, std::vector<float>>& getPriceTrendMap() const; // For UI
-    const std::unordered_map<std::string, float>& getPrices() const;                     // For UI
+    // Price Tracking & Market Trends
+    void trackPriceHistory(const std::string& item);  // Records price changes over time
+    float calculateVolatility(const std::string& item) const; // Measures price fluctuations
+    std::vector<float> getPriceTrend(const std::string& item) const; // Retrieves price history
+    const std::unordered_map<std::string, std::vector<float>>& getPriceTrendMap() const; // Returns full market trend data
+    const std::unordered_map<std::string, float>& getPrices() const; // Returns all current prices
 
-    // Statistics
-    int getTotalTrades() const;                          // Total number of trades
-    int getBuyTransactions(const std::string& item) const;
-    int getSellTransactions(const std::string& item) const;
-    float getRevenue(const std::string& item) const;
-    float getExpenditure(const std::string& item) const;
+    // Market Statistics
+    int getTotalTrades() const;                          // Gets total number of trades
+    int getBuyTransactions(const std::string& item) const; // Retrieves total purchases of an item
+    int getSellTransactions(const std::string& item) const; // Retrieves total sales of an item
+    int getTotalItemsSold() const;  // Calculates total number of items sold
+    int getTotalItemsBought() const; // Calculates total number of items bought
+    float getRevenue(const std::string& item) const; // Returns total revenue from an item
+    float getExpenditure(const std::string& item) const; // Returns total money spent on an item
 
-    // Market Intelligence for AI
-    std::string suggestBestResourceToBuy() const;         // Suggest resource with the highest ROI
-    std::string suggestBestResourceToSell() const;        // Suggest resource with the best profit margin
+    // Market Intelligence (AI Recommendations)
+    std::string suggestBestResourceToBuy() const;  // Suggests best resource to buy based on profitability
+    std::string suggestBestResourceToSell() const; // Suggests best resource to sell based on market trends
+
     // Dynamic Market Adjustments
-    void stabilizePrices(float deltaTime);               // Adjust prices to stabilize market
-    void simulateMarketDynamics(float deltaTime);        // Simulate changes in demand and supply over time
+    void stabilizePrices(float deltaTime);        // Slowly stabilizes market prices over time
+    void simulateMarketDynamics(float deltaTime); // Simulates price variations due to economic forces
+    void resetTransactions(); // Resets all transaction history
+    void randomizePrices();   // Introduces random fluctuations in prices
 
     // UI and Rendering
-    void renderPriceGraph(sf::RenderWindow& window, const std::string& item, sf::Vector2f position, sf::Vector2f size) const;
-    void displayPrices() const;
-    void draw(sf::RenderWindow& window) override;
-    ObjectType getType() const override;
-    std::unordered_map<std::string, float> getResourceStats() const;
+    void renderPriceGraph(sf::RenderWindow& window, const std::string& item, sf::Vector2f position, sf::Vector2f size) const; // Renders price trends
+    void displayPrices() const; // Prints prices to console (for debugging)
+    void draw(sf::RenderWindow& window) override; // Renders the market visually
+    ObjectType getType() const override; // Returns the type of object (Market)
+    std::unordered_map<std::string, float> getResourceStats() const; // Provides current resource prices for UI
 
 };
 
-#endif 
+#endif // MARKET_HPP

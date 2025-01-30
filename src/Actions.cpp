@@ -1,38 +1,41 @@
 #include "Actions.hpp"
 
-// TreeAction
+// Base class method is overridden by each action type
 void TreeAction::perform(NPCEntity& player, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
+    // Check if the tile has an object (tree)
     if (tile.hasObject()) {
-        getDebugConsole().log("TreeAction", "Object exists on tile.");
+        // Attempt to add wood to the player's inventory
         if (player.addToInventory("wood", 1)) {
-            tile.removeObject();
-            player.consumeEnergy(5.0f);
-            player.receiveFeedback(10.0f, tileMap);
+            tile.removeObject(); // Remove tree from the map
+            player.consumeEnergy(5.0f); // Reduce player's energy
+            player.receiveFeedback(10.0f, tileMap); // Reward for success
             getDebugConsole().log("TreeAction", "Tree chopped! Wood added to inventory.");
         } else {
-            player.receiveFeedback(-2.0f, tileMap);
+            player.receiveFeedback(-2.0f, tileMap); // Penalty if inventory is full
             getDebugConsole().logOnce("TreeAction", "Inventory full. Cannot chop tree.");
         }
     } else {
-        player.receiveFeedback(-5.0f, tileMap);
+        player.receiveFeedback(-5.0f, tileMap); // Penalty if no tree is found
         getDebugConsole().logOnce("TreeAction", "No tree to chop on this tile.");
     }
 }
 
 // StoneAction
 void StoneAction::perform(NPCEntity& player, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
+    // Check if the tile has a rock object
     if (tile.hasObject() && tile.getObject()->getType() == ObjectType::Rock) {
+        // Attempt to add stone to inventory
         if (player.addToInventory("stone", 1)) {
-            tile.removeObject();
+            tile.removeObject(); // Remove rock from the tile
             player.consumeEnergy(5.0f);
-            player.receiveFeedback(10.0f, tileMap);
+            player.receiveFeedback(10.0f, tileMap); // Reward for success
             getDebugConsole().log("StoneAction", "Rock mined! Stone added to inventory.");
         } else {
-            player.receiveFeedback(-2.0f, tileMap);
+            player.receiveFeedback(-2.0f, tileMap); // Penalty if inventory is full
             getDebugConsole().logOnce("StoneAction", "Inventory full. Cannot mine rock.");
         }
     } else {
-        player.receiveFeedback(-5.0f, tileMap);
+        player.receiveFeedback(-5.0f, tileMap); // Penalty if no rock found
         getDebugConsole().logOnce("StoneAction", "No rock to mine on this tile.");
     }
 }
@@ -40,49 +43,46 @@ void StoneAction::perform(NPCEntity& player, Tile& tile, const std::vector<std::
 
 // BushAction
 void BushAction::perform(NPCEntity& player, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
+    // Check if the tile has a bush object
     if (tile.hasObject() && tile.getObject()->getType() == ObjectType::Bush) {
+        // Attempt to gather bush resource
         if (player.addToInventory("bush", 1)) {
             tile.removeObject();
             player.consumeEnergy(5.0f);
             player.receiveFeedback(10.0f, tileMap);
-            getDebugConsole().log("BushAction", "Bush gathered from bush!");
+            getDebugConsole().log("BushAction", "Bush gathered from tile!");
         } else {
             player.receiveFeedback(-2.0f, tileMap);
             getDebugConsole().logOnce("BushAction", "Inventory full. Cannot gather bush.");
         }
     } else {
         player.receiveFeedback(-5.0f, tileMap);
-        getDebugConsole().logOnce("BushAction", "No bush to gather bush from on this tile.");
+        getDebugConsole().logOnce("BushAction", "No bush to gather on this tile.");
     }
 }
 
 
 // MoveAction
 void MoveAction::perform(NPCEntity& player, Tile&, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
-    player.consumeEnergy(1.0f); // Zużycie energii za ruch
-    player.receiveFeedback(1.0f, tileMap); // Nagroda za ruch (przykład)
+    player.consumeEnergy(1.0f); // Reduce energy per move
+    player.receiveFeedback(1.0f, tileMap); // Reward for movement
     getDebugConsole().log("Action", "Player moved.");
-}
-
-// TradeAction
-void TradeAction::perform(NPCEntity& player, Tile&, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
-    player.receiveFeedback(5.0f, tileMap); // Przykładowa nagroda za handel
-    getDebugConsole().log("Action", "Trade action performed.");
 }
 
 // RegenerateEnergyAction
 void RegenerateEnergyAction::perform(NPCEntity& player, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
+    // Check if a house exists on the tile
     if (tile.hasObject()) {
         if (auto house = dynamic_cast<House*>(tile.getObject())) {
-            house->regenerateEnergy(player); // Regenerate energy
-            player.receiveFeedback(5.0f, tileMap); // Reward
+            house->regenerateEnergy(player); // Restore player's energy
+            player.receiveFeedback(5.0f, tileMap); // Reward for regeneration
             getDebugConsole().log("Action", "Energy regenerated at house.");
         } else {
-            player.receiveFeedback(-1.0f, tileMap); // Penalty
+            player.receiveFeedback(-1.0f, tileMap); // Penalty if no house found
             getDebugConsole().logOnce("Action", "No house found to regenerate energy.");
         }
     } else {
-        player.receiveFeedback(-1.0f, tileMap); // Penalty
+        player.receiveFeedback(-1.0f, tileMap);
         getDebugConsole().logOnce("Action", "No object found on this tile.");
     }
 }
@@ -91,14 +91,16 @@ void RegenerateEnergyAction::perform(NPCEntity& player, Tile& tile, const std::v
 
 // UpgradeHouseAction
 void UpgradeHouseAction::perform(NPCEntity& player, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
+    // Ensure the tile has a house
     if (auto house = dynamic_cast<House*>(tile.getObject())) {
-        float& npcMoney = player.getMoney(); // Create a reference to NPC money
+        float& npcMoney = player.getMoney(); // Reference to NPC's money
         if (npcMoney >= house->getUpgradeCost()) {
+            // Attempt to upgrade the house
             if (house->upgrade(npcMoney, player)) {
-                player.receiveFeedback(20.0f, tileMap); // Reward for successful upgrade
+                player.receiveFeedback(20.0f, tileMap); // Reward for success
                 getDebugConsole().log("Action", "House upgraded successfully.");
             } else {
-                player.receiveFeedback(-10.0f, tileMap); // Penalty for failed upgrade
+                player.receiveFeedback(-10.0f, tileMap); // Penalty for failure
                 getDebugConsole().logOnce("Action", "Upgrade failed due to insufficient resources.");
             }
         } else {
@@ -106,12 +108,10 @@ void UpgradeHouseAction::perform(NPCEntity& player, Tile& tile, const std::vecto
             getDebugConsole().logOnce("Action", "Not enough money to upgrade the house.");
         }
     } else {
-        player.receiveFeedback(-5.0f, tileMap); // Penalty for no house
+        player.receiveFeedback(-5.0f, tileMap);
         getDebugConsole().logOnce("Action", "No house found to upgrade.");
     }
 }
-
-
 
 // StoreItemAction
 StoreItemAction::StoreItemAction(const std::string& item, int quantity)
@@ -127,20 +127,21 @@ void StoreItemAction::perform(NPCEntity& player, Tile& tile, const std::vector<s
         }
 
         if (inventory.count(item) > 0 && inventory.at(item) >= quantity) {
+            // Attempt to store the item in the house
             if (house->storeItem(item, quantity)) {
-                player.removeFromInventory(item, quantity); // Usuwamy przedmiot z ekwipunku
-                player.receiveFeedback(5.0f, tileMap); // Nagroda za przechowanie
+                player.removeFromInventory(item, quantity);
+                player.receiveFeedback(5.0f, tileMap); // Reward for storing
                 getDebugConsole().log("Action", "Stored " + std::to_string(quantity) + " " + item + " in the house.");
             } else {
-                player.receiveFeedback(-5.0f, tileMap); // Kara za pełny magazyn
+                player.receiveFeedback(-5.0f, tileMap);
                 getDebugConsole().logOnce("Action", "House storage is full! Could not store all items.");
             }
         } else {
-            player.receiveFeedback(-5.0f, tileMap); // Kara za brak wystarczającej ilości
+            player.receiveFeedback(-5.0f, tileMap);
             getDebugConsole().logOnce("Action", "Insufficient " + item + " in inventory.");
         }
     } else {
-        player.receiveFeedback(-5.0f, tileMap); // Kara za brak domu
+        player.receiveFeedback(-5.0f, tileMap);
         getDebugConsole().logOnce("Action", "No house present on this tile.");
     }
 }
@@ -149,45 +150,45 @@ std::string StoreItemAction::getActionName() const {
     return "Store Items in House";
 }
 
-// TakeOutItemsAction
-TakeOutItemsAction::TakeOutItemsAction(const std::string& item, int quantity)
-    : item(item), quantity(quantity) {}
+// TakeOutItemsAction::TakeOutItemsAction(const std::string& item, int quantity)
+//     : item(item), quantity(quantity) {}
 
-void TakeOutItemsAction::perform(NPCEntity& player, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
-    if (auto house = dynamic_cast<House*>(tile.getObject())) {
-        if (house->takeFromStorage(item, quantity, player)) {
-            player.receiveFeedback(10.0f, tileMap); // Nagroda za pobranie przedmiotów
-            getDebugConsole().log("Action", "Took " + std::to_string(quantity) + " " + item + " from the house.");
-        } else {
-            player.receiveFeedback(-5.0f, tileMap); // Kara za brak przedmiotów w magazynie
-            getDebugConsole().logOnce("Action", "Failed to take items. Not enough in storage.");
-        }
-    } else {
-        player.receiveFeedback(-5.0f, tileMap); // Kara za brak domu
-        getDebugConsole().logOnce("Action", "No house present on this tile.");
-    }
-}
+// void TakeOutItemsAction::perform(NPCEntity& player, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
+//     if (auto house = dynamic_cast<House*>(tile.getObject())) {
+//         if (house->takeFromStorage(item, quantity, player)) {
+//             player.receiveFeedback(10.0f, tileMap); // Nagroda za pobranie przedmiotów
+//             getDebugConsole().log("Action", "Took " + std::to_string(quantity) + " " + item + " from the house.");
+//         } else {
+//             player.receiveFeedback(-5.0f, tileMap); // Kara za brak przedmiotów w magazynie
+//             getDebugConsole().logOnce("Action", "Failed to take items. Not enough in storage.");
+//         }
+//     } else {
+//         player.receiveFeedback(-5.0f, tileMap); // Kara za brak domu
+//         getDebugConsole().logOnce("Action", "No house present on this tile.");
+//     }
+// }
 
 
-std::string TakeOutItemsAction::getActionName() const {
-    return "Take Out Items from House";
-}
+// std::string TakeOutItemsAction::getActionName() const {
+//     return "Take Out Items from House";
+// }
 
 // BuyItemAction
 BuyItemAction::BuyItemAction(const std::string& item, int quantity)
     : item(item), quantity(quantity) {}
 
 void BuyItemAction::perform(NPCEntity& player, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
+    // Ensure a market exists on the tile
     if (auto market = dynamic_cast<Market*>(tile.getObject())) {
         if (market->buyItem(player, item, quantity)) {
-            player.receiveFeedback(10.0f, tileMap); // Nagroda za zakup
+            player.receiveFeedback(10.0f, tileMap);
             getDebugConsole().log("Action", "Bought " + std::to_string(quantity) + " " + item + " from the market.");
         } else {
-            player.receiveFeedback(-5.0f, tileMap); // Kara za nieudany zakup
+            player.receiveFeedback(-5.0f, tileMap);
             getDebugConsole().logOnce("Action", "Failed to buy items. Not enough money or stock.");
         }
     } else {
-        player.receiveFeedback(-5.0f, tileMap); // Kara za brak rynku
+        player.receiveFeedback(-5.0f, tileMap);
         getDebugConsole().logOnce("Action", "No market present on this tile.");
     }
 }
@@ -198,16 +199,18 @@ std::string BuyItemAction::getActionName() const {
 }
 
 void SellItemAction::perform(NPCEntity& player, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
+    // Ensure a market exists on the tile
     if (auto market = dynamic_cast<Market*>(tile.getObject())) {
+        // Attempt to sell items
         if (market->sellItem(player, item, quantity)) {
-            player.receiveFeedback(10.0f, tileMap); // Nagroda za sprzedaż
+            player.receiveFeedback(10.0f, tileMap); // Reward for successful sale
             getDebugConsole().log("Action", "Sold " + std::to_string(quantity) + " " + item + " to the market.");
         } else {
-            player.receiveFeedback(-5.0f, tileMap); // Kara za nieudaną sprzedaż
+            player.receiveFeedback(-5.0f, tileMap); // Penalty if not enough items in inventory
             getDebugConsole().logOnce("Action", "Failed to sell items. Not enough in inventory.");
         }
     } else {
-        player.receiveFeedback(-5.0f, tileMap); // Kara za brak rynku
+        player.receiveFeedback(-5.0f, tileMap); // Penalty if no market exists
         getDebugConsole().logOnce("Action", "No market present on this tile.");
     }
 }
@@ -215,97 +218,45 @@ void SellItemAction::perform(NPCEntity& player, Tile& tile, const std::vector<st
 std::string SellItemAction::getActionName() const {
     return "Sell Items to Market";
 }
+
 // ExploreAction
 void ExploreAction::perform(NPCEntity& player, Tile&, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
     // Exploration consumes some energy but provides small rewards
     player.consumeEnergy(2.0f);
-    player.receiveFeedback(5.0f, tileMap); // Użycie `tileMap` dla spójności z NPCEntity
+    player.receiveFeedback(5.0f, tileMap); // Reward for exploration
     getDebugConsole().log("Action", "NPC explored the map.");
-}
-
-// BuildAction
-void BuildAction::perform(NPCEntity& player, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
-    if (tile.hasObject()) {
-        player.receiveFeedback(-10.0f, tileMap); // Kara za próbę budowy na zajętym kafelku
-        getDebugConsole().logOnce("Action", "Tile is occupied. Cannot build here.");
-        return;
-    }
-
-    if (player.getInventoryItemCount("wood") >= 5 && player.getInventoryItemCount("stone") >= 3) {
-        player.removeFromInventory("wood", 5);
-        player.removeFromInventory("stone", 3);
-
-        auto& textureManager = TextureManager::getInstance();
-        const sf::Texture& texture = textureManager.getTexture("house1", "../assets/objects/house1.png");
-
-        auto newHouse = std::make_unique<House>(texture, 1); // Przekazanie tekstury i poziomu
-        tile.placeObject(std::move(newHouse));
-
-        player.receiveFeedback(20.0f, tileMap); // Nagroda za budowę
-        getDebugConsole().log("Action", "NPC built a structure on the tile.");
-    } else {
-        player.receiveFeedback(-10.0f, tileMap); // Kara za brak zasobów
-        getDebugConsole().logOnce("Action", "Not enough resources to build.");
-    }
 }
 
 // PrioritizeAction
 void PrioritizeAction::perform(NPCEntity& player, Tile&, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
-    // AI logic to prioritize actions dynamically
+    // AI-based logic to prioritize actions dynamically
     if (player.getEnergy() < 20.0f) {
-        player.receiveFeedback(-10.0f, tileMap); // Kara za niski poziom energii
+        player.receiveFeedback(-10.0f, tileMap); // Penalty for low energy
         getDebugConsole().log("Action", "NPC has low energy and needs to regenerate.");
     } else if (player.getInventorySize() >= player.getMaxInventorySize()) {
-        player.receiveFeedback(-5.0f, tileMap); // Kara za pełny ekwipunek
+        player.receiveFeedback(-5.0f, tileMap); // Penalty for full inventory
         getDebugConsole().log("Action", "NPC inventory is full; needs to store items.");
     } else {
-        player.receiveFeedback(10.0f, tileMap); // Nagroda za efektywne priorytetyzowanie
+        player.receiveFeedback(10.0f, tileMap); // Reward for efficient prioritization
         getDebugConsole().log("Action", "NPC prioritized its actions successfully.");
     }
 }
 
 // IdleAction
 void IdleAction::perform(NPCEntity& player, Tile&, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
-    player.receiveFeedback(-20.0f, tileMap); // Duża kara za bezczynność
+    player.receiveFeedback(-20.0f, tileMap); // Large penalty for idling
     getDebugConsole().log("Action", "NPC idled and lost rewards.");
-}
-
-// SpecialAction
-SpecialAction::SpecialAction(const std::string& description, float reward, float penalty)
-    : description(description), reward(reward), penalty(penalty) {}
-
-void SpecialAction::perform(NPCEntity& player, Tile&, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
-    if (reward > penalty) {
-        player.receiveFeedback(reward, tileMap); // Nagroda za sukces akcji specjalnej
-        getDebugConsole().log("SpecialAction", description + " succeeded with reward: " + std::to_string(reward));
-    } else {
-        player.receiveFeedback(-penalty, tileMap); // Kara za porażkę
-        getDebugConsole().log("SpecialAction", description + " failed with penalty: " + std::to_string(penalty));
-    }
 }
 
 // RestAction
 void RestAction::perform(NPCEntity& player, Tile&, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
+    // Ensure NPC is not already at full energy
     if (player.getEnergy() < player.getMaxEnergy()) {
-        player.setEnergy(player.getMaxEnergy()); // Pełne przywrócenie energii
-        player.receiveFeedback(5.0f, tileMap); // Nagroda za odpoczynek
+        player.setEnergy(player.getMaxEnergy()); // Fully restore energy
+        player.receiveFeedback(5.0f, tileMap); // Reward for resting
         getDebugConsole().log("Action", "NPC rested and restored energy.");
     } else {
-        player.receiveFeedback(-1.0f, tileMap); // Kara za próbę odpoczynku przy pełnej energii
+        player.receiveFeedback(-1.0f, tileMap); // Penalty for unnecessary rest
         getDebugConsole().logOnce("Action", "Energy is already full. No need to rest.");
-    }
-}
-
-// EvaluateStateAction
-void EvaluateStateAction::perform(NPCEntity& player, Tile&, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
-    if (player.getHunger() < 50.0f) {
-        player.receiveFeedback(-2.0f, tileMap); // Kara za niski poziom głodu
-        getDebugConsole().log("Action", "NPC is hungry and should gather bush.");
-    } else if (player.getEnergy() < 20.0f) {
-        player.receiveFeedback(-2.0f, tileMap); // Kara za niski poziom energii
-        getDebugConsole().log("Action", "NPC is tired and needs to regenerate energy.");
-    } else {
-        player.receiveFeedback(2.0f, tileMap); // Nagroda za zrównoważony stan
-        getDebugConsole().log("Action", "NPC is in a balanced state.");
     }
 }

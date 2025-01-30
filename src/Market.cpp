@@ -1,4 +1,5 @@
 #include "Market.hpp"
+#include "MoneyManager.hpp"
 #include <algorithm>
 #include <cmath>
 #include <numeric>
@@ -65,11 +66,10 @@ bool Market::buyItem(NPCEntity& npc, const std::string& item, int quantity) {
     if (quantity <= 0 || item.empty()) return false;
     if (prices.find(item) == prices.end()) setPrice(item, 1 + std::rand() % 50);
 
-
     float itemPrice = calculateBuyPrice(item);
     float totalCost = itemPrice * quantity;
 
-    if (npc.getMoney() < totalCost) {  // Ensure NPC can afford purchase
+    if (npc.getMoney() < totalCost) {  
         getDebugConsole().log("ERROR", npc.getName() + " cannot afford " + std::to_string(quantity) + " " + item);
         return false;
     }
@@ -80,23 +80,59 @@ bool Market::buyItem(NPCEntity& npc, const std::string& item, int quantity) {
     }
 
     npc.setMoney(npc.getMoney() - totalCost);
+    MoneyManager::recordMoneySpent(totalCost);  // ✅ Track money spent
+
     demand[item] += quantity;
     supply[item] = std::max(0, supply[item] - quantity);
     prices[item] = adjustPriceOnBuy(prices[item], demand[item], supply[item], priceAdjustmentFactor);
 
-    // **Ensure Market Stats Update Properly**
     totalBuyTransactions[item] += quantity;
-    totalExpenditure[item] += totalCost;  // Money spent on items
+    totalExpenditure[item] += totalCost;  
 
-    // **Keep Your Reward Logic**
     npc.addReward(5.0f * quantity);
-
-    // **Track Price for Volatility**
-    // trackPriceHistory(item);
 
     getDebugConsole().log("MARKET", "[BUY] " + npc.getName() + " bought " + std::to_string(quantity) + " " + item);
     return true;
 }
+
+void Market::resetTransactions() {
+    for (auto& [item, count] : totalBuyTransactions) {
+        count = 0;
+    }
+    for (auto& [item, count] : totalSellTransactions) {
+        count = 0;
+    }
+    for (auto& [item, revenue] : totalRevenue) {
+        revenue = 0.0f;
+    }
+    for (auto& [item, expenditure] : totalExpenditure) {
+        expenditure = 0.0f;
+    }
+}
+
+int Market::getTotalItemsSold() const {
+    int total = 0;
+    for (const auto& [_, qty] : totalSellTransactions) {
+        total += qty;
+    }
+    return total;
+}
+
+int Market::getTotalItemsBought() const {
+    int total = 0;
+    for (const auto& [_, qty] : totalBuyTransactions) {
+        total += qty;
+    }
+    return total;
+}
+
+
+void Market::randomizePrices() {
+    for (auto& [item, price] : prices) {
+        price = 1 + rand() % 50;
+    }
+}
+
 
 bool Market::sellItem(NPCEntity& npc, const std::string& item, int quantity) {
     if (item.empty() || quantity <= 0) return false;
@@ -115,19 +151,16 @@ bool Market::sellItem(NPCEntity& npc, const std::string& item, int quantity) {
 
     float revenue = calculateSellPrice(item) * quantity;
     npc.setMoney(npc.getMoney() + revenue);
+    MoneyManager::recordMoneyEarned(revenue);  // ✅ Track money earned
+
     supply[item] += quantity;
     demand[item] = std::max(0, demand[item] - quantity);
     prices[item] = adjustPriceOnSell(prices[item], demand[item], supply[item], priceAdjustmentFactor);
 
-    // **Ensure Market Stats Update Properly**
     totalSellTransactions[item] += quantity;
-    totalRevenue[item] += revenue;  // Money earned from selling
+    totalRevenue[item] += revenue;
 
-    // **Keep Your Reward Logic**
     npc.addReward(10.0f * quantity);
-
-    // **Track Price for Volatility**
-    // trackPriceHistory(item);
 
     getDebugConsole().log("MARKET", "[SELL] " + npc.getName() + " sold " + std::to_string(quantity) + " " + item);
     return true;

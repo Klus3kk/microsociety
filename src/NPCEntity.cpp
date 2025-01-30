@@ -77,6 +77,10 @@ void NPCEntity::updateQLearningState(const std::vector<std::vector<std::unique_p
     currentQLearningState = extractState(tileMap);
 }
 
+int NPCEntity::getGatheredResources() const {
+    return getInventoryItemCount("wood") + getInventoryItemCount("stone") + getInventoryItemCount("bush");
+}
+
 // Inventory Management
 bool NPCEntity::addToInventory(const std::string& item, int quantity) {
     if (getInventorySize() + quantity > inventoryCapacity) {

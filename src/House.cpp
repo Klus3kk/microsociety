@@ -3,23 +3,24 @@
 #include <sstream>
 #include "Configuration.hpp"
 
-// Constructor
+// Constructor: Initializes house properties based on level
 House::House(const sf::Texture& tex, int initialLevel)
     : level(initialLevel),
-      maxStorageCapacity(initialLevel * 10),
-      energyRegenRate(initialLevel * 2.0f),
-      healthBonus(initialLevel * 5),
-      strengthBonus(initialLevel * 2),
-      speedBonus(initialLevel * 1) {
+      maxStorageCapacity(initialLevel * 10),      // Storage capacity increases with level
+      energyRegenRate(initialLevel * 2.0f),      // Energy regeneration rate scales with level
+      healthBonus(initialLevel * 5),            // Health bonus per level
+      strengthBonus(initialLevel * 2),          // Strength bonus per level
+      speedBonus(initialLevel * 1) {            // Speed bonus per level
     texture = tex;
     sprite.setTexture(texture);
 }
 
-// Getters
+// Getters for house storage
 const std::unordered_map<std::string, int>& House::getStorage() const {
     return storage;
 }
 
+// Resource requirements for upgrades
 int House::getWoodRequirement() const {
     return GameConfig::BASE_WOOD_REQUIREMENT + level - 1; 
 }
@@ -32,25 +33,24 @@ int House::getBushRequirement() const {
     return GameConfig::BASE_BUSH_REQUIREMENT + level - 1;
 }
 
+// Get required amount of a specific resource
 int House::getRequirementForItem(const std::string& item) const {
     if (item == "wood") return getWoodRequirement();
     if (item == "stone") return getStoneRequirement();
     if (item == "bush") return getBushRequirement();
-    return 0;  // Default case
+    return 0;  // Default case if item isn't a requirement
 }
 
-
-// Regenerate NPC energy
+// Regenerate NPC energy inside the house
 void House::regenerateEnergy(NPCEntity& npc) {
     if (npc.getEnergy() < npc.getMaxEnergy()) {
-        npc.regenerateEnergy(10.0f); // Regenerate 10 energy per tick
-        npc.restoreHealth(5.0f);
+        npc.regenerateEnergy(10.0f); // Restores 10 energy per tick
+        npc.restoreHealth(5.0f);     // Restores 5 health per tick
         getDebugConsole().log("House", npc.getName() + " is recovering energy at home.");
     }
 }
 
-
-// Store item in the house
+// Store item in the house's storage
 bool House::storeItem(const std::string& item, int quantity) {
     int currentTotal = std::accumulate(storage.begin(), storage.end(), 0,
                                        [](int sum, const auto& pair) { return sum + pair.second; });
@@ -65,8 +65,7 @@ bool House::storeItem(const std::string& item, int quantity) {
     return true;
 }
 
-
-// Take item from storage
+// Retrieve item from storage
 bool House::takeFromStorage(const std::string& item, int quantity, NPCEntity& npc) {
     auto it = storage.find(item);
     if (it != storage.end() && it->second >= quantity) {
@@ -89,6 +88,7 @@ bool House::takeFromStorage(const std::string& item, int quantity, NPCEntity& np
     return false;
 }
 
+// Upgrade the house if NPC has enough resources
 bool House::upgrade(float& npcMoney, NPCEntity& npc) {
     float upgradeCost = getUpgradeCost();
     int woodRequired = getWoodRequirement();
@@ -102,11 +102,12 @@ bool House::upgrade(float& npcMoney, NPCEntity& npc) {
 
         npcMoney -= upgradeCost;
 
-        // Reduce only if resource exists
+        // Reduce required resources from storage
         if (storage.count("wood")) storage["wood"] -= woodRequired;
         if (storage.count("stone")) storage["stone"] -= stoneRequired;
         if (storage.count("bush")) storage["bush"] -= bushRequired;
 
+        // Upgrade stats
         level++;
         maxStorageCapacity += 15;
         energyRegenRate += 2.0f;
@@ -114,6 +115,7 @@ bool House::upgrade(float& npcMoney, NPCEntity& npc) {
         strengthBonus += 3;
         speedBonus += 2;
 
+        // Apply upgrades to NPC
         npc.setHealth(npc.getHealth() + healthBonus);
         npc.setStrength(npc.getStrength() + strengthBonus);
         npc.setSpeed(npc.getSpeed() + speedBonus);
@@ -126,11 +128,6 @@ bool House::upgrade(float& npcMoney, NPCEntity& npc) {
     return false;
 }
 
-
-
-
-
-
 // Log upgrade details
 void House::logUpgradeDetails() const {
     getDebugConsole().log("House", "Upgraded to level " + std::to_string(level) +
@@ -141,12 +138,12 @@ void House::logUpgradeDetails() const {
                                          ", Speed Bonus: +" + std::to_string(speedBonus));
 }
 
+// Calculate the cost for the next upgrade
 float House::getUpgradeCost() const {
     return GameConfig::BASE_UPGRADE_COST + (50 * std::pow(level, 1.5f));
 }
 
-
-// Display the storage contents
+// Display house storage contents
 void House::displayStorage() const {
     std::ostringstream storageDisplay;
     storageDisplay << "House Storage (Capacity: " << maxStorageCapacity << "):\n";
@@ -169,12 +166,12 @@ void House::displayStats() const {
     getDebugConsole().log("House", stats.str());
 }
 
-// Draw the house
+// Render the house on the screen
 void House::draw(sf::RenderWindow& window) {
     window.draw(sprite);
 }
 
-// Get the object type
+// Get the type of this object (House)
 ObjectType House::getType() const {
     return ObjectType::House;
 }
@@ -186,7 +183,7 @@ bool House::isStorageFull() const {
     return currentTotal >= maxStorageCapacity;
 }
 
-// Check if an upgrade is available
+// Check if an upgrade is available for NPC
 bool House::isUpgradeAvailable(float npcMoney) const {
     float upgradeCost = getUpgradeCost();
 
@@ -195,8 +192,6 @@ bool House::isUpgradeAvailable(float npcMoney) const {
            getStoredItemCount("stone") >= getStoneRequirement() &&
            getStoredItemCount("bush") >= getBushRequirement();
 }
-
-
 
 // Get the count of a specific stored item
 int House::getStoredItemCount(const std::string& item) const {

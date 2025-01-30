@@ -67,6 +67,7 @@ public:
     const std::unordered_map<std::string, int>& getInventory() const;
     int getMaxInventorySize() const;
     int getInventorySize() const;
+    int getGatheredResources() const;
 
     // Modify getter to return a reference
     float& getMoney(); // For modifiable access

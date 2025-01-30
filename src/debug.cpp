@@ -11,41 +11,40 @@
 // Constructor for DebugConsole
 DebugConsole::DebugConsole(float windowWidth, float windowHeight) {
     if (!consoleFont.loadFromFile("../assets/fonts/font.ttf")) {
-        std::cerr << "Failed to load console font!" << std::endl;
+        std::cerr << "Failed to load console font!" << std::endl; // Error handling
     }
+
     text.setFont(consoleFont);
     text.setCharacterSize(14);
     text.setFillColor(sf::Color::White);
 
-    background.setSize({windowWidth, 200});
-    background.setFillColor(backgroundColor);
-    background.setPosition(0, windowHeight - 200);
+    background.setSize({windowWidth, 200}); // Debug panel size
+    background.setFillColor(backgroundColor); // Background transparency
+    background.setPosition(0, windowHeight - 200); // Positioning the debug panel
 }
 
-// Enable/Disable DebugConsole
+// Toggle debug console visibility
 void DebugConsole::toggle() { enabled = !enabled; }
 void DebugConsole::enable() { enabled = true; }
 void DebugConsole::disable() { enabled = false; }
 bool DebugConsole::isEnabled() const { return enabled; }
 
-// Set log filtering level
+// Set logging level to filter messages
 void DebugConsole::setLogLevel(LogLevel level) {
     filterLevel = level;
 }
 
+// Save a single log entry to a file
 void DebugConsole::saveLogToFile(const std::string& filename, const std::string& logEntry) {
     std::ofstream outFile(filename, std::ios::app);
-    if (!outFile.is_open()) {
-        return;
-    }
+    if (!outFile.is_open()) return;
     outFile << logEntry << "\n";
 }
 
+// Save all logs to a file
 void DebugConsole::saveAllLogs(const std::string& filename) {
     std::ofstream outFile(filename, std::ios::app);
-    if (!outFile.is_open()) {
-        return;
-    }
+    if (!outFile.is_open()) return;
 
     for (const auto& [category, message] : logs) {
         outFile << message << "\n";
@@ -54,7 +53,7 @@ void DebugConsole::saveAllLogs(const std::string& filename) {
     std::cout << "All logs saved to " << filename << std::endl;
 }
 
-
+// Generate a log filename based on current date
 std::string DebugConsole::getLogFilename() const {
     auto now = std::chrono::system_clock::now();
     auto timeT = std::chrono::system_clock::to_time_t(now);
@@ -65,11 +64,9 @@ std::string DebugConsole::getLogFilename() const {
     return filename.str();
 }
 
-
-
-// Log a message
+// Log a message with timestamp
 void DebugConsole::log(const std::string& category, const std::string& message, LogLevel level) {
-    if (level < filterLevel) return;
+    if (level < filterLevel) return; // Filter logs based on level
 
     std::ostringstream formattedMessage;
     
@@ -81,17 +78,15 @@ void DebugConsole::log(const std::string& category, const std::string& message, 
     formattedMessage << "[" << category << "] " << message;
 
     {
-        std::lock_guard<std::mutex> lock(debugMutex);
+        std::lock_guard<std::mutex> lock(debugMutex); // Thread safety
         logs.emplace_back(category, formattedMessage.str());
-        trimLogs();
+        trimLogs(); // Remove old logs if necessary
     }
 
     saveLogToFile(getLogFilename(), formattedMessage.str());
 }
 
-
-
-// Log a throttled message
+// Log a message with a throttle to prevent spam
 void DebugConsole::logThrottled(const std::string& category, const std::string& message, int throttleMs) {
     auto now = std::chrono::high_resolution_clock::now();
     std::string key = category + ":" + message;
@@ -112,7 +107,7 @@ void DebugConsole::logOnce(const std::string& category, const std::string& messa
     }
 }
 
-// Log system stats like FPS and memory usage
+// Log system stats such as FPS and memory usage
 void DebugConsole::logSystemStats(float fps, size_t memoryUsage) {
     std::ostringstream oss;
     oss << "FPS: " << std::fixed << std::setprecision(2) << fps
@@ -120,7 +115,7 @@ void DebugConsole::logSystemStats(float fps, size_t memoryUsage) {
     log("System", oss.str(), LogLevel::Info);
 }
 
-// Log resource stats for AI monitoring
+// Log resource statistics for AI monitoring
 void DebugConsole::logResourceStats(const std::unordered_map<std::string, int>& resources) {
     std::ostringstream oss;
     oss << "Resource Stats: ";
@@ -138,9 +133,7 @@ void DebugConsole::saveLogsToFile(const std::string& filename) {
     }
 
     std::ofstream outFile(filename, std::ios::app);
-    if (!outFile.is_open()) {
-        return;
-    }
+    if (!outFile.is_open()) return;
 
     std::lock_guard<std::mutex> lock(debugMutex); // Ensure thread safety
     for (const auto& [category, message] : logs) {
@@ -150,7 +143,7 @@ void DebugConsole::saveLogsToFile(const std::string& filename) {
     std::cout << "Logs saved to " << filename << std::endl;
 }
 
-// Render the debug console
+// Render the debug console in the game window
 void DebugConsole::render(sf::RenderWindow& window) {
     if (!enabled) return;
 
@@ -172,18 +165,18 @@ void DebugConsole::clearLogs() {
     logs.clear();
 }
 
-// Trim excess logs to maintain performance
+// Trim logs to maintain performance
 void DebugConsole::trimLogs() {
     if (logs.size() > 1000) logs.erase(logs.begin(), logs.begin() + (logs.size() - 1000));
 }
 
 // Singleton instance for DebugConsole
 DebugConsole& getDebugConsole() {
-    static DebugConsole instance(800, 800); // Adjust size based on your game window
+    static DebugConsole instance(800, 800); // Adjust size based on game window
     return instance;
 }
 
-// Debug helper functions
+// Helper function: Log tile information
 void debugTileInfo(int tileX, int tileY, const Game& game) {
     static auto lastTileLog = std::make_pair(-1, -1);
     if (lastTileLog != std::make_pair(tileX, tileY)) {
@@ -200,31 +193,26 @@ void debugTileInfo(int tileX, int tileY, const Game& game) {
     }
 }
 
+// Log market price changes
 void debugMarketPrices(const std::unordered_map<std::string, float>& marketPrices) {
-    static auto lastMarketLogTime = std::chrono::high_resolution_clock::now();
-    auto now = std::chrono::high_resolution_clock::now();
-    if (std::chrono::duration_cast<std::chrono::milliseconds>(now - lastMarketLogTime).count() > 1000) {
-        std::ostringstream oss;
-        for (const auto& [resource, price] : marketPrices) {
-            oss << resource << ": $" << price << " ";
-        }
-        getDebugConsole().log("Market", oss.str());
-        lastMarketLogTime = now;
+    std::ostringstream oss;
+    for (const auto& [resource, price] : marketPrices) {
+        oss << resource << ": $" << price << " ";
     }
+    getDebugConsole().log("Market", oss.str());
 }
 
+// Log collision events with throttling
 void debugCollisionEvent(const std::string& message, int throttleMs) {
     getDebugConsole().logThrottled("Collision", message, throttleMs);
 }
 
+// Log actions performed by NPCs
 void debugActionPerformed(const std::string& actionName, const std::string& objectType) {
     getDebugConsole().log("Action", actionName + " on " + objectType);
 }
 
-void debugPlayerSpeed(float speed) {
-    getDebugConsole().logThrottled("Player", "Speed: " + std::to_string(speed), 500);
-}
-
+// Log NPC statistics
 void debugNPCStats(const std::string& npcName, float health, float energy, float money) {
     std::ostringstream oss;
     oss << "NPC: " << npcName << " | Health: " << health

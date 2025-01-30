@@ -39,4 +39,4 @@ public:
     sf::FloatRect getBounds() const;
 };
 
-#endif // MOVABLEPANEL_HPP
+#endif 
