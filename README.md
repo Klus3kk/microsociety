@@ -1,7 +1,8 @@
+# MicroSociety
+
 ![CI](https://github.com/Klus3kk/microsociety/actions/workflows/ci.yml/badge.svg)
 ![License](https://img.shields.io/badge/License-MIT-blue)
 ![Language](https://img.shields.io/badge/C++-blue)
-# MicroSociety
 
 ## Description
 
@@ -10,6 +11,7 @@ MicroSociety is an object-oriented simulation project that models a dynamic soci
 ## Setup Options
 
 MicroSociety offers two setup options:
+
 - **With TensorFlow (Docker-based)**: Enables advanced AI capabilities using TensorFlow.
 - **Without TensorFlow (Local build)**: Provides a simpler setup without TensorFlow dependencies.
 
@@ -83,7 +85,6 @@ If you want to check memory leaks or performance profiling, use Valgrind:
 valgrind --leak-check=full --track-origins=yes ./MicroSociety
 ```
 
-
 ```bash
 valgrind --tool=callgrind ./MicroSociety
 kcachegrind callgrind.out.<pid>
@@ -96,7 +97,7 @@ gdb ./MicroSociety
 run
 ```
 
-If the simulation crashes, write: 
+If the simulation crashes, write:
 
 ```bash
 bt full 
