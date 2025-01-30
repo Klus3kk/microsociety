@@ -276,7 +276,7 @@ void Game::regenerateResources() {
     std::mt19937 gen(rd());
     std::uniform_int_distribution<int> distX(0, GameConfig::mapWidth - 1);
     std::uniform_int_distribution<int> distY(0, GameConfig::mapHeight - 1);
-    std::uniform_int_distribution<int> resourceTypeDist(0, 2); // 0 = Tree, 1 = Rock, 2 = Bush
+    std::uniform_real_distribution<float> resourceChance(0.0f, 1.0f); // For probability-based spawning
 
     auto& textureManager = TextureManager::getInstance();
 
@@ -297,36 +297,37 @@ void Game::regenerateResources() {
         &textureManager.getTexture("tree3", "../assets/objects/tree3.png")
     };
 
-    int numResourcesToRegenerate = GameConfig::mapWidth * GameConfig::mapHeight * 0.02; // Regenerate 2% of map tiles
+    int numResourcesToRegenerate = GameConfig::mapWidth * GameConfig::mapHeight * 0.05; // 🔥 Increased to 5% of map tiles
 
     for (int i = 0; i < numResourcesToRegenerate; ++i) {
         int x = distX(gen);
         int y = distY(gen);
 
         if (!tileMap[y][x]->hasObject()) {
-            int resourceType = resourceTypeDist(gen);
+            float chance = resourceChance(gen);
 
-            // Trees & Bushes regenerate only on GrassTile
+            // Higher chance for Trees/Bushes on GrassTile
             if (auto grassTile = dynamic_cast<GrassTile*>(tileMap[y][x].get())) {
-                if (resourceType == 0) {
+                if (chance < 0.4f) { // 40% chance for Trees
                     grassTile->placeObject(std::make_unique<Tree>(*treeTextures[rand() % treeTextures.size()]));
-                    getDebugConsole().log("Resource Regen", "New tree spawned at (" + std::to_string(x) + ", " + std::to_string(y) + ")");
-                } else {
+                    getDebugConsole().log("Resource Regen", "Tree spawned at (" + std::to_string(x) + ", " + std::to_string(y) + ")");
+                } else if (chance < 0.7f) { // 30% chance for Bushes
                     grassTile->placeObject(std::make_unique<Bush>(*bushTextures[rand() % bushTextures.size()]));
-                    getDebugConsole().log("Resource Regen", "New bush spawned at (" + std::to_string(x) + ", " + std::to_string(y) + ")");
+                    getDebugConsole().log("Resource Regen", "Bush spawned at (" + std::to_string(x) + ", " + std::to_string(y) + ")");
                 }
             }
-
-            // Rocks regenerate only on StoneTile
+            
+            // Higher chance for Rocks on StoneTile
             else if (auto stoneTile = dynamic_cast<StoneTile*>(tileMap[y][x].get())) {
-                if (resourceType == 1) {
+                if (chance < 0.8f) { // 80% chance for Rocks on StoneTile
                     stoneTile->placeObject(std::make_unique<Rock>(*rockTextures[rand() % rockTextures.size()]));
-                    getDebugConsole().log("Resource Regen", "New rock spawned at (" + std::to_string(x) + ", " + std::to_string(y) + ")");
+                    getDebugConsole().log("Resource Regen", "Rock spawned at (" + std::to_string(x) + ", " + std::to_string(y) + ")");
                 }
             }
         }
     }
 }
+
 
 
 

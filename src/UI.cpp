@@ -585,11 +585,11 @@ void UI::updateMarketPanel(const Market& market) {
     for (const auto& [resource, price] : market.getPrices()) {
         std::ostringstream resourceStats;
         resourceStats << resource << ":\n"
-                      << "  Price: $" << price << "\n"
-                      << "  Buy: " << market.getBuyTransactions(resource) << "\n"
-                      << "  Sell: " << market.getSellTransactions(resource) << "\n"
-                      << "  Revenue: $" << market.getRevenue(resource) << "\n"
-                      << "  Expenditure: $" << market.getExpenditure(resource) << "\n";
+                      << "  Price: $" << price << "\n";
+                    //   << "  Buy: " << market.getBuyTransactions(resource) << "\n"
+                    //   << "  Sell: " << market.getSellTransactions(resource) << "\n"
+                    //   << "  Revenue: $" << market.getRevenue(resource) << "\n"
+                    //   << "  Expenditure: $" << market.getExpenditure(resource) << "\n";
                     //   << "  Volatility: " << market.calculateVolatility(resource) << "\n";
 
         sf::Text resourceText(resourceStats.str(), font, 16);
