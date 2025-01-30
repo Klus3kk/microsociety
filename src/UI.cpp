@@ -7,7 +7,7 @@
 #include "Game.hpp"
 UI::UI()
     : npcListPanel(npcListWidth, npcListHeight, "NPC List"),
-      npcDetailPanel(400, 600, "NPC Details"),
+      npcDetailPanel(300, 500, "NPC Details"),
       statsPanel(500, 400, ""),
       marketPanel(sf::Vector2f(600, 400)) {
     if (!font.loadFromFile("../assets/fonts/font.ttf")) {
@@ -143,29 +143,35 @@ void UI::updateNPCList(const std::vector<NPCEntity>& npcs) {
     npcButtons.clear();
     npcListPanel.clearChildren(); // Remove old buttons
 
-    float buttonHeight = 50.0f;  // Each button's height
-    float spacing = 10.0f;       // Space between buttons
-    float titlePadding = 40.0f;  // Space for title text
-    float calculatedHeight = npcs.size() * (buttonHeight + spacing) + titlePadding;
+    float panelWidth = 300.0f;  // Reduce panel width
+    float buttonWidth = panelWidth - 40.0f; // Buttons smaller than panel
+    float buttonHeight = 45.0f;  // Slightly reduced height
+    float spacing = 5.0f;        // Keep minimal spacing
+    float titlePadding = 50.0f;  // Ensure title doesn't overlap
+    float bottomPadding = 50.0f; // Extra space at the bottom
 
-    float minHeight = 500.0f;  // Minimum height
-    float maxHeight = 900.0f;  // Maximum height
-    float newHeight = std::clamp(calculatedHeight, minHeight, maxHeight); // Ensure within limits
+    // Ensure total height fits properly
+    float calculatedHeight = npcs.size() * (buttonHeight + spacing) + titlePadding + bottomPadding;
+    float minHeight = 300.0f;
+    float maxHeight = 600.0f;
+    float newHeight = std::clamp(calculatedHeight, minHeight, maxHeight);
 
-    // Force panel height to be large enough
-    npcListPanel.setSize(npcListPanel.getBounds().width, newHeight);
-    npcListPanel.setPosition(50, 100); // Ensure it's positioned correctly
+    // Set panel size correctly
+    npcListPanel.setSize(panelWidth, newHeight);
+    npcListPanel.setPosition(50, 100); // Ensure position
 
-    std::cout << "NPC Panel Resized: " << npcListPanel.getBounds().width << "x" << npcListPanel.getBounds().height << std::endl;
+    if (!showNPCList) return; 
 
-    // Position buttons
+    // Adjust button positions properly
+    float startX = npcListPanel.getBounds().left + 20; // Keep margin
     float startY = npcListPanel.getBounds().top + titlePadding;
+
     for (size_t i = 0; i < npcs.size(); ++i) {
         UIButton* button = new UIButton();
         button->setProperties(
-            npcListPanel.getBounds().left + 10,  // Left padding
+            startX,
             startY,
-            npcListPanel.getBounds().width - 20, // Fit within panel width
+            buttonWidth,  // Reduced width
             buttonHeight,
             npcs[i].getName(),
             font
@@ -179,18 +185,9 @@ void UI::updateNPCList(const std::vector<NPCEntity>& npcs) {
 
         npcListPanel.addChild(button);
         npcButtons.emplace_back(npcs[i].getName(), button);
-        startY += buttonHeight + spacing;  // Stack buttons
+        startY += buttonHeight + spacing;  // Stack properly
     }
 }
-
-
-
-
-
-
-
-
-
 
 void UI::updateMarket(const std::unordered_map<std::string, float>& prices) {
     std::ostringstream marketStream;
@@ -200,8 +197,6 @@ void UI::updateMarket(const std::unordered_map<std::string, float>& prices) {
     }
     marketText.setString(marketStream.str());
 }
-
-
 
 void UI::populateNPCDetails(const NPCEntity& npc) {
     // Update the text content for NPC details
@@ -229,8 +224,6 @@ void UI::populateNPCDetails(const NPCEntity& npc) {
     );
 }
 
-
-
 void UI::showNPCDetails(const std::string& npcDetails) {
     npcDetailPanel.setSize(400, 800);
     npcDetailPanel.setTitle("NPC Details");
@@ -249,7 +242,6 @@ void UI::hideAllPanels() {
     showMarketPanel = false;
     showOptionsPanel = false;
 }
-
 
 void UI::handleButtonClicks(sf::RenderWindow& window, sf::Event& event, std::vector<NPCEntity>& npcs, const TimeManager& timeManager, const Market& market) {
     // NPC Button - Show NPC List, Hide Others
@@ -308,10 +300,7 @@ void UI::handleStatsPanel(sf::RenderWindow& window, sf::Event& event) {
 
 void UI::updateStats(const std::vector<NPCEntity>& npcs, const TimeManager& timeManager) {
     std::ostringstream statsStream;
-
-    // Title
-    statsStream << "Simulation Stats:\n\n";
-
+    
     // Time Details
     statsStream << "Day: " << timeManager.getCurrentDay() << "\n";
     statsStream << "Time: " << timeManager.getFormattedTime() << "\n";
@@ -348,9 +337,16 @@ void UI::updateStats(const std::vector<NPCEntity>& npcs, const TimeManager& time
     // Update the stats text
     statsText.setString(statsStream.str());
 
-    // Ensure text is dynamically centered and formatted
-    statsText.setPosition(statsPanel.getBounds().left + 20, statsPanel.getBounds().top + 50);
+    // **Center the Text in statsPanel**
+    float textWidth = statsText.getLocalBounds().width;
+    float panelWidth = statsPanel.getBounds().width;
+
+    statsText.setPosition(
+        statsPanel.getBounds().left + (panelWidth - textWidth) / 2,  // Center horizontally
+        statsPanel.getBounds().top + 50  // Keep padding
+    );
 }
+
 
 void UI::handleHover(sf::RenderWindow& window) {
     npcButton.handleHover(window);
@@ -364,7 +360,6 @@ void UI::handleHover(sf::RenderWindow& window) {
         }
     }   
 }
-
 
 void UI::populateNPCList(const std::vector<NPCEntity>& npcs) {
     npcListPanel.setSize(400, 800);
@@ -417,8 +412,6 @@ void UI::handleNPCPanel(sf::RenderWindow& window, sf::Event& event, const std::v
     }
 }
 
-
-
 void UI::render(sf::RenderWindow& window, const Market& market, const std::vector<NPCEntity>& npcs) {
     // Top Panels
     window.draw(moneyPanel);
@@ -461,7 +454,7 @@ void UI::render(sf::RenderWindow& window, const Market& market, const std::vecto
     if (showStatsPanel) {
         statsPanel.render(window);
         window.draw(statsText);
-        // Draw the title last so it's above the text
+
         sf::Text title("Simulation Stats", font, 20);
         title.setFillColor(sf::Color::White);
         title.setStyle(sf::Text::Bold);
@@ -471,6 +464,7 @@ void UI::render(sf::RenderWindow& window, const Market& market, const std::vecto
         );
         window.draw(title);
     }
+
 
 
     // Add the missing market panel rendering logic
@@ -484,10 +478,6 @@ void UI::render(sf::RenderWindow& window, const Market& market, const std::vecto
     }
 
 }
-
-
-
-
 
 void UI::setTooltipContent(const std::string& content) {
     tooltipText.setString(content);
@@ -522,7 +512,7 @@ void UI::adjustLayout(sf::RenderWindow& window) {
     // NPC Details Panel
     npcDetailPanel.setPosition(
         (size.x - npcDetailPanel.getBounds().width) / 2 + 220, // Offset right
-        size.y * 0.1f
+        size.y * 0.18f
     );
 
     npcDetailText.setPosition(

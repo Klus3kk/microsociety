@@ -17,7 +17,7 @@ MovablePanel::MovablePanel(float width, float height, const std::string& title)
     // Set title safely
     panelTitle.setFont(font);
     panelTitle.setCharacterSize(18);
-    panelTitle.setString(title.empty() ? "Panel" : title);
+    panelTitle.setString(title.empty() ? "" : title);
     panelTitle.setFillColor(sf::Color::White);
     updateTextPosition();
 

@@ -91,6 +91,9 @@ void Game::run() {
             timeManager.getFormattedTime(),
             timeManager.getSocietyIteration()
         );
+        ui.updateStats(npcs, timeManager);
+        ui.updateMarketPanel(market);
+        ui.updateNPCList(npcs);
 
         window.clear();
         render();
@@ -99,78 +102,70 @@ void Game::run() {
         getDebugConsole().render(window);
         window.display();
     }
-    getDebugConsole().saveLogsToFile("logs/simulation_log.txt");
+    // getDebugConsole().saveLogsToFile("logs/simulation_log.txt");
 }
 
 void Game::simulateNPCEntityBehavior(float deltaTime) {
-    for (auto& npc : npcs) {
-        getDebugConsole().log("DEBUG", "Processing " + npc.getName());
+    for (auto it = npcs.begin(); it != npcs.end(); ) {
+        getDebugConsole().log("DEBUG", "Processing " + it->getName());
 
-        switch (npc.getState()) {
+        // Check if NPC is dead
+        if (it->isDead()) {
+            getDebugConsole().log("DEATH", it->getName() + " has died.");
+            it = npcs.erase(it);  // Remove NPC and move iterator
+            continue;
+        }
+
+        switch (it->getState()) {
             case NPCState::Idle: {
-                ActionType actionType = npc.decideNextAction(tileMap, house, market);
-                npc.setCurrentAction(actionType);
+                ActionType actionType = it->decideNextAction(tileMap, house, market);
+                it->setCurrentAction(actionType);
                 
                 Tile* nearestTile = nullptr;
-                switch (actionType) {
-                    case ActionType::ChopTree:
-                        nearestTile = npc.findNearestTile(tileMap, ObjectType::Tree);
-                        break;
-                    case ActionType::MineRock:
-                        nearestTile = npc.findNearestTile(tileMap, ObjectType::Rock);
-                        break;
-                    case ActionType::GatherBush:
-                        nearestTile = npc.findNearestTile(tileMap, ObjectType::Bush);
-                        break;
-                    case ActionType::StoreItem:
-                    case ActionType::RegenerateEnergy:
-                    case ActionType::TakeOutItems:
-                    case ActionType::UpgradeHouse:
-                        nearestTile = npc.findNearestTile(tileMap, ObjectType::House);
-                        break;
-                    case ActionType::BuyItem:
-                    case ActionType::SellItem:
-                        nearestTile = npc.findNearestTile(tileMap, ObjectType::Market);
-                        break;
-                    default:
-                        getDebugConsole().log("DEBUG", npc.getName() + " did not pick a valid action.");
-                        break;
-                }
+                if (actionType == ActionType::ChopTree) nearestTile = it->findNearestTile(tileMap, ObjectType::Tree);
+                else if (actionType == ActionType::MineRock) nearestTile = it->findNearestTile(tileMap, ObjectType::Rock);
+                else if (actionType == ActionType::GatherBush) nearestTile = it->findNearestTile(tileMap, ObjectType::Bush);
+                else if (actionType == ActionType::BuyItem || actionType == ActionType::SellItem)
+                    nearestTile = it->findNearestTile(tileMap, ObjectType::Market);
+                else if (actionType == ActionType::RegenerateEnergy || actionType == ActionType::UpgradeHouse)
+                    nearestTile = it->findNearestTile(tileMap, ObjectType::House);
 
                 if (nearestTile) {
-                    npc.setTarget(nearestTile);
-                    npc.setState(NPCState::Walking);
-                    getDebugConsole().log("NPC", npc.getName() + " is walking to " + std::to_string(static_cast<int>(actionType)));
+                    it->setTarget(nearestTile);
+                    it->setState(NPCState::Walking);
+                    getDebugConsole().log("NPC", it->getName() + " is walking to " + std::to_string(static_cast<int>(actionType)));
                 } else {
-                    npc.setState(NPCState::Idle);
-                    getDebugConsole().log("ERROR", npc.getName() + " has no valid target.");
+                    it->setState(NPCState::Idle);
+                    getDebugConsole().log("ERROR", it->getName() + " has no valid target.");
                 }
                 break;
             }
 
-            case NPCState::Walking: {
-                if (npc.getTarget() && !npc.isAtTarget()) {
-                    performPathfinding(npc);
+            case NPCState::Walking:
+                if (it->getTarget() && !it->isAtTarget()) {
+                    performPathfinding(*it);
                 } else {
-                    npc.setState(NPCState::PerformingAction);
+                    it->setState(NPCState::PerformingAction);
                 }
                 break;
-            }
 
-            case NPCState::PerformingAction: {
-                if (npc.getTarget()) {
-                    npc.performAction(npc.getCurrentAction(), *npc.getTarget(), tileMap, market, house);
-                    npc.setTarget(nullptr);
-                } else {
-                    getDebugConsole().log("ERROR", npc.getName() + " tried to perform action but target is NULL.");
+            case NPCState::PerformingAction:
+                if (it->getTarget()) {
+                    it->performAction(it->getCurrentAction(), *it->getTarget(), tileMap, market, house);
+                    it->setTarget(nullptr);
                 }
-                npc.setState(NPCState::Idle);
+                it->setState(NPCState::Idle);
                 break;
-            }
         }
+        ++it;
+    }
+
+    // If all NPCs are dead, reset the simulation
+    if (npcs.empty()) {
+        getDebugConsole().log("SYSTEM", "All NPCs have died. Restarting simulation...");
+        resetSimulation();
     }
 }
-
 
 void Game::handleMarketActions(NPCEntity& npc, Tile& targetTile, ActionType actionType) {
     if (!targetTile.hasObject()) {
@@ -179,14 +174,8 @@ void Game::handleMarketActions(NPCEntity& npc, Tile& targetTile, ActionType acti
     }
 
     auto* market = dynamic_cast<Market*>(targetTile.getObject());
-    if (!market) {
-        getDebugConsole().log("ERROR", "Market reference is NULL. NPC cannot trade.");
-        return;
-    }
-
-    // Prevent market interaction if no prices are initialized
-    if (market->getPrices().empty()) {
-        getDebugConsole().log("ERROR", "Market has no prices set. Aborting trade.");
+    if (!market || market->getPrices().empty()) {
+        getDebugConsole().log("ERROR", "Market reference is NULL or has no prices.");
         return;
     }
 
@@ -200,9 +189,11 @@ void Game::handleMarketActions(NPCEntity& npc, Tile& targetTile, ActionType acti
         float itemPrice = market->calculateBuyPrice(bestItemToBuy);
         if (npc.getMoney() >= itemPrice) {
             market->buyItem(npc, bestItemToBuy, 5);
+            npc.reduceHealth(2.5f);  // Buying reduces health
             getDebugConsole().log("MARKET", npc.getName() + " bought 5 " + bestItemToBuy);
         }
-    } else if (actionType == ActionType::SellItem) {
+    } 
+    else if (actionType == ActionType::SellItem) {
         std::string bestItemToSell = market->suggestBestResourceToSell();
         if (bestItemToSell.empty()) {
             getDebugConsole().log("MARKET", npc.getName() + " has nothing to sell.");
@@ -210,7 +201,12 @@ void Game::handleMarketActions(NPCEntity& npc, Tile& targetTile, ActionType acti
         }
 
         market->sellItem(npc, bestItemToSell, 5);
+        npc.restoreHealth(5.0f); // Selling increases health
         getDebugConsole().log("MARKET", npc.getName() + " sold 5 " + bestItemToSell);
+    } 
+    else if (actionType == ActionType::UpgradeHouse) {
+        npc.restoreHealth(20.0f); // Upgrading restores health
+        getDebugConsole().log("MARKET", npc.getName() + " upgraded house and restored health.");
     }
 }
 
@@ -558,7 +554,8 @@ std::vector<NPCEntity> Game::generateNPCEntitys() const {
             getDebugConsole().log("DEBUG", npc.getName() + " uses simple behavior.");
         }
 
-        npcs.push_back(npc);
+        npcs.emplace_back(std::move(npc));
+
     }
     return npcs;
 }
@@ -591,30 +588,50 @@ void Game::drawTileBorders() {
     }
 }
 
+#include <fstream>
+#include "nlohmann/json.hpp"
+
 void Game::resetSimulation() {
-    // Safely clear the tileMap
+    static int iterationCounter = 0;
+    iterationCounter++;
+
+    getDebugConsole().log("SYSTEM", "Simulation resetting... Iteration " + std::to_string(iterationCounter));
+
+    // Save previous stats before reset
+    nlohmann::json statsJson;
+    statsJson["iteration"] = iterationCounter;
+    statsJson["total_npcs"] = GameConfig::NPCEntityCount;
+    statsJson["total_resources"] = aggregateResources(npcs);
+
+    std::ofstream file("stats.json");
+    file << statsJson.dump(4);
+    file.close();
+
+    // Clear map safely
     for (auto& row : tileMap) {
         for (auto& tile : row) {
-            tile.reset(); // Explicitly release the tile memory
+            tile.reset();
         }
     }
-    tileMap.clear();   // Clear the map
-    tileMap.shrink_to_fit(); // Reduce capacity to zero
+    tileMap.clear();
+    tileMap.shrink_to_fit();
 
     // Clear NPCs safely
     npcs.clear();
     npcs.shrink_to_fit();
 
-    // Re-generate map and NPCs
+    // Re-generate everything
     generateMap();
     npcs = generateNPCEntitys();
-
-    // Update UI and reset simulation parameters
     ui.updateNPCEntityList(npcs);
+
+    // Reset parameters
     simulationSpeed = 1.0f;
 
-    getDebugConsole().log("Options", "Simulation reset.");
+    getDebugConsole().log("SYSTEM", "Simulation reset complete.");
 }
+
+
 
 void Game::toggleTileBorders() {
     showTileBorders = !showTileBorders;

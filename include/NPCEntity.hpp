@@ -13,7 +13,8 @@
 #include "ActionType.hpp"
 #include "QLearningAgent.hpp"
 
-class Action; // Forward declaration of Action class
+// Forward declarations
+class Action; 
 class Market;
 class House;
 
@@ -52,6 +53,14 @@ public:
     NPCEntity(const std::string& npcName, float initHealth, float initHunger, float initEnergy,
               float initSpeed, float initStrength, float initMoney, bool enableQLearning = false);
 
+    // Move Constructor & Move Assignment (Fix for vector erase issue)
+    NPCEntity(NPCEntity&& other) noexcept;
+    NPCEntity& operator=(NPCEntity&& other) noexcept;
+
+    // Copy is deleted to prevent unintended behavior
+    NPCEntity(const NPCEntity&) = delete;
+    NPCEntity& operator=(const NPCEntity&) = delete;
+
     // Getters
     const std::string& getName() const;
     float getMaxEnergy() const;
@@ -60,6 +69,7 @@ public:
     const std::unordered_map<std::string, int>& getInventory() const;
     int getMaxInventorySize() const;
     int getInventorySize() const;
+
     // Modify getter to return a reference
     float& getMoney(); // For modifiable access
     const float& getMoney() const; // For read-only access
@@ -68,6 +78,7 @@ public:
     House* getHouse();
 
     bool isAtTarget() const;
+
     // Inventory Management
     bool addToInventory(const std::string& item, int quantity);
     bool removeFromInventory(const std::string& item, int quantity);
@@ -81,11 +92,16 @@ public:
     void consumeEnergy(float amount);
     void regenerateEnergy(float rate);
 
-    // Decision-Making Hook (AI will override this)
+    // Health Management
+    void restoreHealth(float amount);
+    void reduceHealth(float amount);
+
+    // AI Decision Making
     ActionType decideNextAction(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap, const House& house, Market& market);
     std::vector<ObjectType> scanNearbyTiles(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) const;
     Tile* findNearestTile(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap, ObjectType type) const;
-    Tile* getTarget() const; // Getter for the target tile
+    Tile* getTarget() const; 
+
     // Perform Action
     void performAction(ActionType action, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap, Market& market, House& house);
     void update(float deltaTime);
@@ -106,6 +122,7 @@ public:
     void enableQLearning(bool enable); // Toggle Q-learning behavior
     State extractState(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) const; // State representation
     void updateQLearningState(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap);
+    
     // State management
     void setState(NPCState newState) { currentState = newState; }
     NPCState getState() const { return currentState; }

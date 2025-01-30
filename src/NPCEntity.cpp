@@ -9,9 +9,57 @@
 NPCEntity::NPCEntity(const std::string& npcName, float initHealth, float initHunger, float initEnergy,
                      float initSpeed, float initStrength, float initMoney, bool enableQLearning)
     : Entity(initHealth, initHunger, initEnergy, initSpeed, initStrength, initMoney),
-      agent(0.1f, 0.9f, 0.1f), // Initialize Q-learning agent
-      useQLearning(enableQLearning), // Enable/disable Q-learning
+      agent(0.1f, 0.9f, 0.1f),
+      useQLearning(enableQLearning),
       name(npcName) {}
+
+// Move Constructor
+NPCEntity::NPCEntity(NPCEntity&& other) noexcept
+    : Entity(std::move(other)),
+      currentState(other.currentState),
+      target(other.target),
+      currentAction(other.currentAction),
+      agent(std::move(other.agent)),
+      useQLearning(other.useQLearning),
+      inventory(std::move(other.inventory)),
+      inventoryCapacity(other.inventoryCapacity),
+      name(std::move(other.name)),
+      baseSpeed(other.baseSpeed),
+      currentSpeed(other.currentSpeed),
+      deathPenalty(other.deathPenalty),
+      currentReward(other.currentReward),
+      currentPenalty(other.currentPenalty),
+      currentActionCooldown(other.currentActionCooldown),
+      house(other.house),
+      lastAction(other.lastAction),
+      currentQLearningState(std::move(other.currentQLearningState)) {}
+
+
+// Move Assignment Operator
+NPCEntity& NPCEntity::operator=(NPCEntity&& other) noexcept {
+    if (this != &other) {
+        Entity::operator=(std::move(other));
+        currentState = other.currentState;
+        target = other.target;
+        currentAction = other.currentAction;
+        agent = std::move(other.agent);
+        useQLearning = other.useQLearning;
+        inventory = std::move(other.inventory);
+        inventoryCapacity = other.inventoryCapacity;
+        name = std::move(other.name);
+        baseSpeed = other.baseSpeed;
+        currentSpeed = other.currentSpeed;
+        deathPenalty = other.deathPenalty;
+        currentReward = other.currentReward;
+        currentPenalty = other.currentPenalty;
+        currentActionCooldown = other.currentActionCooldown;
+        house = other.house;
+        lastAction = other.lastAction;
+        currentQLearningState = std::move(other.currentQLearningState);
+    }
+    return *this;
+}
+
 
 // Getters
 const std::string& NPCEntity::getName() const { return name; }
@@ -355,10 +403,29 @@ const float& NPCEntity::getMoney() const {
     return money; // Read-only access
 }
 
+void NPCEntity::restoreHealth(float amount) {
+    health = std::min(health + amount, MAX_HEALTH);
+    getDebugConsole().log("HEALTH", name + " restored " + std::to_string(amount) + " health.");
+}
+
+
+void NPCEntity::reduceHealth(float amount) {
+    health -= amount;
+    if (health <= 0.0f) {
+        health = 0.0f;
+        handleDeath();
+    }
+    getDebugConsole().log("HEALTH", getName() + " lost " + std::to_string(amount) + " health. Current: " + std::to_string(health));
+}
+
+bool NPCEntity::isDead() const {
+    return health <= 0.0f;
+}
 
 // Handle NPC Death
-bool NPCEntity::isDead() const {
-    return energy == 0.0f || health == 0.0f;
+void NPCEntity::handleDeath() {
+    getDebugConsole().log(name, name + " has died.");
+    addPenalty(deathPenalty);
 }
 
 void NPCEntity::receiveFeedback(float reward, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
@@ -373,15 +440,6 @@ void NPCEntity::receiveFeedback(float reward, const std::vector<std::vector<std:
         agent.updateQValue(previousState, lastAction, reward, nextState);
         currentQLearningState = nextState;
     }
-}
-
-
-
-
-
-void NPCEntity::handleDeath() {
-    getDebugConsole().log(name, name + " has died.");
-    addPenalty(deathPenalty);
 }
 
 // Inventory Capacity Upgrades
