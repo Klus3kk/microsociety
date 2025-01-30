@@ -2,6 +2,8 @@
 #include <algorithm>
 #include <cmath>
 #include <numeric>
+#include <ctime>
+#include <cstdlib>
 #include "House.hpp"
 // Default constructor
 Market::Market() {
@@ -9,9 +11,11 @@ Market::Market() {
     texture = defaultTexture;
     sprite.setTexture(texture);
 
-    setPrice("wood", 10.0f);
-    setPrice("stone", 10.0f);
-    setPrice("bush", 5.0f);
+    std::srand(static_cast<unsigned int>(std::time(nullptr)));
+
+    setPrice("wood", 1 + std::rand() % 50);
+    setPrice("stone", 1 + std::rand() % 50);
+    setPrice("bush", 1 + std::rand() % 50);
 
     // Debugging: Ensure prices are set
     getDebugConsole().log("DEBUG", "Market initialized with prices:");
@@ -57,10 +61,10 @@ float Market::calculateSellPrice(const std::string& item) const {
     return std::round(getPrice(item) * sellMargin * 10) / 10.0f;
 }
 
-// Player buys an item
 bool Market::buyItem(NPCEntity& npc, const std::string& item, int quantity) {
     if (quantity <= 0 || item.empty()) return false;
-    if (prices.find(item) == prices.end()) setPrice(item, 10.0f);
+    if (prices.find(item) == prices.end()) setPrice(item, 1 + std::rand() % 50);
+
 
     float itemPrice = calculateBuyPrice(item);
     float totalCost = itemPrice * quantity;
@@ -80,22 +84,23 @@ bool Market::buyItem(NPCEntity& npc, const std::string& item, int quantity) {
     supply[item] = std::max(0, supply[item] - quantity);
     prices[item] = adjustPriceOnBuy(prices[item], demand[item], supply[item], priceAdjustmentFactor);
 
+    // **Ensure Market Stats Update Properly**
     totalBuyTransactions[item] += quantity;
-    totalExpenditure[item] += totalCost;
+    totalExpenditure[item] += totalCost;  // Money spent on items
+
+    // **Keep Your Reward Logic**
     npc.addReward(5.0f * quantity);
 
-    getDebugConsole().log("MARKET", npc.getName() + " successfully bought " + std::to_string(quantity) + " " + item);
+    // **Track Price for Volatility**
+    // trackPriceHistory(item);
+
+    getDebugConsole().log("MARKET", "[BUY] " + npc.getName() + " bought " + std::to_string(quantity) + " " + item);
     return true;
 }
 
-
-
-
-
-// Player sells an item
 bool Market::sellItem(NPCEntity& npc, const std::string& item, int quantity) {
     if (item.empty() || quantity <= 0) return false;
-    if (prices.find(item) == prices.end()) setPrice(item, 10.0f);
+    if (prices.find(item) == prices.end()) setPrice(item, 1 + std::rand() % 50);
 
     int inventoryCount = npc.getInventoryItemCount(item);
     if (inventoryCount < quantity) {
@@ -114,33 +119,38 @@ bool Market::sellItem(NPCEntity& npc, const std::string& item, int quantity) {
     demand[item] = std::max(0, demand[item] - quantity);
     prices[item] = adjustPriceOnSell(prices[item], demand[item], supply[item], priceAdjustmentFactor);
 
+    // **Ensure Market Stats Update Properly**
     totalSellTransactions[item] += quantity;
-    totalRevenue[item] += revenue;
+    totalRevenue[item] += revenue;  // Money earned from selling
+
+    // **Keep Your Reward Logic**
     npc.addReward(10.0f * quantity);
 
-    getDebugConsole().log("MARKET", npc.getName() + " successfully sold " + std::to_string(quantity) + " " + item);
+    // **Track Price for Volatility**
+    // trackPriceHistory(item);
+
+    getDebugConsole().log("MARKET", "[SELL] " + npc.getName() + " sold " + std::to_string(quantity) + " " + item);
     return true;
 }
-
-
-
-
 
 
 // Adjust price after a buy
 float Market::adjustPriceOnBuy(float currentPrice, int demand, int supply, float buyFactor) {
     if (supply == 0) supply = 1;
-    float adjustmentFactor = buyFactor * (static_cast<float>(demand) / supply);
-    return std::clamp(currentPrice * (1.0f + adjustmentFactor), minimumPrice, currentPrice * 2.0f);
+    
+    float changeFactor = buyFactor * (static_cast<float>(demand) / (supply + 10));  
+    float newPrice = currentPrice * (1.0f + (changeFactor - 0.05f)); 
+
+    return std::clamp(newPrice, minimumPrice, maximumPrice);
 }
 
-
-
-// Adjust price after a sell
 float Market::adjustPriceOnSell(float currentPrice, int demand, int supply, float sellFactor) {
     if (demand == 0) demand = 1;
-    float adjustmentFactor = -sellFactor * (static_cast<float>(supply) / demand);
-    return std::clamp(currentPrice * (1.0f + adjustmentFactor), minimumPrice, currentPrice * 2.0f);
+    
+    float changeFactor = -sellFactor * (static_cast<float>(supply) / (demand + 10));  
+    float newPrice = currentPrice * (1.0f + (changeFactor + 0.05f)); 
+
+    return std::clamp(newPrice, minimumPrice, maximumPrice);
 }
 
 std::string Market::suggestBestResourceToBuy() const {
@@ -192,15 +202,36 @@ std::string Market::suggestBestResourceToSell() const {
 
 // Simulate market dynamics
 void Market::simulateMarketDynamics(float deltaTime) {
-    for (auto& [item, price] : prices) {
-        // Simulate demand and supply changes
-        demand[item] = std::max(10, demand[item] + static_cast<int>(std::sin(deltaTime) * 5));
-        supply[item] = std::max(10, supply[item] - static_cast<int>(std::cos(deltaTime) * 5));
+    static float timeAccumulator = 0.0f;
+    timeAccumulator += deltaTime;
 
-        // Stabilize prices based on new dynamics
-        stabilizePrices(deltaTime);
+    // ✅ Only update prices every 10-15 seconds
+    if (timeAccumulator < 2.0f) return;  
+    timeAccumulator = 0.0f;  // Reset timer
+
+    for (auto& [item, price] : prices) {
+        int oldDemand = demand[item];
+        int oldSupply = supply[item];
+
+        // Simulate natural market fluctuations, but **slowly**
+        demand[item] = std::max(10, demand[item] + (rand() % 3 - 1));  
+        supply[item] = std::max(10, supply[item] + (rand() % 3 - 1));  
+
+        // Calculate a **smaller** price change based on demand/supply
+        float demandFactor = 1.0f + ((demand[item] - oldDemand) / 500.0f);  // Reduced impact
+        float supplyFactor = 1.0f - ((supply[item] - oldSupply) / 500.0f);  // Reduced impact
+
+        float newPrice = price * demandFactor * supplyFactor;
+
+        // ✅ Ensure stability: Prices won’t swing too fast
+        prices[item] = std::clamp(newPrice, minimumPrice, maximumPrice);
+
+        // Track price history for UI graph
+        trackPriceHistory(item);
     }
 }
+
+
 
 // Track price history
 void Market::trackPriceHistory(const std::string& item) {
@@ -220,15 +251,24 @@ float Market::calculateVolatility(const std::string& item) const {
     for (float price : it->second) {
         variance += std::pow(price - mean, 2);
     }
-    return std::sqrt(variance / it->second.size());
+    float volatility = std::sqrt(variance / it->second.size());
+
+    getDebugConsole().log("MARKET", "[VOLATILITY UPDATE] " + item + " = " + std::to_string(volatility));
+    return volatility;
 }
+
 
 // Display market prices
 void Market::displayPrices() const {
     for (const auto& [item, price] : prices) {
         getDebugConsole().log("Market", "- " + item + ": $" + std::to_string(price));
+        getDebugConsole().log("Market", "  Buy: " + std::to_string(getBuyTransactions(item)));
+        getDebugConsole().log("Market", "  Sell: " + std::to_string(getSellTransactions(item)));
+        getDebugConsole().log("Market", "  Revenue: $" + std::to_string(getRevenue(item)));
+        getDebugConsole().log("Market", "  Expenditure: $" + std::to_string(getExpenditure(item)));
     }
 }
+
 
 // Stabilize prices
 void Market::stabilizePrices(float deltaTime) {

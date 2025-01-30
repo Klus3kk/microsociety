@@ -16,7 +16,7 @@ UI::UI()
 
     // Market Panel
     marketPanel.setSize({600, 400});
-    marketPanel.setPosition(100, 100);
+    marketPanel.setPosition(120, 120);
     marketPanel.setFillColor(UIStyles::PanelBackground);
     applyShadow(marketPanel);
 
@@ -465,9 +465,6 @@ void UI::render(sf::RenderWindow& window, const Market& market, const std::vecto
         window.draw(title);
     }
 
-
-
-    // Add the missing market panel rendering logic
     if (showMarketPanel) {
         renderMarketPanel(window, market);
     }
@@ -570,42 +567,42 @@ void UI::adjustLayout(sf::RenderWindow& window) {
 
 
 
-// Update Market Panel
 void UI::updateMarketPanel(const Market& market) {
-    advancedMarketStatsText.setString("");
-
-    std::ostringstream statsStream;
-    marketResourceTexts.clear(); // Clear old resource text
+    marketResourceTexts.clear(); // Clear old entries
 
     float startX = marketPanel.getPosition().x + 20;
-    float startY = marketPanel.getPosition().y + 50;
-    float spacingX = 200.0f; 
+    float startY = marketPanel.getPosition().y + 60;
+    float columnWidth = 180.0f;  // Ensures proper spacing
+    float rowSpacing = 100.0f;  
+
+    advancedMarketStatsText.setString("Market Prices and Stats");
+    advancedMarketStatsText.setPosition(
+        marketPanel.getPosition().x + (marketPanel.getSize().x - advancedMarketStatsText.getGlobalBounds().width) / 2,
+        marketPanel.getPosition().y + 10
+    );
 
     int index = 0;
     for (const auto& [resource, price] : market.getPrices()) {
-        float posX = startX + index * spacingX;
+        std::ostringstream resourceStats;
+        resourceStats << resource << ":\n"
+                      << "  Price: $" << price << "\n"
+                      << "  Buy: " << market.getBuyTransactions(resource) << "\n"
+                      << "  Sell: " << market.getSellTransactions(resource) << "\n"
+                      << "  Revenue: $" << market.getRevenue(resource) << "\n"
+                      << "  Expenditure: $" << market.getExpenditure(resource) << "\n";
+                    //   << "  Volatility: " << market.calculateVolatility(resource) << "\n";
 
-        statsStream << resource << ":\n";
-        statsStream << "  Price: $" << price << "\n";
-        statsStream << "  Buy Transactions: " << market.getBuyTransactions(resource) << "\n";
-        statsStream << "  Sell Transactions: " << market.getSellTransactions(resource) << "\n";
-        statsStream << "  Revenue: $" << market.getRevenue(resource) << "\n";
-        statsStream << "  Expenditure: $" << market.getExpenditure(resource) << "\n";
-        statsStream << "  Volatility: " << market.calculateVolatility(resource) << "\n";
-
-        sf::Text resourceText(statsStream.str(), font, 14);
+        sf::Text resourceText(resourceStats.str(), font, 16);
         resourceText.setFillColor(sf::Color::White);
-        resourceText.setPosition(posX, startY);
-
+        
+        float col = index % 3;
+        float row = index / 3;
+        resourceText.setPosition(startX + col * columnWidth, startY + row * rowSpacing);
+        
         marketResourceTexts.push_back(resourceText);
-        statsStream.str("");
-        statsStream.clear();
         index++;
     }
 }
-
-
-
 
 void UI::renderOptionsPanel(sf::RenderWindow& window) {
     if (!showOptionsPanel) return;
@@ -776,46 +773,41 @@ void UI::updateSliderValue(float newValue, Game& game) {
 
 // Draw Graph
 void UI::drawMarketGraph(sf::RenderWindow& window, const Market& market) {
-    float startX = marketPanel.getGlobalBounds().left + 20.0f;
-    float startY = marketPanel.getGlobalBounds().top + 50.0f;
-    float graphWidth = marketPanel.getGlobalBounds().width - 40.0f;
-    float graphHeight = 150.0f;
+    float startX = marketPanel.getGlobalBounds().left + 30.0f;
+    float startY = marketPanel.getGlobalBounds().top + marketPanel.getSize().y - 150.0f;
+    float graphWidth = marketPanel.getSize().x - 60.0f;
+    float graphHeight = 120.0f;
 
     sf::RectangleShape graphBackground(sf::Vector2f(graphWidth, graphHeight));
     graphBackground.setPosition(startX, startY);
-    graphBackground.setFillColor(sf::Color(15, 15, 15, 220));
+    graphBackground.setFillColor(sf::Color(25, 25, 25, 230));
+    graphBackground.setOutlineThickness(1);
+    graphBackground.setOutlineColor(sf::Color::White);
     window.draw(graphBackground);
 
-    float maxPrice = 1.0f;
-    for (const auto& [resource, prices] : market.getPriceTrendMap()) {
-        if (!prices.empty()) {
-            maxPrice = std::max(maxPrice, *std::max_element(prices.begin(), prices.end()));
-        }
-    }
-
-    int colorIndex = 0;
-    std::vector<sf::Color> lineColors = {sf::Color::Red, sf::Color::Green, sf::Color::Blue};
+    std::unordered_map<std::string, sf::Color> colors = {
+        {"wood", sf::Color::Red},
+        {"stone", sf::Color::Green},
+        {"bush", sf::Color::Blue}
+    };
 
     for (const auto& [resource, prices] : market.getPriceTrendMap()) {
-        if (prices.empty()) continue;
+        if (prices.empty() || colors.find(resource) == colors.end()) continue;
 
         sf::VertexArray line(sf::LineStrip, prices.size());
+        float maxPrice = *std::max_element(prices.begin(), prices.end());
+        float minPrice = *std::min_element(prices.begin(), prices.end());
+
         for (size_t i = 0; i < prices.size(); ++i) {
-            float x = startX + (static_cast<float>(i) / (prices.size() - 1)) * graphWidth;
-            float y = startY + graphHeight - (prices[i] / maxPrice) * graphHeight;
+            float x = startX + (i / float(prices.size() - 1)) * graphWidth;
+            float y = startY + graphHeight - ((prices[i] - minPrice) / (maxPrice - minPrice)) * graphHeight;
             line[i].position = sf::Vector2f(x, y);
-            line[i].color = lineColors[colorIndex % lineColors.size()];
+            line[i].color = colors[resource];
         }
         window.draw(line);
-
-        sf::Text label(resource, font, 12);
-        label.setPosition(startX, startY + graphHeight + 5 + (15 * colorIndex));
-        label.setFillColor(lineColors[colorIndex % lineColors.size()]);
-        window.draw(label);
-
-        colorIndex++;
     }
 }
+
 
 
 void UI::updateAll(const std::vector<NPCEntity>& npcs, const Market& market, const TimeManager& timeManager) {
@@ -827,14 +819,17 @@ void UI::updateAll(const std::vector<NPCEntity>& npcs, const Market& market, con
 
 // Render Market Panel
 void UI::renderMarketPanel(sf::RenderWindow& window, const Market& market) {
-    window.draw(marketPanel); // Draw the panel background
-    window.draw(advancedMarketStatsText); // Static market stats
+    window.draw(marketPanel);  // Draw the background panel
+    window.draw(advancedMarketStatsText);  // Draw title first
 
-    // Draw each resource text block
+    drawMarketGraph(window, market);  // Graph should be drawn before text
+
     for (const auto& text : marketResourceTexts) {
-        window.draw(text);
+        window.draw(text);  // Draw resource stats after the graph
     }
 }
+
+
 
 
 void UI::updateNPCEntityList(const std::vector<NPCEntity>& npcs) {

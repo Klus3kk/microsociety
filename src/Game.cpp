@@ -20,13 +20,12 @@ Game::Game()
         std::cerr << "Failed to load player texture!" << std::endl;
     }
 
+    market.setPrice("wood", 1 + std::rand() % 50);
+    market.setPrice("stone", 1 + std::rand() % 50);
+    market.setPrice("bush", 1 + std::rand() % 50);
+
     generateMap();
     npcs = generateNPCEntitys(); 
-
-    // Initialize market prices
-    market.setPrice("wood", 10.0f);
-    market.setPrice("stone", 10.0f);
-    market.setPrice("bush", 5.0f);
 
     ui.updateNPCEntityList(npcs); // Update UI with NPCEntity list
 }
@@ -71,6 +70,7 @@ void Game::run() {
         sf::Time dt = clock.restart();
         deltaTime = dt.asSeconds();
 
+        market.simulateMarketDynamics(deltaTime);
         // Update resource regeneration timer
         resourceRegenerationTimer += deltaTime;
         if (resourceRegenerationTimer >= regenerationInterval) {
@@ -306,7 +306,7 @@ void Game::regenerateResources() {
         if (!tileMap[y][x]->hasObject()) {
             int resourceType = resourceTypeDist(gen);
 
-            // 🌳 Trees & Bushes regenerate only on GrassTile
+            // Trees & Bushes regenerate only on GrassTile
             if (auto grassTile = dynamic_cast<GrassTile*>(tileMap[y][x].get())) {
                 if (resourceType == 0) {
                     grassTile->placeObject(std::make_unique<Tree>(*treeTextures[rand() % treeTextures.size()]));
@@ -317,7 +317,7 @@ void Game::regenerateResources() {
                 }
             }
 
-            // 🪨 Rocks regenerate only on StoneTile
+            // Rocks regenerate only on StoneTile
             else if (auto stoneTile = dynamic_cast<StoneTile*>(tileMap[y][x].get())) {
                 if (resourceType == 1) {
                     stoneTile->placeObject(std::make_unique<Rock>(*rockTextures[rand() % rockTextures.size()]));
