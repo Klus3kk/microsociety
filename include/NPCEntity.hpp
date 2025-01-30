@@ -12,7 +12,7 @@
 #include <memory>
 #include "ActionType.hpp"
 #include "QLearningAgent.hpp"
-
+#include "Configuration.hpp"
 // Forward declarations
 class Action; 
 class Market;
@@ -27,13 +27,12 @@ enum class NPCState {
 
 class NPCEntity : public Entity {
 private:
-    static constexpr float MAX_HEALTH = 100.0f;
-    static constexpr float MAX_ENERGY = 100.0f;
+    House* house;
     NPCState currentState = NPCState::Idle; 
     Tile* target = nullptr;
     ActionType currentAction = ActionType::None; 
-    QLearningAgent agent; // Q-learning agent for decision-making
-    bool useQLearning = false; // Toggle Q-learning behavior
+    QLearningAgent agent;                           // Q-learning agent for decision-making
+    bool useQLearning = false;                      // Toggle Q-learning behavior
     std::unordered_map<std::string, int> inventory; // Map for items and their quantities
     int inventoryCapacity = 10;                     // Max inventory capacity
     std::string name;                               // NPC's name
@@ -44,7 +43,6 @@ private:
     int currentPenalty = 0;                         // Penalty balance
     float currentActionCooldown = 0.0f;             // Time remaining before next action
     const float actionCooldownTime = 2.0f;          // Time between actions (adjust as needed)
-    House* house;
     ActionType lastAction;                          // Last action performed by NPC
     State currentQLearningState;  
 
@@ -104,7 +102,7 @@ public:
 
     // Perform Action
     void performAction(ActionType action, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap, Market& market, House& house);
-    void update(float deltaTime);
+    void update(float deltaTime); 
 
     // Handle NPC Death
     bool isDead() const;
@@ -122,7 +120,6 @@ public:
     void enableQLearning(bool enable); // Toggle Q-learning behavior
     State extractState(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) const; // State representation
     void updateQLearningState(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap);
-    
     // State management
     void setState(NPCState newState) { currentState = newState; }
     NPCState getState() const { return currentState; }

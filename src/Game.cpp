@@ -106,13 +106,18 @@ void Game::run() {
 }
 
 void Game::simulateNPCEntityBehavior(float deltaTime) {
-    for (auto it = npcs.begin(); it != npcs.end(); ) {
-        getDebugConsole().log("DEBUG", "Processing " + it->getName());
+    static std::unordered_map<std::string, int> stuckCounter;
+    static std::unordered_map<std::string, int> idleCounter;  
 
-        // Check if NPC is dead
-        if (it->isDead()) {
+    for (auto it = npcs.begin(); it != npcs.end(); ) {
+        // getDebugConsole().log("DEBUG", "Processing " + it->getName());
+        NPCEntity& npc = *it;
+
+        npc.update(deltaTime);
+
+        if (it->isDead() || it->getHealth() <= 0 || it->getEnergy() <= 0) {
             getDebugConsole().log("DEATH", it->getName() + " has died.");
-            it = npcs.erase(it);  // Remove NPC and move iterator
+            it = npcs.erase(it);
             continue;
         }
 
@@ -120,8 +125,9 @@ void Game::simulateNPCEntityBehavior(float deltaTime) {
             case NPCState::Idle: {
                 ActionType actionType = it->decideNextAction(tileMap, house, market);
                 it->setCurrentAction(actionType);
-                
+
                 Tile* nearestTile = nullptr;
+
                 if (actionType == ActionType::ChopTree) nearestTile = it->findNearestTile(tileMap, ObjectType::Tree);
                 else if (actionType == ActionType::MineRock) nearestTile = it->findNearestTile(tileMap, ObjectType::Rock);
                 else if (actionType == ActionType::GatherBush) nearestTile = it->findNearestTile(tileMap, ObjectType::Bush);
@@ -131,12 +137,22 @@ void Game::simulateNPCEntityBehavior(float deltaTime) {
                     nearestTile = it->findNearestTile(tileMap, ObjectType::House);
 
                 if (nearestTile) {
-                    it->setTarget(nearestTile);
-                    it->setState(NPCState::Walking);
-                    getDebugConsole().log("NPC", it->getName() + " is walking to " + std::to_string(static_cast<int>(actionType)));
+                    npc.setTarget(nearestTile);
+                    npc.setState(NPCState::Walking);
+                    stuckCounter[npc.getName()] = 0;
+                    idleCounter[npc.getName()] = 0;
+                    getDebugConsole().log("NPC", npc.getName() + " is walking to action: " +
+                                          std::to_string(static_cast<int>(actionType)));
                 } else {
-                    it->setState(NPCState::Idle);
-                    getDebugConsole().log("ERROR", it->getName() + " has no valid target.");
+                    stuckCounter[npc.getName()]++;
+                    if (stuckCounter[npc.getName()] > 3) {
+                        ActionType randomAction = static_cast<ActionType>(1 + rand() % (static_cast<int>(ActionType::SellItem)));
+                        npc.setCurrentAction(randomAction);
+                        stuckCounter[npc.getName()] = 0;
+                        getDebugConsole().log("FIX", npc.getName() + " was stuck, forced random action.");
+                    }
+                    npc.setState(NPCState::Idle);
+                    // getDebugConsole().log("ERROR", it->getName() + " has no valid target.");
                 }
                 break;
             }
@@ -144,6 +160,8 @@ void Game::simulateNPCEntityBehavior(float deltaTime) {
             case NPCState::Walking:
                 if (it->getTarget() && !it->isAtTarget()) {
                     performPathfinding(*it);
+                    it->reduceHealth(0.05f);
+                    it->consumeEnergy(0.1f);  // ✅ Ensures NPCs consume energy when moving
                 } else {
                     it->setState(NPCState::PerformingAction);
                 }
@@ -157,15 +175,30 @@ void Game::simulateNPCEntityBehavior(float deltaTime) {
                 it->setState(NPCState::Idle);
                 break;
         }
+
+        // ✅ Enforce activity if idle too long
+        if (it->getState() == NPCState::Idle) {
+            idleCounter[it->getName()]++;
+            if (idleCounter[it->getName()] > 5) {
+                ActionType randomAction = static_cast<ActionType>(1 + rand() % (static_cast<int>(ActionType::SellItem)));
+                it->setCurrentAction(randomAction);
+                idleCounter[it->getName()] = 0;
+                getDebugConsole().log("FIX", it->getName() + " was idle too long, forced random action.");
+            }
+        } else {
+            idleCounter[it->getName()] = 0;
+        }
+
         ++it;
     }
 
-    // If all NPCs are dead, reset the simulation
     if (npcs.empty()) {
         getDebugConsole().log("SYSTEM", "All NPCs have died. Restarting simulation...");
         resetSimulation();
     }
 }
+
+
 
 void Game::handleMarketActions(NPCEntity& npc, Tile& targetTile, ActionType actionType) {
     if (!targetTile.hasObject()) {
@@ -377,11 +410,6 @@ void Game::performPathfinding(NPCEntity& npc) {
     }
 }
 
-
-
-
-
-
 std::unordered_map<std::string, int> Game::aggregateResources(const std::vector<NPCEntity>& npcs) const {
     std::unordered_map<std::string, int> allResources;
 
@@ -556,7 +584,6 @@ std::vector<NPCEntity> Game::generateNPCEntitys() const {
         }
 
         npcs.emplace_back(std::move(npc));
-
     }
     return npcs;
 }

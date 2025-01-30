@@ -63,9 +63,9 @@ NPCEntity& NPCEntity::operator=(NPCEntity&& other) noexcept {
 
 // Getters
 const std::string& NPCEntity::getName() const { return name; }
-float NPCEntity::getMaxEnergy() const { return MAX_ENERGY; }
+float NPCEntity::getMaxEnergy() const { return GameConfig::MAX_ENERGY; }
 float NPCEntity::getBaseSpeed() const { return baseSpeed; }
-float NPCEntity::getEnergyPercentage() const { return energy / MAX_ENERGY; }
+float NPCEntity::getEnergyPercentage() const { return energy / GameConfig::MAX_ENERGY; }
 const std::unordered_map<std::string, int>& NPCEntity::getInventory() const { return inventory; }
 int NPCEntity::getMaxInventorySize() const { return inventoryCapacity; }
 int NPCEntity::getInventorySize() const {
@@ -139,11 +139,17 @@ void NPCEntity::consumeEnergy(float amount) {
 }
 
 void NPCEntity::regenerateEnergy(float rate) {
-    if (energy < MAX_ENERGY) {
-        energy = std::min(MAX_ENERGY, energy + rate);
+    if (energy < GameConfig::MAX_ENERGY) {
+        energy = std::min(GameConfig::MAX_ENERGY, energy + rate);
         getDebugConsole().log(name, name + "'s energy regenerated to " + std::to_string(energy));
     }
 }
+
+void NPCEntity::restoreHealth(float amount) {
+    health = std::min(health + amount, GameConfig::MAX_HEALTH);
+    getDebugConsole().log("HEALTH", name + " restored " + std::to_string(amount) + " health.");
+}
+
 
 // Perform Action
 void NPCEntity::performAction(ActionType action, Tile& tile,
@@ -160,8 +166,10 @@ void NPCEntity::performAction(ActionType action, Tile& tile,
                 actionPtr = std::make_unique<TreeAction>();
                 actionReward = 10.0f;
                 actionSuccess = true;
+                reduceHealth(0.8f);  // ✅ Health reduction
+                consumeEnergy(1.5f);
             } else {
-                actionReward = -5.0f; // Penalty for invalid action
+                actionReward = -5.0f;
             }
             break;
 
@@ -170,6 +178,8 @@ void NPCEntity::performAction(ActionType action, Tile& tile,
                 actionPtr = std::make_unique<StoneAction>();
                 actionReward = 10.0f;
                 actionSuccess = true;
+                reduceHealth(1.2f);  // ✅ Health reduction
+                consumeEnergy(1.5f);
             } else {
                 actionReward = -5.0f;
             }
@@ -180,6 +190,8 @@ void NPCEntity::performAction(ActionType action, Tile& tile,
                 actionPtr = std::make_unique<BushAction>();
                 actionReward = 10.0f;
                 actionSuccess = true;
+                reduceHealth(0.5f);  // ✅ Health reduction
+                consumeEnergy(1.5f);
             } else {
                 actionReward = -5.0f;
             }
@@ -190,7 +202,7 @@ void NPCEntity::performAction(ActionType action, Tile& tile,
                 if (!inventory.empty()) {
                     for (const auto& [item, quantity] : inventory) {
                         if (item == "wood" || item == "stone" || item == "bush") {
-                            if (quantity > 2) { // Keep at least 2 in inventory
+                            if (quantity > 2) {
                                 houseObj->storeItem(item, quantity - 2);
                             }
                         } else {
@@ -200,7 +212,7 @@ void NPCEntity::performAction(ActionType action, Tile& tile,
                     actionReward = 5.0f;
                     actionSuccess = true;
                 } else {
-                    actionReward = -5.0f; // Penalty for attempting to store nothing
+                    actionReward = -5.0f;
                 }
             } else {
                 actionReward = -5.0f;
@@ -211,7 +223,6 @@ void NPCEntity::performAction(ActionType action, Tile& tile,
             if (getMoney() >= house.getUpgradeCost()) {
                 bool hasAllItems = true;
 
-                // Store required resources before upgrading
                 for (const std::string& item : {"wood", "stone", "bush"}) {
                     int requiredAmount = house.getRequirementForItem(item);
                     int inventoryAmount = getInventoryItemCount(item);
@@ -223,7 +234,6 @@ void NPCEntity::performAction(ActionType action, Tile& tile,
                                             std::to_string(requiredAmount - (inventoryAmount + storageAmount)) +
                                             " " + item + " for upgrade.");
                     } else {
-                        // Store items to house if they are still in NPC's inventory
                         if (inventoryAmount > 0) {
                             int toStore = std::min(inventoryAmount, requiredAmount - storageAmount);
                             removeFromInventory(item, toStore);
@@ -237,26 +247,27 @@ void NPCEntity::performAction(ActionType action, Tile& tile,
                     if (house.upgrade(money, *this)) {
                         actionReward = 20.0f;
                         actionSuccess = true;
+                        restoreHealth(10.0f);  
                         getDebugConsole().log("HOUSE", getName() + " successfully upgraded the house!");
                     } else {
                         actionReward = -5.0f;
                         getDebugConsole().log("HOUSE", getName() + " upgrade failed.");
                     }
                 } else {
-                    actionReward = -10.0f; // Higher penalty for missing items
+                    actionReward = -10.0f;
                 }
             } else {
-                actionReward = -10.0f; // Higher penalty for not having enough money
+                actionReward = -10.0f;
                 getDebugConsole().log("HOUSE", getName() + " lacks money to upgrade!");
             }
             break;
-
 
         case ActionType::RegenerateEnergy:
             if (auto houseObj = dynamic_cast<House*>(tile.getObject())) {
                 houseObj->regenerateEnergy(*this);
                 actionReward = 5.0f;
                 actionSuccess = true;
+                restoreHealth(3.0f);
             } else {
                 actionReward = -5.0f;
             }
@@ -278,13 +289,15 @@ void NPCEntity::performAction(ActionType action, Tile& tile,
                     float itemPrice = marketObj->calculateBuyPrice(item);
                     if (getMoney() >= itemPrice) {
                         int maxAffordable = static_cast<int>(getMoney() / itemPrice);
-                        int quantityToBuy = std::min(maxAffordable, 3); // Limit purchases to 3 per transaction
+                        int quantityToBuy = std::min(maxAffordable, 3);
 
                         if (marketObj->buyItem(*this, item, quantityToBuy)) {
                             actionReward = 5.0f * quantityToBuy;
                             boughtSomething = true;
+                            reduceHealth(1.5f);  // ✅ Small health reduction
+                            consumeEnergy(1.0f);
                             getDebugConsole().log("MARKET", getName() + " bought " + std::to_string(quantityToBuy) + " " + item);
-                            break;  // Buy only one item per action
+                            break;
                         }
                     }
                 }
@@ -311,7 +324,7 @@ void NPCEntity::performAction(ActionType action, Tile& tile,
 
                 std::vector<std::string> itemsToSell;
                 for (const auto& [item, quantity] : inventory) {
-                    if (quantity > 1) { // Keep at least 1 in inventory
+                    if (quantity > 1) {
                         itemsToSell.push_back(item);
                     }
                 }
@@ -320,12 +333,14 @@ void NPCEntity::performAction(ActionType action, Tile& tile,
                     static std::mt19937 rng(std::random_device{}());
                     std::shuffle(itemsToSell.begin(), itemsToSell.end(), rng);
 
-                    std::uniform_int_distribution<int> sellQuantityDist(1, 3); // Random 1-3 items per sale
+                    std::uniform_int_distribution<int> sellQuantityDist(1, 3);
                     std::string selectedItem = itemsToSell.front();
                     int sellQuantity = std::min(sellQuantityDist(rng), getInventoryItemCount(selectedItem));
 
                     if (marketObj->sellItem(*this, selectedItem, sellQuantity)) {
                         actionReward = 10.0f * sellQuantity;
+                        restoreHealth(2.0f);  // ✅ Small health reduction
+                        consumeEnergy(1.0f);
                         getDebugConsole().log("MARKET", getName() + " sold " + std::to_string(sellQuantity) + " " + selectedItem);
                         actionSuccess = true;
                     }
@@ -339,32 +354,27 @@ void NPCEntity::performAction(ActionType action, Tile& tile,
             }
             break;
 
-
-
-
         case ActionType::Rest:
             if (getEnergy() < getMaxEnergy()) {
                 setEnergy(getMaxEnergy());
                 actionReward = 5.0f;
                 actionSuccess = true;
+                restoreHealth(5.0f);
             } else {
-                actionReward = -2.0f; // Penalty for unnecessary resting
+                actionReward = -2.0f;
             }
             break;
 
-        case ActionType::None:
         default:
-            actionReward = -10.0f; // Large penalty for doing nothing
+            actionReward = -10.0f;
             break;
     }
 
     if (actionPtr) {
         actionPtr->perform(*this, tile, tileMap);
-        receiveFeedback(actionReward, tileMap); 
-        getDebugConsole().log("Action", getName() + " performed: " + actionPtr->getActionName());
-    } else {
-        getDebugConsole().log("Action", getName() + " attempted action but it failed.");
+        receiveFeedback(actionReward, tileMap);
     }
+    setState(NPCState::Idle);
 }
 
 void NPCEntity::setTarget(Tile* newTarget) {
@@ -403,20 +413,20 @@ const float& NPCEntity::getMoney() const {
     return money; // Read-only access
 }
 
-void NPCEntity::restoreHealth(float amount) {
-    health = std::min(health + amount, MAX_HEALTH);
-    getDebugConsole().log("HEALTH", name + " restored " + std::to_string(amount) + " health.");
-}
-
 
 void NPCEntity::reduceHealth(float amount) {
-    health -= amount;
-    if (health <= 0.0f) {
-        health = 0.0f;
-        handleDeath();
+    if (health > 5.0f) {  // Prevent instant deaths
+        health -= amount;
+        if (health <= 0.0f) {
+            health = 0.0f;
+            handleDeath();
+        }
+        getDebugConsole().log("HEALTH", getName() + " lost " + std::to_string(amount) + " health. Current: " + std::to_string(health));
+    } else {
+        getDebugConsole().log("HEALTH", getName() + " is too weak to take further damage.");
     }
-    getDebugConsole().log("HEALTH", getName() + " lost " + std::to_string(amount) + " health. Current: " + std::to_string(health));
 }
+
 
 bool NPCEntity::isDead() const {
     return health <= 0.0f;
@@ -449,7 +459,7 @@ void NPCEntity::upgradeInventoryCapacity(int extraSlots) {
 }
 
 void NPCEntity::setHealth(float newHealth) {
-    health = std::clamp(newHealth, 0.0f, MAX_HEALTH);
+    health = std::clamp(newHealth, 0.0f, GameConfig::MAX_HEALTH);
     if (health == 0.0f) {
         setDead(true);
     }
@@ -516,7 +526,7 @@ ActionType NPCEntity::decideNextAction(const std::vector<std::vector<std::unique
         currentQLearningState = agent.extractState(tileMap, getPosition(), getEnergy(), getInventorySize(), getMaxInventorySize());
         action = agent.decideAction(currentQLearningState);
     } else {
-        if (getEnergy() < 15.0f) {
+        if (getEnergy() < 10.0f) {
             action = ActionType::RegenerateEnergy;
         } 
         else if (getInventorySize() >= getMaxInventorySize()) {

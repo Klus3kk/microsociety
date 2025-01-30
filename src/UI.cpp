@@ -203,10 +203,10 @@ void UI::populateNPCDetails(const NPCEntity& npc) {
     std::ostringstream details;
     details << "Name: " << npc.getName() << "\n"
             << "Health: " << npc.getHealth() << " / 100\n"
-            << "Hunger: " << npc.getHunger() << "\n"
+            // << "Hunger: " << npc.getHunger() << "\n"
             << "Energy: " << static_cast<int>(npc.getEnergyPercentage() * 100) << "%\n"
             << "Speed: " << npc.getBaseSpeed() << "\n"
-            << "Strength: " << npc.getStrength() << "\n"
+            // << "Strength: " << npc.getStrength() << "\n"
             << "Money: $" << npc.getMoney() << "\n"
             << "\nInventory:\n";
 
@@ -320,7 +320,7 @@ void UI::updateStats(const std::vector<NPCEntity>& npcs, const TimeManager& time
     // Averages
     statsStream << "  Avg. Health: " << (npcs.empty() ? 0 : totalHealth / npcs.size()) << "\n";
     statsStream << "  Avg. Energy: " << (npcs.empty() ? 0 : totalEnergy / npcs.size()) << "\n";
-    statsStream << "  Avg. Hunger: " << (npcs.empty() ? 0 : totalHunger / npcs.size()) << "\n\n";
+    // statsStream << "  Avg. Hunger: " << (npcs.empty() ? 0 : totalHunger / npcs.size()) << "\n\n";
 
     // Resource Stats
     statsStream << "Resource Stats:\n";

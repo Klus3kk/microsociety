@@ -42,16 +42,13 @@ int House::getRequirementForItem(const std::string& item) const {
 
 // Regenerate NPC energy
 void House::regenerateEnergy(NPCEntity& npc) {
-    if (npc.getEnergy() < 100.0f) {
-        npc.regenerateEnergy(energyRegenRate * 1.5f); // 50% faster regen
-        getDebugConsole().log("House", npc.getName() + "'s energy regenerated.");
-    }
-
-    if (npc.getEnergy() > 100.0f) {
-        npc.setEnergy(100.0f);
-        getDebugConsole().log("House", npc.getName() + "'s energy capped at max.");
+    if (npc.getEnergy() < npc.getMaxEnergy()) {
+        npc.regenerateEnergy(10.0f); // Regenerate 10 energy per tick
+        npc.restoreHealth(5.0f);
+        getDebugConsole().log("House", npc.getName() + " is recovering energy at home.");
     }
 }
+
 
 // Store item in the house
 bool House::storeItem(const std::string& item, int quantity) {
