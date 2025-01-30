@@ -40,13 +40,15 @@ void UIButton::setProperties(float x, float y, float width, float height, const 
 }
 
 void UIButton::setColors(const sf::Color& normal, const sf::Color& hover, const sf::Color& click, const sf::Color& border) {
-    normalColor = normal;
-    hoverColor = hover;
-    clickColor = click;
-    borderColor = border;
+    normalColor = sf::Color(80, 80, 80, 180);  // Darker transparent
+    hoverColor = sf::Color(100, 100, 120, 220);
+    clickColor = sf::Color(140, 140, 180, 255);
+    borderColor = sf::Color(200, 200, 200, 255);
+    
     buttonShape.setOutlineColor(borderColor);
-    buttonShape.setFillColor(normalColor); // Default to normal color
+    buttonShape.setFillColor(normalColor);
 }
+
 
 void UIButton::setStyle(float radius, float thickness) {
     cornerRadius = radius;

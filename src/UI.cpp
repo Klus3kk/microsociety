@@ -109,19 +109,64 @@ void UI::updateStatus(int day, const std::string& time, int iteration) {
 }
 
 
+void UI::enableNPCListScrolling(sf::Event& event) {
+    if (!showNPCList) return; // Ensure NPC list is open
+
+    if (event.type == sf::Event::MouseWheelScrolled) {
+        float scrollAmount = event.mouseWheelScroll.delta * -30.0f; // Adjust sensitivity
+        npcListScrollOffset += scrollAmount;
+
+        // Constrain scrolling limits
+        float minOffset = 0;
+        float maxOffset = std::max(0.0f, static_cast<float>(npcButtons.size() * 50 - npcListPanel.getBounds().height));
+        npcListScrollOffset = std::clamp(npcListScrollOffset, minOffset, maxOffset);
+
+        // Update button positions based on scroll offset
+        float buttonY = npcListPanel.getBounds().top + 20 - npcListScrollOffset;
+        for (auto& [_, button] : npcButtons) {
+            button->setProperties(
+                button->getPosition().x,
+                buttonY,
+                button->getSize().x,
+                button->getSize().y,
+                button->getText(),
+                font
+            );
+            buttonY += 50;
+        }
+    }
+}
+
+
+
 void UI::updateNPCList(const std::vector<NPCEntity>& npcs) {
     npcButtons.clear();
-    npcListPanel.clearChildren(); // Ensure old buttons are removed
+    npcListPanel.clearChildren(); // Remove old buttons
 
-    float buttonY = npcListPanel.getBounds().top + 20;
+    float buttonHeight = 50.0f;  // Each button's height
+    float spacing = 10.0f;       // Space between buttons
+    float titlePadding = 40.0f;  // Space for title text
+    float calculatedHeight = npcs.size() * (buttonHeight + spacing) + titlePadding;
 
+    float minHeight = 500.0f;  // Minimum height
+    float maxHeight = 900.0f;  // Maximum height
+    float newHeight = std::clamp(calculatedHeight, minHeight, maxHeight); // Ensure within limits
+
+    // Force panel height to be large enough
+    npcListPanel.setSize(npcListPanel.getBounds().width, newHeight);
+    npcListPanel.setPosition(50, 100); // Ensure it's positioned correctly
+
+    std::cout << "NPC Panel Resized: " << npcListPanel.getBounds().width << "x" << npcListPanel.getBounds().height << std::endl;
+
+    // Position buttons
+    float startY = npcListPanel.getBounds().top + titlePadding;
     for (size_t i = 0; i < npcs.size(); ++i) {
         UIButton* button = new UIButton();
         button->setProperties(
-            npcListPanel.getBounds().left + 20,
-            buttonY,
-            npcListPanel.getBounds().width - 40,
-            40,
+            npcListPanel.getBounds().left + 10,  // Left padding
+            startY,
+            npcListPanel.getBounds().width - 20, // Fit within panel width
+            buttonHeight,
             npcs[i].getName(),
             font
         );
@@ -132,11 +177,16 @@ void UI::updateNPCList(const std::vector<NPCEntity>& npcs) {
             sf::Color::White
         );
 
-        npcListPanel.addChild(button); // Link button to panel
+        npcListPanel.addChild(button);
         npcButtons.emplace_back(npcs[i].getName(), button);
-        buttonY += 50;
+        startY += buttonHeight + spacing;  // Stack buttons
     }
 }
+
+
+
+
+
 
 
 
@@ -182,7 +232,7 @@ void UI::populateNPCDetails(const NPCEntity& npc) {
 
 
 void UI::showNPCDetails(const std::string& npcDetails) {
-    npcDetailPanel.setSize(400, 600);
+    npcDetailPanel.setSize(400, 800);
     npcDetailPanel.setTitle("NPC Details");
     npcDetailText.setFont(font);
     npcDetailText.setCharacterSize(16);
@@ -192,53 +242,58 @@ void UI::showNPCDetails(const std::string& npcDetails) {
 }
 
 
+void UI::hideAllPanels() {
+    showNPCList = false;
+    showNPCDetail = false;
+    showStatsPanel = false;
+    showMarketPanel = false;
+    showOptionsPanel = false;
+}
 
 
 void UI::handleButtonClicks(sf::RenderWindow& window, sf::Event& event, std::vector<NPCEntity>& npcs, const TimeManager& timeManager, const Market& market) {
+    // NPC Button - Show NPC List, Hide Others
     if (npcButton.isClicked(window, event)) {
-        showNPCList = !showNPCList; // Toggle NPC list visibility
-        showNPCDetail = false;   
-        // std::cout << "NPC button clicked.\n";
+        bool wasVisible = showNPCList;
+        hideAllPanels();  // Hide all panels first
+        showNPCList = !wasVisible; // Toggle NPC list
     }
 
+    // Market Button - Show Market Panel, Hide Others
     if (marketButton.isClicked(window, event)) {
-        showMarketPanel = !showMarketPanel; // Toggle market panel visibility
+        bool wasVisible = showMarketPanel;
+        hideAllPanels();
+        showMarketPanel = !wasVisible;
         if (showMarketPanel) {
-            updateMarketPanel(market);
+            updateMarketPanel(market);  // Ensure real-time update
         }
     }
-    
 
+    // Stats Button - Show Stats Panel, Hide Others
     if (statsButton.isClicked(window, event)) {
-        showStatsPanel = !showStatsPanel; // Toggle visibility
+        bool wasVisible = showStatsPanel;
+        hideAllPanels();
+        showStatsPanel = !wasVisible;
         if (showStatsPanel) {
-            updateStats(npcs, timeManager);
+            updateStats(npcs, timeManager);  // Ensure real-time update
         }
     }
 
-    // if (statsButton.isClicked(window, event)) {
-    //     std::cout << "Stats button clicked.\n";
-    // }
-
-    // if (marketButton.isClicked(window, event)) {
-    //     std::cout << "Market button clicked.\n";
-    // }
-
+    // Options Button - Show Options Panel, Hide Others
     if (optionsButton.isClicked(window, event)) {
-        showOptionsPanel = !showOptionsPanel; // Toggle visibility
-        // std::cout << "Options button clicked. Panel visibility: " << showOptionsPanel << "\n";
+        bool wasVisible = showOptionsPanel;
+        hideAllPanels();
+        showOptionsPanel = !wasVisible;
     }
 
-
-    // Handle NPC list clicks
+    // Handle NPC List Clicks (Show Details, Hide List)
     if (showNPCList) {
         for (size_t i = 0; i < npcButtons.size(); ++i) {
             if (npcButtons[i].second->isClicked(window, event)) {
                 selectedNPCIndex = static_cast<int>(i);
-                populateNPCDetails(npcs[selectedNPCIndex]); // Show NPC details
+                populateNPCDetails(npcs[selectedNPCIndex]);  // Update UI
                 showNPCDetail = true;
                 showNPCList = false;
-                // std::cout << "NPC detail shown for: " << npcButtons[i].first << "\n";
                 break;
             }
         }
@@ -312,12 +367,12 @@ void UI::handleHover(sf::RenderWindow& window) {
 
 
 void UI::populateNPCList(const std::vector<NPCEntity>& npcs) {
-    npcListPanel.setSize(400, 600);
+    npcListPanel.setSize(400, 800);
     // npcListPanel.setTitle("");
     npcListPanel.clearChildren();
 
     float startY = npcListPanel.getBounds().top + 50; // Start below the title
-    float buttonSpacing = 10.0f;
+    float buttonSpacing = 5.0f;
 
     for (size_t i = 0; i < npcs.size(); ++i) {
         UIButton* button = new UIButton();
@@ -347,20 +402,7 @@ void UI::handleNPCPanel(sf::RenderWindow& window, sf::Event& event, const std::v
 
     // Handle scrolling
     if (event.type == sf::Event::MouseWheelScrolled && showNPCList) {
-        float scrollAmount = event.mouseWheelScroll.delta * scrollSpeed;
-        npcListScrollOffset += scrollAmount;
-
-        // Constrain scrolling
-        float minOffset = 0;
-        float maxOffset = std::max(0.0f, static_cast<float>(npcButtons.size() * 50 - npcListPanel.getBounds().height));
-        npcListScrollOffset = std::clamp(npcListScrollOffset, minOffset, maxOffset);
-
-        // Update button positions based on scroll offset
-        float buttonY = -npcListScrollOffset;
-        for (auto& [_, button] : npcButtons) {
-            button->setProperties(button->getPosition().x, buttonY, button->getSize().x, button->getSize().y, button->getText(), font);
-            buttonY += 50;
-        }
+        enableNPCListScrolling(event);
     }
 
     // Handle clicks on NPC buttons
@@ -540,17 +582,16 @@ void UI::adjustLayout(sf::RenderWindow& window) {
 
 // Update Market Panel
 void UI::updateMarketPanel(const Market& market) {
-    // Clear the advancedMarketStatsText to ensure no overlap
     advancedMarketStatsText.setString("");
 
     std::ostringstream statsStream;
+    marketResourceTexts.clear(); // Clear old resource text
 
-    // Start positions for the horizontal layout
     float startX = marketPanel.getPosition().x + 20;
     float startY = marketPanel.getPosition().y + 50;
-    float spacingX = 200.0f; // Horizontal spacing between resource blocks
+    float spacingX = 200.0f; 
 
-    int index = 0; // Index to track the current resource
+    int index = 0;
     for (const auto& [resource, price] : market.getPrices()) {
         float posX = startX + index * spacingX;
 
@@ -562,21 +603,17 @@ void UI::updateMarketPanel(const Market& market) {
         statsStream << "  Expenditure: $" << market.getExpenditure(resource) << "\n";
         statsStream << "  Volatility: " << market.calculateVolatility(resource) << "\n";
 
-        // Draw the text block for each resource
         sf::Text resourceText(statsStream.str(), font, 14);
         resourceText.setFillColor(sf::Color::White);
         resourceText.setPosition(posX, startY);
 
-        // Add the generated text block to the panel directly
         marketResourceTexts.push_back(resourceText);
-
-        // Clear the stream for the next resource
         statsStream.str("");
         statsStream.clear();
-
         index++;
     }
 }
+
 
 
 
@@ -754,13 +791,11 @@ void UI::drawMarketGraph(sf::RenderWindow& window, const Market& market) {
     float graphWidth = marketPanel.getGlobalBounds().width - 40.0f;
     float graphHeight = 150.0f;
 
-    // Background for the graph
     sf::RectangleShape graphBackground(sf::Vector2f(graphWidth, graphHeight));
     graphBackground.setPosition(startX, startY);
-    graphBackground.setFillColor(sf::Color(15, 15, 15, 220)); // Modern black background
+    graphBackground.setFillColor(sf::Color(15, 15, 15, 220));
     window.draw(graphBackground);
 
-    // Find the maximum price for scaling
     float maxPrice = 1.0f;
     for (const auto& [resource, prices] : market.getPriceTrendMap()) {
         if (!prices.empty()) {
@@ -768,7 +803,6 @@ void UI::drawMarketGraph(sf::RenderWindow& window, const Market& market) {
         }
     }
 
-    // Draw price trends for each item
     int colorIndex = 0;
     std::vector<sf::Color> lineColors = {sf::Color::Red, sf::Color::Green, sf::Color::Blue};
 
@@ -793,6 +827,12 @@ void UI::drawMarketGraph(sf::RenderWindow& window, const Market& market) {
     }
 }
 
+
+void UI::updateAll(const std::vector<NPCEntity>& npcs, const Market& market, const TimeManager& timeManager) {
+    updateStats(npcs, timeManager);
+    updateMarketPanel(market);
+    updateNPCList(npcs);
+}
 
 
 // Render Market Panel
@@ -840,9 +880,8 @@ void UI::updateNPCEntityList(const std::vector<NPCEntity>& npcs) {
 
 
 void UI::handleNPCEntityPanel(sf::RenderWindow& window, sf::Event& event, const std::vector<NPCEntity>& npcs) {
-    for (auto& [name, button] : npcButtons) {
-        if (button->isClicked(window, event)) {
-            // std::cout << "NPC selected: " << name << std::endl;
-        }
+    if (showNPCDetail && selectedNPCIndex >= 0 && selectedNPCIndex < static_cast<int>(npcs.size())) {
+        populateNPCDetails(npcs[selectedNPCIndex]); // Force update while open
     }
 }
+

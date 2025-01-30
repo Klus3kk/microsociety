@@ -134,6 +134,9 @@ public:
 
     // Responsive Layout
     void adjustLayout(sf::RenderWindow& window);
+    void updateAll(const std::vector<NPCEntity>& npcs, const Market& market, const TimeManager& timeManager);
+    void hideAllPanels();
+    void enableNPCListScrolling(sf::Event& event);
 };
 
 #endif
