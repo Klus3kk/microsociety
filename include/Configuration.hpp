@@ -13,7 +13,7 @@ struct GameConfig {
     static constexpr int mapHeight = windowHeight / tileSize; // Number of tiles vertically
 
     // NPC & Inventory configuration
-    static constexpr int NPCEntityCount = 500;    // Number of NPCs at game start
+    static constexpr int NPCEntityCount = 10;    // Number of NPCs at game start
     static constexpr int maxInventorySize = 10;  // Maximum inventory size an NPC can carry
 
     // Resource requirements for basic actions
