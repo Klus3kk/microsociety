@@ -45,17 +45,16 @@ include(GoogleTest)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
-# **🔹 TensorFlow Lite Setup (CORRECT PATH)**
-set(TFLITE_DIR "/usr/local/tensorflow-lite/tensorflow/lite/build")
-set(TFLITE_LIB "${TFLITE_DIR}/libtensorflow-lite.a")
+# **🔹 TensorFlow Lite Setup (FINAL FIX)**
+set(TFLITE_DIR "/usr/local/tflite")
+set(TFLITE_LIB "${TFLITE_DIR}/lib/libtensorflow-lite.a")
 
-# Ensure TensorFlow Lite is actually installed
+# **Ensure TensorFlow Lite is installed**
 if(NOT EXISTS ${TFLITE_LIB})
     message(FATAL_ERROR "TensorFlow Lite library not found at ${TFLITE_LIB}. Did you install it correctly?")
 endif()
 
-include_directories(${TFLITE_DIR})
-link_directories(${TFLITE_DIR})
+include_directories(${TFLITE_DIR}/include)
 
 # **🔹 Source Files**
 file(GLOB SOURCES "src/*.cpp")
