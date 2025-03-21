@@ -21,6 +21,7 @@
 /* KLASY */
 #include "Tile.hpp"
 #include "Game.hpp"
+#include "StartupMenu.hpp"
 
 using std::cout;
 using std::endl;
@@ -31,15 +32,56 @@ void handleCrash(int signal) {
     std::exit(signal);
 }
 
+
 int main() {
     std::signal(SIGSEGV, handleCrash);  // Segmentation fault
     std::signal(SIGABRT, handleCrash);  // Abort signal
     std::signal(SIGFPE, handleCrash);   // Floating point exception
 
+    // Show startup menu first
+    StartupMenu startupMenu;
+    SimulationMode selectedMode = startupMenu.run();
+    
+    // Exit if user chose to quit
+    if (selectedMode == SimulationMode::Exit) {
+        getDebugConsole().saveLogsToFile("logs/simulation_log.txt");
+        std::cout << "Application exited by user." << std::endl;
+        return EXIT_SUCCESS;
+    }
+    
+    // Initialize game based on selected mode
     Game game;
+    
+    // Configure game based on selected mode
+    switch (selectedMode) {
+        case SimulationMode::SinglePlayer:
+            getDebugConsole().log("Main", "Starting Single Player mode");
+            game.enableSinglePlayerMode(true);
+            break;
+            
+        case SimulationMode::ReinforcementLearningCPP:
+            getDebugConsole().log("Main", "Starting Reinforcement Learning C++ mode");
+            game.enableReinforcementLearning(true);
+            game.enableTensorFlow(false);
+            break;
+            
+        case SimulationMode::DeepQLearningTF:
+            getDebugConsole().log("Main", "Starting Deep Q-Learning TensorFlow mode");
+            game.enableReinforcementLearning(true);
+            game.enableTensorFlow(true);
+            break;
+            
+        default:
+            getDebugConsole().log("Main", "Unknown mode selected, defaulting to Reinforcement Learning C++");
+            game.enableReinforcementLearning(true);
+            game.enableTensorFlow(false);
+            break;
+    }
+    
+    // Run the game
     game.run();
 
-    // ✅ Ensure logs are saved before exit
+    // Ensure logs are saved before exit
     getDebugConsole().saveLogsToFile("logs/simulation_log.txt");
     std::cout << "Game closed. Logs saved successfully." << std::endl;
 
