@@ -13,6 +13,7 @@
 #include "ActionType.hpp"
 #include "QLearningAgent.hpp"
 #include "Configuration.hpp"
+#include "TFWrapper.hpp"
 // Forward declarations
 class Action; 
 class Market;
@@ -45,6 +46,9 @@ private:
     const float actionCooldownTime = 2.0f;          // Time between actions (adjust as needed)
     ActionType lastAction;                          // Last action performed by NPC
     State currentQLearningState;  
+    bool useTensorFlow = false;
+    std::shared_ptr<TensorFlowWrapper> tfModel; 
+
 
 public:
     // Constructor
@@ -108,6 +112,11 @@ public:
     // Handle NPC Death
     bool isDead() const;
     void handleDeath();
+
+    // TensorFlow integration methods
+    void enableTensorFlow(bool enable);
+    void setTensorFlowModel(std::shared_ptr<TensorFlowWrapper> model);
+    bool isTensorFlowEnabled() const { return useTensorFlow; }
 
     // Inventory Capacity Upgrades
     void upgradeInventoryCapacity(int extraSlots);

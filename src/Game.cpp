@@ -7,6 +7,11 @@
 #include <algorithm>
 #include <thread>
 #include <nlohmann/json.hpp>
+#include "PlayerEntity.hpp" // Include the player entity
+
+#ifdef USE_TENSORFLOW
+#include <tensorflow/c/c_api.h>
+#endif
 
 // Constructor
 Game::Game()
@@ -30,6 +35,131 @@ Game::Game()
     npcs = generateNPCEntitys(); 
 
     ui.updateNPCEntityList(npcs); // Update UI with NPCEntity list
+    
+    // Initialize TensorFlow if enabled
+    if (tensorFlowEnabled) {
+        getDebugConsole().log("TensorFlow", "Initializing TensorFlow integration...");
+        initializeNPCTensorFlow();
+    }
+    
+    // Create player if in single player mode
+    if (singlePlayerMode) {
+        getDebugConsole().log("Game", "Initializing single player mode");
+        
+        // Random position for player
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> distX(1, GameConfig::mapWidth - 2);
+        std::uniform_int_distribution<> distY(1, GameConfig::mapHeight - 2);
+        
+        // Create player with slightly better stats than NPCs
+        player = std::make_unique<PlayerEntity>(
+            "Player", 
+            120.0f,     // Health
+            60.0f,      // Hunger  
+            100.0f,     // Energy
+            200.0f,     // Speed
+            15.0f,      // Strength
+            200.0f      // Money
+        );
+        
+        // Set player texture and position
+        player->setTexture(playerTexture, sf::Color::White);
+        player->setPosition(distX(gen) * GameConfig::tileSize, distY(gen) * GameConfig::tileSize);
+        
+        getDebugConsole().log("Player", "Player created at position: " + 
+                            std::to_string(player->getPosition().x) + ", " + 
+                            std::to_string(player->getPosition().y));
+    }
+}
+
+void Game::initializeNPCTensorFlow() {
+#ifdef USE_TENSORFLOW
+    getDebugConsole().log("TensorFlow", "TensorFlow C API version: " + std::string(TF_Version()));
+    
+    // Check if TF model file exists
+    std::ifstream modelFile("models/npc_rl_model.tflite");
+    if (!modelFile.good()) {
+        getDebugConsole().log("TensorFlow", "TensorFlow model file not found. Using default Q-learning instead.", LogLevel::Warning);
+        tensorFlowEnabled = false;
+        return;
+    }
+    
+    getDebugConsole().log("TensorFlow", "TensorFlow model loaded successfully.");
+#else
+    getDebugConsole().log("TensorFlow", "TensorFlow support not compiled in. Using default Q-learning instead.", LogLevel::Warning);
+    tensorFlowEnabled = false;
+#endif
+}
+
+void Game::handlePlayerInput() {
+    if (!singlePlayerMode || !player) return;
+    
+    // Handle player movement
+    player->handleInput(deltaTime * simulationSpeed);
+    
+    // Handle interaction with E key
+    static bool eKeyPressed = false;
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::E)) {
+        if (!eKeyPressed) {  // Only trigger once per key press
+            eKeyPressed = true;
+            
+            // Find target tile under player's position
+            sf::Vector2f playerPos = player->getPosition();
+            Tile* targetTile = player->getTargetTileAt(tileMap, playerPos.x, playerPos.y);
+            
+            if (targetTile) {
+                player->interactWithTile(*targetTile, tileMap, market, house);
+            }
+        }
+    } else {
+        eKeyPressed = false;
+    }
+    
+    // Toggle camera with C key
+    static bool cKeyPressed = false;
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::C)) {
+        if (!cKeyPressed) {
+            cKeyPressed = true;
+            player->activateCamera(!player->getCamera().getViewport().width); // Toggle
+            
+            if (player->getCamera().getViewport().width) {
+                window.setView(window.getDefaultView());
+                getDebugConsole().log("Camera", "Switched to default view");
+            } else {
+                window.setView(player->getCamera());
+                getDebugConsole().log("Camera", "Switched to player camera");
+            }
+        }
+    } else {
+        cKeyPressed = false;
+    }
+}
+
+void Game::updatePlayer() {
+    if (!singlePlayerMode || !player) return;
+    
+    player->update(deltaTime * simulationSpeed);
+    player->updateCamera(window, GameConfig::mapWidth, GameConfig::mapHeight);
+    
+    // Check if player died
+    if (player->isDead()) {
+        getDebugConsole().log("Player", "Player has died. Restarting...");
+        
+        // Reset player
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> distX(1, GameConfig::mapWidth - 2);
+        std::uniform_int_distribution<> distY(1, GameConfig::mapHeight - 2);
+        
+        player->setHealth(120.0f);
+        player->setEnergy(100.0f);
+        player->setDead(false);
+        player->setPosition(distX(gen) * GameConfig::tileSize, distY(gen) * GameConfig::tileSize);
+    }
+    
+    // Check for collisions
+    detectCollision(*player);
 }
 
 const std::vector<std::vector<std::unique_ptr<Tile>>>& Game::getTileMap() const {
@@ -72,12 +202,22 @@ void Game::run() {
         sf::Time dt = clock.restart();
         deltaTime = dt.asSeconds();
 
+        // Handle player input in single player mode
+        if (singlePlayerMode) {
+            handlePlayerInput();
+        }
+
         market.simulateMarketDynamics(deltaTime);
         // Update resource regeneration timer
         resourceRegenerationTimer += deltaTime;
         if (resourceRegenerationTimer >= regenerationInterval) {
             regenerateResources();
             resourceRegenerationTimer = 0.0f;
+        }
+
+        // Update player in single player mode
+        if (singlePlayerMode) {
+            updatePlayer();
         }
 
         // Simulate NPC behavior
@@ -194,13 +334,11 @@ void Game::simulateNPCEntityBehavior(float deltaTime) {
         ++it;
     }
 
-    if (npcs.empty()) {
+    if (npcs.empty() && !singlePlayerMode) {
         getDebugConsole().log("SYSTEM", "All NPCs have died. Restarting simulation...");
         resetSimulation();
     }
 }
-
-
 
 void Game::handleMarketActions(NPCEntity& npc, Tile& targetTile, ActionType actionType) {
     if (!targetTile.hasObject()) {
@@ -362,9 +500,6 @@ void Game::regenerateResources() {
         }
     }
 }
-
-
-
 
 void Game::simulateSocietalGrowth(float deltaTime) {
     // Example societal growth logic: increase market prices as demand rises
@@ -598,6 +733,12 @@ void Game::render() {
         }
     }
 
+    // Render the player in single player mode
+    if (singlePlayerMode && player) {
+        player->draw(window);
+    }
+    
+    // Render NPCs
     for (const auto& NPCEntity : npcs) {
         NPCEntity.draw(window);
     }
@@ -641,6 +782,10 @@ int Game::getTotalItemsGathered() const {
     return totalGathered;
 }
 
+int Game::getTotalItemsMined() const {
+    // For future implementation if needed
+    return 0;
+}
 
 void Game::resetSimulation() {
     static int iterationCounter = 0;
@@ -681,6 +826,21 @@ void Game::resetSimulation() {
     regenerateResources();
     getDebugConsole().log("RESOURCES", "Resources regenerated.");
 
+    // Reset player in single player mode
+    if (singlePlayerMode && player) {
+        // Random position for player
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> distX(1, GameConfig::mapWidth - 2);
+        std::uniform_int_distribution<> distY(1, GameConfig::mapHeight - 2);
+        
+        player->setHealth(120.0f);
+        player->setEnergy(100.0f);
+        player->setDead(false);
+        player->setPosition(distX(gen) * GameConfig::tileSize, distY(gen) * GameConfig::tileSize);
+        getDebugConsole().log("PLAYER", "Player reset to new position.");
+    }
+
     // Update UI Status with Iteration +1
     ui.updateStatus(timeManager.getCurrentDay(), timeManager.getFormattedTime(), timeManager.getSocietyIteration());
 
@@ -690,10 +850,6 @@ void Game::resetSimulation() {
 
     getDebugConsole().log("SYSTEM", "Simulation reset complete.");
 }
-
-
-
-
 
 void Game::toggleTileBorders() {
     showTileBorders = !showTileBorders;

@@ -521,15 +521,45 @@ Tile* NPCEntity::getTarget() const {
     return target;
 }
 
-// AI Decision-Making
+// Add these implementations to NPCEntity.cpp
+
+void NPCEntity::enableTensorFlow(bool enable) {
+    useTensorFlow = enable && tfModel && tfModel->isModelLoaded();
+    if (enable && (!tfModel || !tfModel->isModelLoaded())) {
+        getDebugConsole().log("TensorFlow", getName() + " could not enable TensorFlow (model not available)", LogLevel::Warning);
+    } else if (enable) {
+        getDebugConsole().log("TensorFlow", getName() + " is now using TensorFlow for decision making");
+    }
+}
+
+void NPCEntity::setTensorFlowModel(std::shared_ptr<TensorFlowWrapper> model) {
+    tfModel = model;
+    // Re-validate TensorFlow status
+    if (useTensorFlow && (!tfModel || !tfModel->isModelLoaded())) {
+        useTensorFlow = false;
+        getDebugConsole().log("TensorFlow", getName() + " disabled TensorFlow (model not available)", LogLevel::Warning);
+    }
+}
+
+// Modify the decideNextAction method to include TensorFlow support
 ActionType NPCEntity::decideNextAction(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap, 
-                                       const House& house, Market& market) {
+                                    const House& house, Market& market) {
     ActionType action = ActionType::None;  
 
-    if (useQLearning) {
+    if (useTensorFlow && tfModel) {
+        // Use TensorFlow for decision making
+        currentQLearningState = extractState(tileMap);
+        action = tfModel->predictAction(currentQLearningState);
+        getDebugConsole().log("TensorFlow", getName() + " used TF model to choose action: " + 
+                            std::to_string(static_cast<int>(action)));
+    }
+    else if (useQLearning) {
+        // Use Q-learning (existing code)
         currentQLearningState = agent.extractState(tileMap, getPosition(), getEnergy(), getInventorySize(), getMaxInventorySize());
         action = agent.decideAction(currentQLearningState);
-    } else {
+    }
+    else {
+        // Simple rule-based behavior (existing code)
         if (getEnergy() < 10.0f) {
             action = ActionType::RegenerateEnergy;
         } 
@@ -578,11 +608,8 @@ ActionType NPCEntity::decideNextAction(const std::vector<std::vector<std::unique
         getDebugConsole().log("DEBUG", getName() + " was stuck, randomizing action to: " + std::to_string(static_cast<int>(action)));
     }
 
-
-
     return action;
 }
-
 
 
 
