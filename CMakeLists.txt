@@ -16,10 +16,11 @@ if(MSVC)
 endif()
 
 option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
+option(USE_TENSORFLOW "Use TensorFlow for AI" ON)
 
 include(FetchContent)
 
-# **🔹 Fetch Dependencies**
+# Fetch Dependencies
 FetchContent_Declare(SFML
     GIT_REPOSITORY https://github.com/SFML/SFML.git
     GIT_TAG 2.6.1
@@ -45,43 +46,144 @@ include(GoogleTest)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
-# **🔹 TensorFlow Lite Setup (FINAL FIX)**
-set(TFLITE_DIR "/usr/local/tflite")
-set(TFLITE_LIB "${TFLITE_DIR}/lib/libtensorflow-lite.a")
+# TensorFlow Setup 
+if(USE_TENSORFLOW)
+    set(TENSORFLOW_VERSION "2.12.0")
 
-# **Ensure TensorFlow Lite is installed**
-if(NOT EXISTS ${TFLITE_LIB})
-    message(FATAL_ERROR "TensorFlow Lite library not found at ${TFLITE_LIB}. Did you install it correctly?")
+    if(WIN32)
+        set(TENSORFLOW_URL "https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-windows-x86_64-${TENSORFLOW_VERSION}.zip")
+        set(TENSORFLOW_ARCHIVE "${CMAKE_BINARY_DIR}/libtensorflow.zip")
+    elseif(APPLE)
+        set(TENSORFLOW_URL "https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-darwin-x86_64-${TENSORFLOW_VERSION}.tar.gz")
+        set(TENSORFLOW_ARCHIVE "${CMAKE_BINARY_DIR}/libtensorflow.tar.gz")
+    else() # Linux
+        set(TENSORFLOW_URL "https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-linux-x86_64-${TENSORFLOW_VERSION}.tar.gz")
+        set(TENSORFLOW_ARCHIVE "${CMAKE_BINARY_DIR}/libtensorflow.tar.gz")
+    endif()
+    
+    # Setup directories
+    set(TENSORFLOW_EXTRACT_DIR "${CMAKE_BINARY_DIR}/tensorflow")
+    set(TENSORFLOW_INCLUDE_DIR "${TENSORFLOW_EXTRACT_DIR}/include")
+    set(TENSORFLOW_LIB_DIR "${TENSORFLOW_EXTRACT_DIR}/lib")
+    
+    # Try to find existing libraries first to avoid redownloading
+    if(NOT EXISTS "${TENSORFLOW_LIB_DIR}")
+        message(STATUS "Downloading TensorFlow from ${TENSORFLOW_URL}")
+        file(DOWNLOAD ${TENSORFLOW_URL} ${TENSORFLOW_ARCHIVE} SHOW_PROGRESS STATUS DOWNLOAD_STATUS)
+        list(GET DOWNLOAD_STATUS 0 STATUS_CODE)
+        
+        if(NOT STATUS_CODE EQUAL 0)
+            message(FATAL_ERROR "Failed to download TensorFlow: ${DOWNLOAD_STATUS}")
+        endif()
+        
+        # Extract archive
+        message(STATUS "Extracting TensorFlow...")
+        file(MAKE_DIRECTORY ${TENSORFLOW_EXTRACT_DIR})
+        
+        if(WIN32)
+            execute_process(
+                COMMAND ${CMAKE_COMMAND} -E tar xf ${TENSORFLOW_ARCHIVE}
+                WORKING_DIRECTORY ${TENSORFLOW_EXTRACT_DIR}
+            )
+        else()
+            execute_process(
+                COMMAND ${CMAKE_COMMAND} -E tar xzf ${TENSORFLOW_ARCHIVE}
+                WORKING_DIRECTORY ${TENSORFLOW_EXTRACT_DIR}
+            )
+        endif()
+        
+        message(STATUS "TensorFlow extracted to ${TENSORFLOW_EXTRACT_DIR}")
+    else()
+        message(STATUS "Using existing TensorFlow installation at ${TENSORFLOW_EXTRACT_DIR}")
+    endif()
+
+    set(TENSORFLOW_RUNTIME_DIR "${CMAKE_BINARY_DIR}/bin")
+
+    if(WIN32)
+        file(GLOB TF_RUNTIME_LIBS "${TENSORFLOW_LIB_DIR}/*.dll")
+    else()
+        file(GLOB TF_RUNTIME_LIBS 
+            "${TENSORFLOW_LIB_DIR}/libtensorflow.so*"
+            "${TENSORFLOW_LIB_DIR}/libtensorflow_framework.so*"
+            "${TENSORFLOW_LIB_DIR}/libtensorflow.dylib*"
+        )
+    endif()
+    
+    foreach(LIB ${TF_RUNTIME_LIBS})
+        get_filename_component(LIB_NAME ${LIB} NAME)
+        file(COPY ${LIB} DESTINATION ${TENSORFLOW_RUNTIME_DIR})
+        message(STATUS "Copied ${LIB_NAME} to runtime directory")
+    endforeach()
+    
+    # Set the library path (platform specific)
+    if(WIN32)
+        set(TENSORFLOW_LIBS "${TENSORFLOW_LIB_DIR}/tensorflow.lib")
+    elseif(APPLE)
+        set(TENSORFLOW_LIBS "${TENSORFLOW_LIB_DIR}/libtensorflow.dylib")
+    else() # Linux
+        set(TENSORFLOW_LIBS "${TENSORFLOW_LIB_DIR}/libtensorflow.so" "${TENSORFLOW_LIB_DIR}/libtensorflow_framework.so")
+    endif()
+    
+    # Set include directory
+    include_directories(${TENSORFLOW_INCLUDE_DIR})
+    
+    # Set RPATH for Linux/macOS
+    if(UNIX)
+        set(CMAKE_INSTALL_RPATH "${CMAKE_BINARY_DIR}/bin")
+        set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+    endif()
+    
+    # Add definition for conditional compilation
+    add_definitions(-DUSE_TENSORFLOW)
 endif()
 
-include_directories(${TFLITE_DIR}/include)
-
-# **🔹 Source Files**
+# Source Files
 file(GLOB SOURCES "src/*.cpp")
 list(REMOVE_ITEM SOURCES "${CMAKE_SOURCE_DIR}/src/main.cpp")
 
-# **🔹 Assets**
+# Assets
 file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
+file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/models")
 
-# **🔹 Main Executable**
+# Main Executable
 add_executable(MicroSociety src/main.cpp ${SOURCES})
 
-target_link_libraries(MicroSociety PRIVATE 
-    sfml-graphics sfml-audio sfml-system sfml-window 
-    nlohmann_json::nlohmann_json 
-    pthread
-    ${TFLITE_LIB}
-)
+# Link libraries
+if(USE_TENSORFLOW)
+    message(STATUS "Linking with TensorFlow libraries: ${TENSORFLOW_LIBS}")
+    target_link_libraries(MicroSociety PRIVATE 
+        sfml-graphics sfml-audio sfml-system sfml-window 
+        nlohmann_json::nlohmann_json 
+        pthread
+        ${TENSORFLOW_LIBS}
+    )
+else()
+    target_link_libraries(MicroSociety PRIVATE 
+        sfml-graphics sfml-audio sfml-system sfml-window 
+        nlohmann_json::nlohmann_json 
+        pthread
+    )
+endif()
 
-# **🔹 Unit Tests**
+# Unit Tests
 file(GLOB TEST_SOURCES "tests/*.cpp")
 add_executable(all_tests ${TEST_SOURCES} ${SOURCES})
-target_link_libraries(all_tests PRIVATE 
-    sfml-graphics sfml-audio sfml-system sfml-window 
-    nlohmann_json::nlohmann_json 
-    gtest_main 
-    ${TFLITE_LIB}
-)
 
-# **🔹 Discover all tests**
+# Link libraries for tests
+if(USE_TENSORFLOW)
+    target_link_libraries(all_tests PRIVATE 
+        sfml-graphics sfml-audio sfml-system sfml-window 
+        nlohmann_json::nlohmann_json 
+        gtest_main 
+        ${TENSORFLOW_LIBS}
+    )
+else()
+    target_link_libraries(all_tests PRIVATE 
+        sfml-graphics sfml-audio sfml-system sfml-window 
+        nlohmann_json::nlohmann_json 
+        gtest_main
+    )
+endif()
+
+# Discover all tests
 gtest_discover_tests(all_tests)

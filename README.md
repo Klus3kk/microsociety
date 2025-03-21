@@ -44,7 +44,7 @@ MicroSociety offers two setup options:
 3. Run the executable:
 
    ```bash
-   ./MicroSociety
+   ./bin/MicroSociety
    ```
 
 ### Local Setup without TensorFlow (Windows)
