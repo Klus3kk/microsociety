@@ -82,11 +82,37 @@ public:
 
     // --- MODIFIER METHODS ---
 
-    void setSpeed(float newSpeed) { speed = newSpeed; }
-    void setEnergy(float newEnergy) { energy = newEnergy; }
-    void setMoney(float newMoney) { money = newMoney; }
-    void setDead(bool isDead) { dead = isDead; }
+    void setHealth(float newHealth) { 
+        health = std::clamp(newHealth, 0.0f, GameConfig::MAX_HEALTH);
+        if (health <= 0.0f) {
+            setDead(true);
+        }
+    }
 
+    void setEnergy(float newEnergy) { 
+        energy = std::clamp(newEnergy, 0.0f, GameConfig::MAX_ENERGY); 
+    }
+
+    void setHunger(float newHunger) { 
+        hunger = std::clamp(newHunger, 0.0f, 100.0f); 
+    }
+
+    void setStrength(float newStrength) { 
+        strength = std::max(0.0f, newStrength); 
+    }
+
+    void setSpeed(float newSpeed) { 
+        speed = std::max(0.0f, newSpeed); 
+    }
+
+    void setDead(bool isDead) { 
+        dead = isDead; 
+        if (dead) {
+            health = 0.0f;
+            energy = 0.0f;
+        }
+    }
+    
     // --- MOVEMENT SYSTEM ---
 
     // Moves the entity while ensuring it stays within map boundaries
@@ -158,6 +184,8 @@ public:
     virtual void applyPenalty(int penalty) {
         money = std::max(0.0f, money - penalty);
     }
+
+
 };
 
 #endif

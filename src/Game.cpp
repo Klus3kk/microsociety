@@ -22,7 +22,7 @@ Game::Game()
 #ifdef _WIN32
     ui.adjustLayout(window);
 #endif
-    playerTexture.loadFromFile("../assets/npc/person1.png"); // Adjust path as needed
+    playerTexture.loadFromFile("../assets/npc/person1.png");
     if (!playerTexture.getSize().x) {
         std::cerr << "Failed to load player texture!" << std::endl;
     }
@@ -34,7 +34,7 @@ Game::Game()
     generateMap();
     npcs = generateNPCEntitys(); 
 
-    ui.updateNPCEntityList(npcs); // Update UI with NPCEntity list
+    ui.updateNPCEntityList(npcs);
     
     // Initialize TensorFlow if enabled
     if (tensorFlowEnabled) {
@@ -42,18 +42,33 @@ Game::Game()
         initializeNPCTensorFlow();
     }
     
-    // Create player if in single player mode
-    if (singlePlayerMode) {
-        getDebugConsole().log("Game", "Initializing single player mode");
-        
-        // Random position for player
+    // Player will be created when enableSinglePlayerMode(true) is called
+}
+
+// Destructor
+Game::~Game() {
+    cleanupPlayer();
+}
+
+void Game::cleanupPlayer() {
+    if (player) {
+        delete player;
+        player = nullptr;
+    }
+}
+
+void Game::enableSinglePlayerMode(bool enable) { 
+    singlePlayerMode = enable; 
+    
+    if (enable && !player) {
+        // Create player if enabling single player mode
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_int_distribution<> distX(1, GameConfig::mapWidth - 2);
         std::uniform_int_distribution<> distY(1, GameConfig::mapHeight - 2);
         
         // Create player with slightly better stats than NPCs
-        player = std::make_unique<PlayerEntity>(
+        player = new PlayerEntity(
             "Player", 
             120.0f,     // Health
             60.0f,      // Hunger  
@@ -67,9 +82,10 @@ Game::Game()
         player->setTexture(playerTexture, sf::Color::White);
         player->setPosition(distX(gen) * GameConfig::tileSize, distY(gen) * GameConfig::tileSize);
         
-        getDebugConsole().log("Player", "Player created at position: " + 
-                            std::to_string(player->getPosition().x) + ", " + 
-                            std::to_string(player->getPosition().y));
+        getDebugConsole().log("Player", "Player created for single player mode");
+    } else if (!enable && player) {
+        // Clean up player if disabling single player mode
+        cleanupPlayer();
     }
 }
 
@@ -85,7 +101,23 @@ void Game::initializeNPCTensorFlow() {
         return;
     }
     
-    getDebugConsole().log("TensorFlow", "TensorFlow model loaded successfully.");
+    getDebugConsole().log("TensorFlow", "TensorFlow model found, integration enabled.");
+    
+    // Initialize TensorFlow models for NPCs
+    auto tfModel = std::make_shared<TensorFlowWrapper>();
+    if (tfModel->initialize("models/npc_rl_model.tflite")) {
+        getDebugConsole().log("TensorFlow", "TensorFlow model loaded successfully.");
+        
+        // Apply TF model to NPCs
+        for (auto& npc : npcs) {
+            npc.setTensorFlowModel(tfModel);
+            npc.enableTensorFlow(true);
+        }
+    } else {
+        getDebugConsole().log("TensorFlow", "Failed to load TensorFlow model", LogLevel::Error);
+        tensorFlowEnabled = false;
+    }
+    
 #else
     getDebugConsole().log("TensorFlow", "TensorFlow support not compiled in. Using default Q-learning instead.", LogLevel::Warning);
     tensorFlowEnabled = false;
@@ -101,7 +133,7 @@ void Game::handlePlayerInput() {
     // Handle interaction with E key
     static bool eKeyPressed = false;
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::E)) {
-        if (!eKeyPressed) {  // Only trigger once per key press
+        if (!eKeyPressed) {
             eKeyPressed = true;
             
             // Find target tile under player's position
@@ -121,7 +153,7 @@ void Game::handlePlayerInput() {
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::C)) {
         if (!cKeyPressed) {
             cKeyPressed = true;
-            player->activateCamera(!player->getCamera().getViewport().width); // Toggle
+            player->activateCamera(!player->getCamera().getViewport().width);
             
             if (player->getCamera().getViewport().width) {
                 window.setView(window.getDefaultView());
@@ -158,7 +190,7 @@ void Game::updatePlayer() {
         player->setPosition(distX(gen) * GameConfig::tileSize, distY(gen) * GameConfig::tileSize);
     }
     
-    // Check for collisions
+    // FIXED: Now using Entity-based collision detection
     detectCollision(*player);
 }
 
@@ -166,20 +198,31 @@ const std::vector<std::vector<std::unique_ptr<Tile>>>& Game::getTileMap() const 
     return tileMap;
 }
 
-bool Game::detectCollision(NPCEntity& NPCEntity) {
-    int tileX = static_cast<int>(NPCEntity.getPosition().x / GameConfig::tileSize);
-    int tileY = static_cast<int>(NPCEntity.getPosition().y / GameConfig::tileSize);
+// FIXED: Now works with Entity base class - supports both NPCs and Players
+bool Game::detectCollision(Entity& entity) {
+    int tileX = static_cast<int>(entity.getPosition().x / GameConfig::tileSize);
+    int tileY = static_cast<int>(entity.getPosition().y / GameConfig::tileSize);
 
     if (tileX >= 0 && tileX < tileMap[0].size() && tileY >= 0 && tileY < tileMap.size()) {
         Tile& targetTile = *tileMap[tileY][tileX];
         
-        // Pass Market and House references
-        NPCEntity.performAction(ActionType::RegenerateEnergy, targetTile, tileMap, market, house);
+        // Handle collision with tile objects
+        if (targetTile.hasObject()) {
+            ObjectType objType = targetTile.getObject()->getType();
+            
+            // Different handling for NPCs vs Players
+            if (auto* npc = dynamic_cast<NPCEntity*>(&entity)) {
+                // NPC-specific collision handling
+                npc->performAction(ActionType::RegenerateEnergy, targetTile, tileMap, market, house);
+            } else if (auto* player = dynamic_cast<PlayerEntity*>(&entity)) {
+                // Player-specific collision handling (if needed)
+                getDebugConsole().log("Player", "Player collision detected with object type: " + 
+                                    std::to_string(static_cast<int>(objType)));
+            }
+        }
     }
     return false;
 }
-
-
 
 void Game::run() {
     sf::Clock clock;
@@ -244,7 +287,6 @@ void Game::run() {
         getDebugConsole().render(window);
         window.display();
     }
-    // getDebugConsole().saveLogsToFile("logs/simulation_log.txt");
 }
 
 void Game::simulateNPCEntityBehavior(float deltaTime) {
@@ -252,7 +294,6 @@ void Game::simulateNPCEntityBehavior(float deltaTime) {
     static std::unordered_map<std::string, int> idleCounter;  
 
     for (auto it = npcs.begin(); it != npcs.end(); ) {
-        // getDebugConsole().log("DEBUG", "Processing " + it->getName());
         NPCEntity& npc = *it;
 
         npc.update(deltaTime);
@@ -294,7 +335,6 @@ void Game::simulateNPCEntityBehavior(float deltaTime) {
                         getDebugConsole().log("FIX", npc.getName() + " was stuck, forced random action.");
                     }
                     npc.setState(NPCState::Idle);
-                    // getDebugConsole().log("ERROR", it->getName() + " has no valid target.");
                 }
                 break;
             }
@@ -303,7 +343,7 @@ void Game::simulateNPCEntityBehavior(float deltaTime) {
                 if (it->getTarget() && !it->isAtTarget()) {
                     performPathfinding(*it);
                     it->reduceHealth(0.05f);
-                    it->consumeEnergy(0.1f);  // ✅ Ensures NPCs consume energy when moving
+                    it->consumeEnergy(0.1f);
                 } else {
                     it->setState(NPCState::PerformingAction);
                 }
@@ -339,6 +379,7 @@ void Game::simulateNPCEntityBehavior(float deltaTime) {
         resetSimulation();
     }
 }
+
 
 void Game::handleMarketActions(NPCEntity& npc, Tile& targetTile, ActionType actionType) {
     if (!targetTile.hasObject()) {
@@ -787,48 +828,42 @@ int Game::getTotalItemsMined() const {
     return 0;
 }
 
+
 void Game::resetSimulation() {
     static int iterationCounter = 0;
-    iterationCounter++;  // Increment iteration
+    iterationCounter++;
 
     getDebugConsole().log("SYSTEM", "Resetting simulation... Iteration " + std::to_string(iterationCounter));
 
-    // Save previous iteration stats
     logIterationStats(iterationCounter);
 
-    // Reset time and clock
     clockGUI.reset();
     timeManager.incrementSocietyIteration();
-    timeManager.reset();  // Reset time but keep iteration incremented
+    timeManager.reset();
     getDebugConsole().log("TIME", "Time and clock reset.");
 
-    // Reset Market and UI
-    market.resetTransactions();  // Clear past transactions
-    market.randomizePrices();    // Refresh with new prices
-    ui.resetMarketGraph();       // Ensure graph clears before updating
+    market.resetTransactions();
+    market.randomizePrices();
+    ui.resetMarketGraph();
     ui.updateMarketPanel(market);
     getDebugConsole().log("MARKET", "Market reset with new randomized prices.");
 
-    // Reset NPCs safely
     npcs.clear();
     npcs.shrink_to_fit();
     npcs = generateNPCEntitys();
     ui.updateNPCEntityList(npcs);
     getDebugConsole().log("NPC", "NPCs reset with fresh random stats.");
 
-    // Clear and regenerate the map properly
     tileMap.clear();
     tileMap.shrink_to_fit();
     generateMap();
     getDebugConsole().log("MAP", "Map reset and regenerated.");
 
-    // Reset resources on the map
     regenerateResources();
     getDebugConsole().log("RESOURCES", "Resources regenerated.");
 
     // Reset player in single player mode
     if (singlePlayerMode && player) {
-        // Random position for player
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_int_distribution<> distX(1, GameConfig::mapWidth - 2);
@@ -841,11 +876,8 @@ void Game::resetSimulation() {
         getDebugConsole().log("PLAYER", "Player reset to new position.");
     }
 
-    // Update UI Status with Iteration +1
     ui.updateStatus(timeManager.getCurrentDay(), timeManager.getFormattedTime(), timeManager.getSocietyIteration());
 
-
-    // Reset simulation parameters
     simulationSpeed = 1.0f;
 
     getDebugConsole().log("SYSTEM", "Simulation reset complete.");

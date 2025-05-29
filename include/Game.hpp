@@ -18,6 +18,8 @@
 
 // Forward declaration for the NPCEntity class
 class NPCEntity;
+
+// Forward declaration for PlayerEntity - we'll include it in Game.cpp
 class PlayerEntity;
 
 class Game {
@@ -51,8 +53,8 @@ private:
     // NPCEntity Management
     std::vector<NPCEntity> npcs;
     
-    // Player Entity (for single player mode)
-    std::unique_ptr<PlayerEntity> player;
+    // Player Entity (for single player mode) - using raw pointer to avoid incomplete type issues
+    PlayerEntity* player = nullptr;
     bool singlePlayerMode = false;
     
     // AI Settings
@@ -76,10 +78,16 @@ private:
     // Single player mode helpers
     void handlePlayerInput();
     void updatePlayer();
+    
+    // Player cleanup helper
+    void cleanupPlayer();
 
 public:
     // Constructor
     Game();
+    
+    // Destructor to handle cleanup
+    ~Game();
 
     // Main Run Loop
     void run();
@@ -96,8 +104,10 @@ public:
     void evaluateNPCEntityState(NPCEntity& NPCEntity);
     void performPathfinding(NPCEntity& NPCEntity);
     void handleMarketActions(NPCEntity& npc, Tile& targetTile, ActionType actionType);
-    // Collision Detection  
-    bool detectCollision(NPCEntity& npc);
+    
+    // Collision Detection - FIXED to work with Entity base class
+    bool detectCollision(Entity& entity);
+    
     void generateMap();
     void storeItems(NPCEntity& npc, Tile& tile);
     void moveToResource(NPCEntity& npc, ActionType actionType);
@@ -105,7 +115,7 @@ public:
     const std::vector<std::vector<std::unique_ptr<Tile>>>& getTileMap() const;
     
     // Simulation Mode Settings
-    void enableSinglePlayerMode(bool enable) { singlePlayerMode = enable; }
+    void enableSinglePlayerMode(bool enable);
     void enableReinforcementLearning(bool enable) { reinforcementLearningEnabled = enable; }
     void enableTensorFlow(bool enable) { tensorFlowEnabled = enable; }
     

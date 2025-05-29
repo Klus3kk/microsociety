@@ -3,10 +3,6 @@
 #include <fstream>
 #include <algorithm>
 
-#ifdef USE_TENSORFLOW
-#include <tensorflow/c/c_api.h>
-#endif
-
 TensorFlowWrapper::TensorFlowWrapper()
     : modelPath("models/npc_rl_model.tflite"),
       inputOpName("serving_default_input_1"),
@@ -55,12 +51,14 @@ bool TensorFlowWrapper::initialize(const std::string& path) {
     status = TF_NewStatus();
     graph = TF_NewGraph();
     
-    // Here you would load the model from file
-    // This is a simplified version - actual loading would depend on format (SavedModel, TFLite)
-    // For a full implementation, refer to TensorFlow C API documentation
+    // Create session options
+    TF_SessionOptions* session_opts = TF_NewSessionOptions();
     
     // Create a TF session
-    session = TF_NewSession(graph, nullptr, status);
+    session = TF_NewSession(graph, session_opts, status);
+    
+    // Clean up session options
+    TF_DeleteSessionOptions(session_opts);
     
     if (TF_GetCode(status) != TF_OK) {
         getDebugConsole().log("TensorFlow", "Failed to create session: " + 
@@ -95,31 +93,20 @@ ActionType TensorFlowWrapper::predictAction(const State& state) {
         return static_cast<ActionType>(1 + rand() % (static_cast<int>(ActionType::Rest)));
     }
     
-    // Run inference
-    // This is simplified - actual implementation depends on TF C API specifics
-    TF_Tensor* outputTensor = nullptr;
-    
-    // We would run the session here and get output
-    // TF_SessionRun(session, ...);
-    
-    // Get action from output tensor
-    ActionType action = interpretOutput(outputTensor);
-    
-    // Clean up
+    // For now, return random action until we implement full TF inference
+    // This is a placeholder for proper TF model inference
     TF_DeleteTensor(inputTensor);
-    if (outputTensor) {
-        TF_DeleteTensor(outputTensor);
-    }
     
-    return action;
+    // TODO: Implement proper TF inference here
+    return static_cast<ActionType>(1 + rand() % (static_cast<int>(ActionType::Rest)));
 #else
     // Fallback to random action if TF not available
     return static_cast<ActionType>(1 + rand() % (static_cast<int>(ActionType::Rest)));
 #endif
 }
 
-TF_Tensor* TensorFlowWrapper::createInputTensor(const std::vector<float>& stateVector) const {
 #ifdef USE_TENSORFLOW
+TF_Tensor* TensorFlowWrapper::createInputTensor(const std::vector<float>& stateVector) const {
     // Create tensor for state input (batch_size=1, features=state size)
     int64_t dims[] = {1, static_cast<int64_t>(stateVector.size())};
     size_t dataSize = stateVector.size() * sizeof(float);
@@ -132,13 +119,9 @@ TF_Tensor* TensorFlowWrapper::createInputTensor(const std::vector<float>& stateV
     std::copy(stateVector.begin(), stateVector.end(), tensorData);
     
     return tensor;
-#else
-    return nullptr;
-#endif
 }
 
 ActionType TensorFlowWrapper::interpretOutput(TF_Tensor* outputTensor) const {
-#ifdef USE_TENSORFLOW
     if (!outputTensor) {
         return static_cast<ActionType>(1 + rand() % (static_cast<int>(ActionType::Rest)));
     }
@@ -159,10 +142,8 @@ ActionType TensorFlowWrapper::interpretOutput(TF_Tensor* outputTensor) const {
     }
     
     return static_cast<ActionType>(bestActionIndex);
-#else
-    return static_cast<ActionType>(1 + rand() % (static_cast<int>(ActionType::Rest)));
-#endif
 }
+#endif
 
 std::vector<float> TensorFlowWrapper::stateToVector(const State& state) const {
     // Convert State struct to a flat vector for TF input

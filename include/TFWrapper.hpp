@@ -7,19 +7,30 @@
 #include "ActionType.hpp"
 #include "State.hpp"
 
-// Forward declare TF_Session to avoid including TensorFlow headers in header files
-// This allows compilation even when TF is not available
+// Only include TensorFlow headers if we're actually using TensorFlow
+#ifdef USE_TENSORFLOW
+#include <tensorflow/c/c_api.h>
+// Don't forward declare - use the actual types from TensorFlow
+#else
+// Forward declare only when TensorFlow is not available
 struct TF_Graph;
 struct TF_Session;
 struct TF_Status;
 struct TF_Tensor;
+#endif
 
 class TensorFlowWrapper {
 private:
     // TensorFlow session and related objects
+#ifdef USE_TENSORFLOW
     TF_Graph* graph = nullptr;
     TF_Session* session = nullptr;
     TF_Status* status = nullptr;
+#else
+    void* graph = nullptr;      // Placeholder when TF not available
+    void* session = nullptr;
+    void* status = nullptr;
+#endif
     
     bool isInitialized = false;
     std::string modelPath;
@@ -30,8 +41,16 @@ private:
     
     // Helper methods
     void cleanupTensorFlow();
+    
+#ifdef USE_TENSORFLOW
     TF_Tensor* createInputTensor(const std::vector<float>& stateVector) const;
     ActionType interpretOutput(TF_Tensor* outputTensor) const;
+#else
+    void* createInputTensor(const std::vector<float>& stateVector) const { return nullptr; }
+    ActionType interpretOutput(void* outputTensor) const { 
+        return static_cast<ActionType>(1 + rand() % static_cast<int>(ActionType::Rest)); 
+    }
+#endif
     
 public:
     TensorFlowWrapper();
@@ -50,4 +69,4 @@ public:
     bool isModelLoaded() const { return isInitialized; }
 };
 
-#endif 
+#endif
