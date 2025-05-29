@@ -192,8 +192,13 @@ void PlayerEntity::performAction(ActionType action, Tile& tile,
         case ActionType::UpgradeHouse:
             if (tile.hasObject() && tile.getObject()->getType() == ObjectType::House) {
                 auto* houseObj = dynamic_cast<House*>(tile.getObject());
-                if (houseObj && houseObj->upgrade(money, *this)) {
-                    getDebugConsole().log("HOUSE", name + " upgraded house successfully!");
+                if (houseObj) {
+                    // FIXED: Use temporary variable for money reference
+                    float playerMoney = getMoney();
+                    if (houseObj->upgrade(playerMoney, *this)) {
+                        setMoney(playerMoney); // Update money after upgrade
+                        getDebugConsole().log("HOUSE", name + " upgraded house successfully!");
+                    }
                 }
             }
             break;
@@ -283,7 +288,7 @@ void PlayerEntity::regenerateEnergy(float rate) {
     }
 }
 
-// Health Management
+// Health Management  
 void PlayerEntity::restoreHealth(float amount) {
     health = std::min(health + amount, GameConfig::MAX_HEALTH);
     getDebugConsole().log("HEALTH", name + " restored " + std::to_string(amount) + " health.");

@@ -34,7 +34,6 @@ NPCEntity::NPCEntity(NPCEntity&& other) noexcept
       lastAction(other.lastAction),
       currentQLearningState(std::move(other.currentQLearningState)) {}
 
-
 // Move Assignment Operator
 NPCEntity& NPCEntity::operator=(NPCEntity&& other) noexcept {
     if (this != &other) {
@@ -59,7 +58,6 @@ NPCEntity& NPCEntity::operator=(NPCEntity&& other) noexcept {
     }
     return *this;
 }
-
 
 // Getters
 const std::string& NPCEntity::getName() const { return name; }
@@ -117,7 +115,6 @@ bool NPCEntity::removeFromInventory(const std::string& item, int quantity) {
     return true;
 }
 
-
 int NPCEntity::getInventoryItemCount(const std::string& item) const {
     auto it = inventory.find(item);
     return (it != inventory.end()) ? it->second : 0;
@@ -154,7 +151,6 @@ void NPCEntity::restoreHealth(float amount) {
     getDebugConsole().log("HEALTH", name + " restored " + std::to_string(amount) + " health.");
 }
 
-
 // Perform Action
 void NPCEntity::performAction(ActionType action, Tile& tile,
     const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap,
@@ -170,7 +166,7 @@ void NPCEntity::performAction(ActionType action, Tile& tile,
                 actionPtr = std::make_unique<TreeAction>();
                 actionReward = 10.0f;
                 actionSuccess = true;
-                reduceHealth(0.8f);  // ✅ Health reduction
+                reduceHealth(0.8f);  
                 consumeEnergy(1.5f);
             } else {
                 actionReward = -5.0f;
@@ -182,7 +178,7 @@ void NPCEntity::performAction(ActionType action, Tile& tile,
                 actionPtr = std::make_unique<StoneAction>();
                 actionReward = 10.0f;
                 actionSuccess = true;
-                reduceHealth(1.2f);  // ✅ Health reduction
+                reduceHealth(1.2f); 
                 consumeEnergy(1.5f);
             } else {
                 actionReward = -5.0f;
@@ -194,7 +190,7 @@ void NPCEntity::performAction(ActionType action, Tile& tile,
                 actionPtr = std::make_unique<BushAction>();
                 actionReward = 10.0f;
                 actionSuccess = true;
-                reduceHealth(0.5f);  // ✅ Health reduction
+                reduceHealth(0.5f); 
                 consumeEnergy(1.5f);
             } else {
                 actionReward = -5.0f;
@@ -224,6 +220,7 @@ void NPCEntity::performAction(ActionType action, Tile& tile,
             break;
 
         case ActionType::UpgradeHouse:
+            // FIXED: Use Entity::getMoney() instead of custom method
             if (getMoney() >= house.getUpgradeCost()) {
                 bool hasAllItems = true;
 
@@ -248,7 +245,10 @@ void NPCEntity::performAction(ActionType action, Tile& tile,
                 }
 
                 if (hasAllItems) {
-                    if (house.upgrade(money, *this)) {
+                    // FIXED: Pass money by reference using a temporary variable
+                    float npcMoney = getMoney();
+                    if (house.upgrade(npcMoney, *this)) {
+                        setMoney(npcMoney); // Update the money after upgrade
                         actionReward = 20.0f;
                         actionSuccess = true;
                         restoreHealth(10.0f);  
@@ -298,7 +298,7 @@ void NPCEntity::performAction(ActionType action, Tile& tile,
                         if (marketObj->buyItem(*this, item, quantityToBuy)) {
                             actionReward = 5.0f * quantityToBuy;
                             boughtSomething = true;
-                            reduceHealth(1.5f);  // ✅ Small health reduction
+                            reduceHealth(1.5f);  
                             consumeEnergy(1.0f);
                             getDebugConsole().log("MARKET", getName() + " bought " + std::to_string(quantityToBuy) + " " + item);
                             break;
@@ -343,7 +343,7 @@ void NPCEntity::performAction(ActionType action, Tile& tile,
 
                     if (marketObj->sellItem(*this, selectedItem, sellQuantity)) {
                         actionReward = 10.0f * sellQuantity;
-                        restoreHealth(2.0f);  // ✅ Small health reduction
+                        restoreHealth(2.0f);  
                         consumeEnergy(1.0f);
                         getDebugConsole().log("MARKET", getName() + " sold " + std::to_string(sellQuantity) + " " + selectedItem);
                         actionSuccess = true;
@@ -400,23 +400,12 @@ void NPCEntity::setTarget(Tile* newTarget) {
     target = newTarget;
 }
 
-
-
 bool NPCEntity::isAtTarget() const {
     if (target == nullptr) {
         return false;
     }
     return position == target->getPosition();
 }
-
-float& NPCEntity::getMoney() {
-    return money; // Allow modification
-}
-
-const float& NPCEntity::getMoney() const {
-    return money; // Read-only access
-}
-
 
 void NPCEntity::reduceHealth(float amount) {
     if (health > 5.0f) {  // Prevent instant deaths
@@ -430,7 +419,6 @@ void NPCEntity::reduceHealth(float amount) {
         getDebugConsole().log("HEALTH", getName() + " is too weak to take further damage.");
     }
 }
-
 
 bool NPCEntity::isDead() const {
     return health <= 0.0f;
@@ -521,8 +509,7 @@ Tile* NPCEntity::getTarget() const {
     return target;
 }
 
-// Add these implementations to NPCEntity.cpp
-
+// TensorFlow integration methods
 void NPCEntity::enableTensorFlow(bool enable) {
     useTensorFlow = enable && tfModel && tfModel->isModelLoaded();
     if (enable && (!tfModel || !tfModel->isModelLoaded())) {
@@ -541,7 +528,7 @@ void NPCEntity::setTensorFlowModel(std::shared_ptr<TensorFlowWrapper> model) {
     }
 }
 
-// Modify the decideNextAction method to include TensorFlow support
+// AI Decision Making
 ActionType NPCEntity::decideNextAction(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap, 
                                     const House& house, Market& market) {
     ActionType action = ActionType::None;  
@@ -611,8 +598,6 @@ ActionType NPCEntity::decideNextAction(const std::vector<std::vector<std::unique
     return action;
 }
 
-
-
 void NPCEntity::setHouse(House* assignedHouse) {
     house = assignedHouse;
 }
@@ -623,7 +608,6 @@ House* NPCEntity::getHouse() {
     }
     return house;
 }
-
 
 // Extract State for Q-Learning
 State NPCEntity::extractState(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) const {
@@ -676,4 +660,8 @@ int NPCEntity::countNearbyObjects(const std::vector<std::vector<std::unique_ptr<
     }
 
     return count;
+}
+
+void NPCEntity::enableQLearning(bool enable) {
+    useQLearning = enable;
 }

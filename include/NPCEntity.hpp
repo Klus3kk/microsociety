@@ -49,7 +49,6 @@ private:
     bool useTensorFlow = false;
     std::shared_ptr<TensorFlowWrapper> tfModel; 
 
-
 public:
     // Constructor
     NPCEntity(const std::string& npcName, float initHealth, float initHunger, float initEnergy,
@@ -73,9 +72,7 @@ public:
     int getInventorySize() const;
     int getGatheredResources() const;
 
-    // Modify getter to return a reference
-    float& getMoney(); // For modifiable access
-    const float& getMoney() const; // For read-only access
+    // CLEANED UP: Removed redundant getMoney methods - now uses Entity::getMoney() and Entity::setMoney()
     void setTarget(Tile* newTarget);
     void setHouse(House* assignedHouse); // Setter for house
     House* getHouse();

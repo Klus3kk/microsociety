@@ -7,9 +7,6 @@
 #include <cfloat>
 #include <cmath>
 
-// // Defines different animation states for the entity
-// enum class AnimationState { Idle, Walking, Interacting, Dead, Exhausted };
-
 // Base class for all entities in the game
 class Entity {
 protected:
@@ -22,7 +19,6 @@ protected:
     sf::Vector2f position; // Current position on the map
     sf::Sprite sprite;     // Graphical representation
     sf::Texture texture;   // Texture associated with the sprite
-    // AnimationState state = AnimationState::Idle; // Current animation state
     bool dead = false;     // Flag to track if the entity is dead
 
 public:
@@ -77,7 +73,6 @@ public:
         return money; 
     }
 
-    // AnimationState getState() const { return state; }
     bool isDead() const { return dead; }
 
     // --- MODIFIER METHODS ---
@@ -103,6 +98,16 @@ public:
 
     void setSpeed(float newSpeed) { 
         speed = std::max(0.0f, newSpeed); 
+    }
+
+    // FIXED: Added setMoney method that was missing
+    void setMoney(float newMoney) {
+        if (std::isnan(newMoney)) {
+            std::cerr << "ERROR: Attempted to set NaN money value, setting to 0" << std::endl;
+            money = 0.0f;
+        } else {
+            money = std::max(0.0f, newMoney); // Ensure money is never negative
+        }
     }
 
     void setDead(bool isDead) { 
@@ -159,7 +164,6 @@ public:
     void takeDamage(float amount) {
         health = std::max(0.0f, health - amount);
         if (health == 0.0f) {
-            // state = AnimationState::Dead;
             dead = true;
         }
     }
@@ -184,8 +188,6 @@ public:
     virtual void applyPenalty(int penalty) {
         money = std::max(0.0f, money - penalty);
     }
-
-
 };
 
 #endif
