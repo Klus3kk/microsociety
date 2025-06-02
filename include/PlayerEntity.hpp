@@ -1,3 +1,5 @@
+// include/PlayerEntity.hpp - Simplified without camera complexity
+
 #ifndef PLAYER_ENTITY_HPP
 #define PLAYER_ENTITY_HPP
 
@@ -22,17 +24,13 @@ private:
     ActionType currentAction = ActionType::None;
     
     float baseSpeed = 200.0f; // Player moves slightly faster than NPCs
-    
-    // Camera
-    sf::View playerCamera;
-    bool cameraActive = true;
 
 public:
     // Constructor
     PlayerEntity(const std::string& playerName, float initHealth, float initHunger, 
                 float initEnergy, float initSpeed, float initStrength, float initMoney);
                 
-    // Movement
+    // Movement - SIMPLIFIED
     void handleInput(float deltaTime);
     void update(float deltaTime);
     
@@ -61,11 +59,6 @@ public:
     void restoreHealth(float amount);
     void reduceHealth(float amount);
     
-    // Camera 
-    void updateCamera(sf::RenderWindow& window, float mapWidth, float mapHeight);
-    void activateCamera(bool active);
-    sf::View& getCamera();
-    
     // Getters
     const std::string& getName() const;
     float getMaxEnergy() const;
@@ -76,4 +69,4 @@ public:
                          float x, float y) const;
 };
 
-#endif // PLAYER_ENTITY_HPP
+#endif 

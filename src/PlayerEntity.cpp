@@ -8,15 +8,11 @@
 
 // Constructor
 PlayerEntity::PlayerEntity(const std::string& playerName, float initHealth, float initHunger, 
-                           float initEnergy, float initSpeed, float initStrength, float initMoney)
-    : Entity(initHealth, initHunger, initEnergy, initSpeed, initStrength, initMoney),
-      name(playerName) {
-    
-    // Initialize camera
-    playerCamera.setSize(800.f, 600.f);
-    playerCamera.setCenter(position);
-    
-    getDebugConsole().log("Player", "Created player entity: " + name);
+    float initEnergy, float initSpeed, float initStrength, float initMoney)
+: Entity(initHealth, initHunger, initEnergy, initSpeed, initStrength, initMoney),
+name(playerName) {
+
+getDebugConsole().log("Player", "Created player entity: " + name);
 }
 
 // Movement
@@ -41,6 +37,8 @@ void PlayerEntity::handleInput(float deltaTime) {
     if (moveX != 0.0f || moveY != 0.0f) {
         move(moveX, moveY, deltaTime);
         consumeEnergy(0.1f * deltaTime); // Consume energy while moving
+        getDebugConsole().log("Player", name + " moved to (" + 
+                            std::to_string(position.x) + ", " + std::to_string(position.y) + ")");
     }
 }
 
@@ -306,50 +304,6 @@ void PlayerEntity::reduceHealth(float amount) {
     } else {
         getDebugConsole().log("HEALTH", name + " is too weak to take further damage.");
     }
-}
-
-// Camera management
-void PlayerEntity::updateCamera(sf::RenderWindow& window, float mapWidth, float mapHeight) {
-    if (!cameraActive) return;
-    
-    // Set camera center to player position
-    playerCamera.setCenter(position);
-    
-    // Ensure camera stays within map bounds
-    float viewSizeX = playerCamera.getSize().x / 2;
-    float viewSizeY = playerCamera.getSize().y / 2;
-    
-    // Map bounds (in pixels)
-    float mapWidthPixels = mapWidth * GameConfig::tileSize;
-    float mapHeightPixels = mapHeight * GameConfig::tileSize;
-    
-    // Adjust camera position to keep it within bounds
-    sf::Vector2f cameraCenter = playerCamera.getCenter();
-    
-    // Clamp X position
-    if (cameraCenter.x - viewSizeX < 0) {
-        cameraCenter.x = viewSizeX;
-    } else if (cameraCenter.x + viewSizeX > mapWidthPixels) {
-        cameraCenter.x = mapWidthPixels - viewSizeX;
-    }
-    
-    // Clamp Y position
-    if (cameraCenter.y - viewSizeY < 0) {
-        cameraCenter.y = viewSizeY;
-    } else if (cameraCenter.y + viewSizeY > mapHeightPixels) {
-        cameraCenter.y = mapHeightPixels - viewSizeY;
-    }
-    
-    playerCamera.setCenter(cameraCenter);
-    window.setView(playerCamera);
-}
-
-void PlayerEntity::activateCamera(bool active) {
-    cameraActive = active;
-}
-
-sf::View& PlayerEntity::getCamera() {
-    return playerCamera;
 }
 
 // Getters

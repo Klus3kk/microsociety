@@ -65,33 +65,51 @@ void Game::cleanupPlayer() {
 void Game::enableSinglePlayerMode(bool enable) { 
     singlePlayerMode = enable; 
     
-    if (enable && !player) {
-        // Create player if enabling single player mode
+    if (enable) {
+        // Clear existing NPCs and create exactly ONE
+        npcs.clear();
+        
+        // Create exactly one NPC for single player mode
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_int_distribution<> distX(1, GameConfig::mapWidth - 2);
         std::uniform_int_distribution<> distY(1, GameConfig::mapHeight - 2);
         
-        // Create player with slightly better stats than NPCs
-        player = new PlayerEntity(
-            "Player", 
-            120.0f,     // Health
-            60.0f,      // Hunger  
-            100.0f,     // Energy
-            200.0f,     // Speed
-            15.0f,      // Strength
-            200.0f      // Money
-        );
+        NPCEntity singleNPC("Companion", 100, 50, 100, 150.0f, 10, 100, reinforcementLearningEnabled);
+        singleNPC.setTexture(playerTexture, sf::Color::Blue); // Blue color to distinguish from player
+        singleNPC.setPosition(distX(gen) * GameConfig::tileSize, distY(gen) * GameConfig::tileSize);
+        npcs.emplace_back(std::move(singleNPC));
         
-        // Set player texture and position
-        player->setTexture(playerTexture, sf::Color::White);
-        player->setPosition(distX(gen) * GameConfig::tileSize, distY(gen) * GameConfig::tileSize);
+        if (!player) {
+            // Create player
+            player = new PlayerEntity(
+                "Player", 
+                120.0f,     // Health
+                60.0f,      // Hunger  
+                100.0f,     // Energy
+                200.0f,     // Speed
+                15.0f,      // Strength
+                200.0f      // Money
+            );
+            
+            // Set player texture and position
+            player->setTexture(playerTexture, sf::Color::White);
+            player->setPosition(distX(gen) * GameConfig::tileSize, distY(gen) * GameConfig::tileSize);
+        }
         
-        getDebugConsole().log("Player", "Player created for single player mode");
+        getDebugConsole().log("Player", "Single player mode: Created 1 player + 1 NPC companion");
     } else if (!enable && player) {
-        // Clean up player if disabling single player mode
+        // Reset to normal NPC count for other modes
+        npcs.clear();
+        npcs = generateNPCEntitys();
+        
+        // Clean up player
         cleanupPlayer();
+        getDebugConsole().log("Game", "Returned to multi-NPC mode with " + std::to_string(npcs.size()) + " NPCs");
     }
+    
+    // Update UI
+    ui.updateNPCList(npcs);
 }
 
 void Game::initializeNPCTensorFlow() {
@@ -152,32 +170,12 @@ void Game::handlePlayerInput() {
     } else {
         eKeyPressed = false;
     }
-    
-    // Toggle camera with C key
-    static bool cKeyPressed = false;
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::C)) {
-        if (!cKeyPressed) {
-            cKeyPressed = true;
-            player->activateCamera(!player->getCamera().getViewport().width);
-            
-            if (player->getCamera().getViewport().width) {
-                window.setView(window.getDefaultView());
-                getDebugConsole().log("Camera", "Switched to default view");
-            } else {
-                window.setView(player->getCamera());
-                getDebugConsole().log("Camera", "Switched to player camera");
-            }
-        }
-    } else {
-        cKeyPressed = false;
-    }
 }
 
 void Game::updatePlayer() {
     if (!singlePlayerMode || !player) return;
     
     player->update(deltaTime * simulationSpeed);
-    player->updateCamera(window, GameConfig::mapWidth, GameConfig::mapHeight);
     
     // Check if player died
     if (player->isDead()) {
@@ -195,7 +193,7 @@ void Game::updatePlayer() {
         player->setPosition(distX(gen) * GameConfig::tileSize, distY(gen) * GameConfig::tileSize);
     }
     
-    // FIXED: Now using Entity-based collision detection
+    // Check collision
     detectCollision(*player);
 }
 
@@ -232,6 +230,7 @@ bool Game::detectCollision(Entity& entity) {
 void Game::run() {
     sf::Clock clock;
     window.setFramerateLimit(60);
+    
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -253,27 +252,27 @@ void Game::run() {
         // Handle player input in single player mode
         if (singlePlayerMode) {
             handlePlayerInput();
+            updatePlayer();
         }
 
+        // Always simulate market
         market.simulateMarketDynamics(deltaTime);
-        // Update resource regeneration timer
+        
+        // Update resource regeneration
         resourceRegenerationTimer += deltaTime;
         if (resourceRegenerationTimer >= regenerationInterval) {
             regenerateResources();
             resourceRegenerationTimer = 0.0f;
         }
 
-        // Update player in single player mode
-        if (singlePlayerMode) {
-            updatePlayer();
-        }
-
-        // Simulate NPC behavior
+        // Always simulate NPCs (1 in single player, many in other modes)
         simulateNPCEntityBehavior(deltaTime * simulationSpeed);
         simulateSocietalGrowth(deltaTime * simulationSpeed);
 
-        // Other updates and rendering
-        ui.updateMoney(MoneyManager::calculateTotalMoney(npcs));
+        // Update UI
+        ui.updateMoney(singlePlayerMode && player ? 
+                      static_cast<int>(player->getMoney()) : 
+                      MoneyManager::calculateTotalMoney(npcs));
         timeManager.update(deltaTime);
         clockGUI.update(timeManager.getElapsedTime());
         ui.updateStatus(
@@ -285,8 +284,9 @@ void Game::run() {
         ui.updateMarketPanel(market);
         ui.updateNPCList(npcs);
 
+        // ALWAYS render everything - no view switching complexity
         window.clear();
-        render();
+        render(); // Uses default view only
         clockGUI.render(window, isClockVisible);
         ui.render(window, market, npcs);
         getDebugConsole().render(window);
@@ -773,22 +773,34 @@ std::vector<NPCEntity> Game::generateNPCEntitys() const {
 
 
 void Game::render() {
+    // ALWAYS render the world with default view first
+    window.setView(window.getDefaultView());
+    
+    // Render tiles
     for (const auto& row : tileMap) {
         for (const auto& tile : row) {
             tile->draw(window);
         }
     }
 
-    // Render the player in single player mode
-    if (singlePlayerMode && player) {
-        player->draw(window);
-    }
-    
-    // Render NPCs
-    for (const auto& NPCEntity : npcs) {
-        NPCEntity.draw(window);
+    // Render NPCs based on mode
+    if (singlePlayerMode) {
+        // Single player mode: render the player
+        if (player) {
+            player->draw(window);
+        }
+        // Single player mode: render exactly ONE NPC if it exists
+        if (!npcs.empty()) {
+            npcs[0].draw(window); // Only render the first NPC
+        }
+    } else {
+        // Multi-NPC modes: render all NPCs
+        for (const auto& npc : npcs) {
+            npc.draw(window);
+        }
     }
 
+    // Render tile borders if enabled
     if (showTileBorders) drawTileBorders();
 }
 
