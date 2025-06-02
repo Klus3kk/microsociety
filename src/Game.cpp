@@ -66,7 +66,9 @@ void Game::enableSinglePlayerMode(bool enable) {
     singlePlayerMode = enable; 
     
     if (enable) {
-        // Clear existing NPCs and create exactly ONE
+        getDebugConsole().log("Player", "Enabling single player mode...");
+        
+        // Clear existing NPCs and create exactly ONE companion
         npcs.clear();
         
         // Create exactly one NPC for single player mode
@@ -75,30 +77,53 @@ void Game::enableSinglePlayerMode(bool enable) {
         std::uniform_int_distribution<> distX(1, GameConfig::mapWidth - 2);
         std::uniform_int_distribution<> distY(1, GameConfig::mapHeight - 2);
         
+        // Create NPC companion
         NPCEntity singleNPC("Companion", 100, 50, 100, 150.0f, 10, 100, reinforcementLearningEnabled);
         singleNPC.setTexture(playerTexture, sf::Color::Blue); // Blue color to distinguish from player
-        singleNPC.setPosition(distX(gen) * GameConfig::tileSize, distY(gen) * GameConfig::tileSize);
-        npcs.emplace_back(std::move(singleNPC));
         
+        float npcX = distX(gen) * GameConfig::tileSize;
+        float npcY = distY(gen) * GameConfig::tileSize;
+        singleNPC.setPosition(npcX, npcY);
+        
+        npcs.emplace_back(std::move(singleNPC));
+        getDebugConsole().log("Player", "Created NPC companion at (" + std::to_string(npcX) + ", " + std::to_string(npcY) + ")");
+        
+        // Clean up existing player if any
+        cleanupPlayer();
+        
+        // Create player
+        player = new PlayerEntity(
+            "Player", 
+            120.0f,     // Health
+            60.0f,      // Hunger  
+            100.0f,     // Energy
+            200.0f,     // Speed
+            15.0f,      // Strength
+            200.0f      // Money
+        );
+        
+        // Set player texture and position
+        player->setTexture(playerTexture, sf::Color::White);
+        
+        float playerX = distX(gen) * GameConfig::tileSize;
+        float playerY = distY(gen) * GameConfig::tileSize;
+        player->setPosition(playerX, playerY);
+        
+        getDebugConsole().log("Player", "Created player at (" + std::to_string(playerX) + ", " + std::to_string(playerY) + ")");
+        getDebugConsole().log("Player", "Single player mode: Created 1 player + 1 NPC companion");
+        
+        // Verify creation
         if (!player) {
-            // Create player
-            player = new PlayerEntity(
-                "Player", 
-                120.0f,     // Health
-                60.0f,      // Hunger  
-                100.0f,     // Energy
-                200.0f,     // Speed
-                15.0f,      // Strength
-                200.0f      // Money
-            );
-            
-            // Set player texture and position
-            player->setTexture(playerTexture, sf::Color::White);
-            player->setPosition(distX(gen) * GameConfig::tileSize, distY(gen) * GameConfig::tileSize);
+            getDebugConsole().log("ERROR", "Failed to create player!");
+        } else if (npcs.empty()) {
+            getDebugConsole().log("ERROR", "Failed to create NPC companion!");
+        } else {
+            getDebugConsole().log("SUCCESS", "Single player mode setup complete");
         }
         
-        getDebugConsole().log("Player", "Single player mode: Created 1 player + 1 NPC companion");
     } else if (!enable && player) {
+        getDebugConsole().log("Player", "Disabling single player mode...");
+        
         // Reset to normal NPC count for other modes
         npcs.clear();
         npcs = generateNPCEntitys();
@@ -110,6 +135,7 @@ void Game::enableSinglePlayerMode(bool enable) {
     
     // Update UI
     ui.updateNPCList(npcs);
+    getDebugConsole().log("UI", "Updated NPC list for single player mode: " + std::string(enable ? "ON" : "OFF"));
 }
 
 void Game::initializeNPCTensorFlow() {
@@ -783,21 +809,33 @@ void Game::render() {
         }
     }
 
-    // Render NPCs based on mode
+    // Render entities based on mode
     if (singlePlayerMode) {
-        // Single player mode: render the player
-        if (player) {
+        // Single player mode: render the player first
+        if (player && !player->isDead()) {
             player->draw(window);
+            getDebugConsole().log("Render", "Player rendered at (" + 
+                                std::to_string(player->getPosition().x) + ", " + 
+                                std::to_string(player->getPosition().y) + ")");
+        } else {
+            getDebugConsole().log("ERROR", "Player is NULL or dead in single player mode!");
         }
-        // Single player mode: render exactly ONE NPC if it exists
-        if (!npcs.empty()) {
-            npcs[0].draw(window); // Only render the first NPC
+        
+        // Single player mode: render exactly ONE NPC companion if it exists
+        if (!npcs.empty() && !npcs[0].isDead()) {
+            npcs[0].draw(window); 
+            getDebugConsole().log("Render", "NPC companion rendered");
+        } else if (npcs.empty()) {
+            getDebugConsole().log("ERROR", "No NPC companion found in single player mode!");
         }
     } else {
         // Multi-NPC modes: render all NPCs
         for (const auto& npc : npcs) {
-            npc.draw(window);
+            if (!npc.isDead()) {
+                npc.draw(window);
+            }
         }
+        getDebugConsole().log("Render", "Rendered " + std::to_string(npcs.size()) + " NPCs");
     }
 
     // Render tile borders if enabled
