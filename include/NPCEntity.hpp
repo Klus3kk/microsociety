@@ -14,10 +14,13 @@
 #include "QLearningAgent.hpp"
 #include "Configuration.hpp"
 #include "TFWrapper.hpp"
-// Forward declarations
+
+// FIXED: Include complete type definitions instead of forward declarations
+#include "House.hpp"
+
+// Forward declarations for classes that don't need complete definitions in header
 class Action; 
 class Market;
-class House;
 
 enum class NPCState {
     Idle,

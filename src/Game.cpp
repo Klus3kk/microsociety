@@ -1,14 +1,19 @@
 #include "Game.hpp"
 #include "FastNoiseLite.h"
 #include "debug.hpp"
+
+#include <nlohmann/json.hpp>
+#include "NPCEntity.hpp"
+#include "PlayerEntity.hpp"
+#include "House.hpp"
+#include "Market.hpp"
+#include "Actions.hpp"
+
 #include <random>
 #include <set>
 #include <unordered_map>
 #include <algorithm>
 #include <thread>
-#include <nlohmann/json.hpp>
-#include "PlayerEntity.hpp" // Include the player entity
-
 #ifdef USE_TENSORFLOW
 #include <tensorflow/c/c_api.h>
 #endif

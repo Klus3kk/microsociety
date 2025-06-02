@@ -5,15 +5,15 @@
 #include <string>
 #include <vector>
 #include <SFML/Graphics.hpp>
-#include "Entity.hpp"  // CHANGED: Include Entity instead of NPCEntity
+#include "Entity.hpp"  
 #include "Object.hpp"
 #include "debug.hpp"
 #include <cmath>
 #include <numeric>
 
-// Forward declarations
 class NPCEntity;
-class PlayerEntity;  // Added forward declaration for PlayerEntity
+class PlayerEntity;
+
 
 // Market class: Represents a dynamic in-game trading system
 class Market : public Object {

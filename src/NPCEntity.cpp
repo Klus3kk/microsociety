@@ -1,10 +1,12 @@
 #include "NPCEntity.hpp"
+#include "House.hpp"
+#include "Market.hpp" 
 #include "Actions.hpp"
+
 #include <algorithm>
 #include <numeric>
 #include <cmath>
 #include <random>
-
 // Constructor
 NPCEntity::NPCEntity(const std::string& npcName, float initHealth, float initHunger, float initEnergy,
                      float initSpeed, float initStrength, float initMoney, bool enableQLearning)

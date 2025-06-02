@@ -2,12 +2,11 @@
 #define HOUSE_HPP
 
 #include "Object.hpp"
-#include "Entity.hpp"  // CHANGED: Include Entity instead of NPCEntity
+#include "Entity.hpp"  
 #include <unordered_map>
 #include <string>
 #include "TextureManager.hpp"
 
-// Forward declaration
 class NPCEntity;
 
 class House : public Object {

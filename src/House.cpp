@@ -1,8 +1,11 @@
 #include "House.hpp"
+#include "NPCEntity.hpp"
 #include "debug.hpp"
-#include <sstream>
-#include <numeric>  // Added for std::accumulate
 #include "Configuration.hpp"
+
+#include <sstream>
+#include <numeric>  
+
 
 // Constructor: Initializes house properties based on level
 House::House(const sf::Texture& tex, int initialLevel)

@@ -1,5 +1,11 @@
 #include "Actions.hpp"
 
+// FIXED: Include complete type definitions needed for dynamic_cast
+#include "NPCEntity.hpp"
+#include "PlayerEntity.hpp"
+#include "House.hpp"
+#include "Market.hpp"
+
 // FIXED: Changed all method signatures from NPCEntity& to Entity&
 
 // Base class method is overridden by each action type

@@ -1,16 +1,16 @@
 #ifndef ACTIONS_HPP
 #define ACTIONS_HPP
 
-#include "Entity.hpp"  // CHANGED: Include Entity instead of NPCEntity
+#include "Entity.hpp"  
 #include "Tile.hpp"
 #include "debug.hpp"
 #include <string>
-#include <memory> // For std::make_unique
+#include <memory> 
 #include "ActionType.hpp"
 
-// Forward declarations
+// Forward declarations only - complete type definitions will be in .cpp file
 class NPCEntity;
-class PlayerEntity;  // Added forward declaration for PlayerEntity
+class PlayerEntity;  
 class House;
 class Market;
 
@@ -101,7 +101,7 @@ private:
     int quantity;
 
 public:
-    BuyItemAction(const std::string& item, int quantity); // Encapsulation (hiding item and quantity variables), access only through controlled methods
+    BuyItemAction(const std::string& item, int quantity); 
     void perform(Entity& entity, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
     std::string getActionName() const override;
     float getReward() const override { return 10.0f; }

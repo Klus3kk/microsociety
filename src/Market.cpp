@@ -1,11 +1,14 @@
 #include "Market.hpp"
+#include "NPCEntity.hpp"
+#include "PlayerEntity.hpp"
 #include "MoneyManager.hpp"
+
 #include <algorithm>
 #include <cmath>
 #include <numeric>
 #include <ctime>
 #include <cstdlib>
-#include "House.hpp"
+
 // Default constructor
 Market::Market() {
     sf::Texture defaultTexture;
