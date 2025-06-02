@@ -11,8 +11,9 @@
 #include <cmath>
 #include <numeric>
 
-// Forward declaration
+// Forward declarations
 class NPCEntity;
+class PlayerEntity;  // Added forward declaration for PlayerEntity
 
 // Market class: Represents a dynamic in-game trading system
 class Market : public Object {
@@ -86,4 +87,4 @@ public:
 
 };
 
-#endif 
+#endif

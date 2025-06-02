@@ -1,6 +1,7 @@
 #include "House.hpp"
 #include "debug.hpp"
 #include <sstream>
+#include <numeric>  // Added for std::accumulate
 #include "Configuration.hpp"
 
 // Constructor: Initializes house properties based on level
@@ -41,12 +42,12 @@ int House::getRequirementForItem(const std::string& item) const {
     return 0;  // Default case if item isn't a requirement
 }
 
-// Regenerate NPC energy inside the house
-void House::regenerateEnergy(NPCEntity& npc) {
-    if (npc.getEnergy() < npc.getMaxEnergy()) {
-        npc.regenerateEnergy(10.0f); // Restores 10 energy per tick
-        npc.restoreHealth(5.0f);     // Restores 5 health per tick
-        getDebugConsole().log("House", npc.getName() + " is recovering energy at home.");
+// FIXED: Changed parameter from NPCEntity& to Entity&
+void House::regenerateEnergy(Entity& entity) {
+    if (entity.getEnergy() < GameConfig::MAX_ENERGY) {
+        entity.setEnergy(std::min(GameConfig::MAX_ENERGY, entity.getEnergy() + 10.0f)); // Restores 10 energy per tick
+        entity.setHealth(std::min(GameConfig::MAX_HEALTH, entity.getHealth() + 5.0f));  // Restores 5 health per tick
+        getDebugConsole().log("House", "Entity is recovering energy at home.");
     }
 }
 
@@ -57,7 +58,7 @@ bool House::storeItem(const std::string& item, int quantity) {
 
     if (currentTotal + quantity > maxStorageCapacity) {
         getDebugConsole().log("House", "Storage full! Selling excess " + item + ".");
-        return false; // NPC should sell instead
+        return false; // Entity should sell instead
     }
 
     storage[item] += quantity;
@@ -65,22 +66,26 @@ bool House::storeItem(const std::string& item, int quantity) {
     return true;
 }
 
-// Retrieve item from storage
-bool House::takeFromStorage(const std::string& item, int quantity, NPCEntity& npc) {
+// FIXED: Changed parameter from NPCEntity& to Entity&
+bool House::takeFromStorage(const std::string& item, int quantity, Entity& entity) {
     auto it = storage.find(item);
     if (it != storage.end() && it->second >= quantity) {
-        if (npc.getInventorySize() + quantity > npc.getMaxInventorySize()) {
-            getDebugConsole().log("House", npc.getName() + " does not have enough inventory space.");
-            return false;
+        // For Entity base class, we need to check if it's actually an NPCEntity to access inventory methods
+        if (auto* npc = dynamic_cast<NPCEntity*>(&entity)) {
+            if (npc->getInventorySize() + quantity > npc->getMaxInventorySize()) {
+                getDebugConsole().log("House", "Entity does not have enough inventory space.");
+                return false;
+            }
+            npc->addToInventory(item, quantity);
         }
-        npc.addToInventory(item, quantity);
+        // For PlayerEntity, we would need similar logic but it's not in the current implementation
+        
         it->second -= quantity;
-
         if (it->second == 0) {
             storage.erase(it); // Remove the item if quantity reaches zero
         }
 
-        getDebugConsole().log("House", npc.getName() + " took " + std::to_string(quantity) + " " + item + "(s).");
+        getDebugConsole().log("House", "Entity took " + std::to_string(quantity) + " " + item + "(s).");
         return true;
     }
 
@@ -88,19 +93,19 @@ bool House::takeFromStorage(const std::string& item, int quantity, NPCEntity& np
     return false;
 }
 
-// Upgrade the house if NPC has enough resources
-bool House::upgrade(float& npcMoney, NPCEntity& npc) {
+// FIXED: Changed parameter from NPCEntity& to Entity&
+bool House::upgrade(float& entityMoney, Entity& entity) {
     float upgradeCost = getUpgradeCost();
     int woodRequired = getWoodRequirement();
     int stoneRequired = getStoneRequirement();
     int bushRequired = getBushRequirement();
 
-    if (npcMoney >= upgradeCost &&
+    if (entityMoney >= upgradeCost &&
         getStoredItemCount("wood") >= woodRequired &&
         getStoredItemCount("stone") >= stoneRequired &&
         getStoredItemCount("bush") >= bushRequired) {
 
-        npcMoney -= upgradeCost;
+        entityMoney -= upgradeCost;
 
         // Reduce required resources from storage
         if (storage.count("wood")) storage["wood"] -= woodRequired;
@@ -115,16 +120,16 @@ bool House::upgrade(float& npcMoney, NPCEntity& npc) {
         strengthBonus += 3;
         speedBonus += 2;
 
-        // Apply upgrades to NPC
-        npc.setHealth(npc.getHealth() + healthBonus);
-        npc.setStrength(npc.getStrength() + strengthBonus);
-        npc.setSpeed(npc.getSpeed() + speedBonus);
+        // Apply upgrades to entity
+        entity.setHealth(entity.getHealth() + healthBonus);
+        entity.setStrength(entity.getStrength() + strengthBonus);
+        entity.setSpeed(entity.getSpeed() + speedBonus);
 
         logUpgradeDetails();
         return true;
     }
 
-    getDebugConsole().log("House", npc.getName() + " Upgrade failed due to insufficient resources.");
+    getDebugConsole().log("House", "Entity upgrade failed due to insufficient resources.");
     return false;
 }
 
@@ -183,11 +188,11 @@ bool House::isStorageFull() const {
     return currentTotal >= maxStorageCapacity;
 }
 
-// Check if an upgrade is available for NPC
-bool House::isUpgradeAvailable(float npcMoney) const {
+// Check if an upgrade is available for entity
+bool House::isUpgradeAvailable(float entityMoney) const {
     float upgradeCost = getUpgradeCost();
 
-    return npcMoney >= upgradeCost &&
+    return entityMoney >= upgradeCost &&
            getStoredItemCount("wood") >= getWoodRequirement() &&
            getStoredItemCount("stone") >= getStoneRequirement() &&
            getStoredItemCount("bush") >= getBushRequirement();

@@ -62,24 +62,36 @@ float Market::calculateSellPrice(const std::string& item) const {
     return std::round(getPrice(item) * sellMargin * 10) / 10.0f;
 }
 
-bool Market::buyItem(NPCEntity& npc, const std::string& item, int quantity) {
+// FIXED: Changed parameter from NPCEntity& to Entity&
+bool Market::buyItem(Entity& entity, const std::string& item, int quantity) {
     if (quantity <= 0 || item.empty()) return false;
     if (prices.find(item) == prices.end()) setPrice(item, 1 + std::rand() % 50);
 
     float itemPrice = calculateBuyPrice(item);
     float totalCost = itemPrice * quantity;
 
-    if (npc.getMoney() < totalCost) {  
-        getDebugConsole().log("ERROR", npc.getName() + " cannot afford " + std::to_string(quantity) + " " + item);
+    if (entity.getMoney() < totalCost) {  
+        getDebugConsole().log("ERROR", "Entity cannot afford " + std::to_string(quantity) + " " + item);
         return false;
     }
 
-    if (!npc.addToInventory(item, quantity)) {
-        getDebugConsole().log("ERROR", npc.getName() + " inventory FULL. Cannot buy " + item);
+    // Check if entity is an NPCEntity to access inventory methods
+    if (auto* npc = dynamic_cast<NPCEntity*>(&entity)) {
+        if (!npc->addToInventory(item, quantity)) {
+            getDebugConsole().log("ERROR", "NPC inventory FULL. Cannot buy " + item);
+            return false;
+        }
+    } else if (auto* player = dynamic_cast<PlayerEntity*>(&entity)) {
+        if (!player->addToInventory(item, quantity)) {
+            getDebugConsole().log("ERROR", "Player inventory FULL. Cannot buy " + item);
+            return false;
+        }
+    } else {
+        getDebugConsole().log("ERROR", "Unknown entity type trying to buy items");
         return false;
     }
 
-    npc.setMoney(npc.getMoney() - totalCost);
+    entity.setMoney(entity.getMoney() - totalCost);
     MoneyManager::recordMoneySpent(totalCost);  // ✅ Track money spent
 
     demand[item] += quantity;
@@ -89,9 +101,12 @@ bool Market::buyItem(NPCEntity& npc, const std::string& item, int quantity) {
     totalBuyTransactions[item] += quantity;
     totalExpenditure[item] += totalCost;  
 
-    npc.addReward(5.0f * quantity);
+    // Add reward for NPCs
+    if (auto* npc = dynamic_cast<NPCEntity*>(&entity)) {
+        npc->addReward(5.0f * quantity);
+    }
 
-    getDebugConsole().log("MARKET", "[BUY] " + npc.getName() + " bought " + std::to_string(quantity) + " " + item);
+    getDebugConsole().log("MARKET", "[BUY] Entity bought " + std::to_string(quantity) + " " + item);
     return true;
 }
 
@@ -133,24 +148,43 @@ void Market::randomizePrices() {
     }
 }
 
-
-bool Market::sellItem(NPCEntity& npc, const std::string& item, int quantity) {
+// FIXED: Changed parameter from NPCEntity& to Entity&
+bool Market::sellItem(Entity& entity, const std::string& item, int quantity) {
     if (item.empty() || quantity <= 0) return false;
     if (prices.find(item) == prices.end()) setPrice(item, 1 + std::rand() % 50);
 
-    int inventoryCount = npc.getInventoryItemCount(item);
-    if (inventoryCount < quantity) {
-        getDebugConsole().log("ERROR", npc.getName() + " tried to sell more than they have.");
+    int inventoryCount = 0;
+    
+    // Check inventory count based on entity type
+    if (auto* npc = dynamic_cast<NPCEntity*>(&entity)) {
+        inventoryCount = npc->getInventoryItemCount(item);
+    } else if (auto* player = dynamic_cast<PlayerEntity*>(&entity)) {
+        inventoryCount = player->getInventoryItemCount(item);
+    } else {
+        getDebugConsole().log("ERROR", "Unknown entity type trying to sell items");
         return false;
     }
 
-    if (!npc.removeFromInventory(item, quantity)) {
+    if (inventoryCount < quantity) {
+        getDebugConsole().log("ERROR", "Entity tried to sell more than they have.");
+        return false;
+    }
+
+    // Remove from inventory based on entity type
+    bool removeSuccess = false;
+    if (auto* npc = dynamic_cast<NPCEntity*>(&entity)) {
+        removeSuccess = npc->removeFromInventory(item, quantity);
+    } else if (auto* player = dynamic_cast<PlayerEntity*>(&entity)) {
+        removeSuccess = player->removeFromInventory(item, quantity);
+    }
+
+    if (!removeSuccess) {
         getDebugConsole().log("ERROR", "Failed to remove " + std::to_string(quantity) + " " + item);
         return false;
     }
 
     float revenue = calculateSellPrice(item) * quantity;
-    npc.setMoney(npc.getMoney() + revenue);
+    entity.setMoney(entity.getMoney() + revenue);
     MoneyManager::recordMoneyEarned(revenue);  // ✅ Track money earned
 
     supply[item] += quantity;
@@ -160,9 +194,12 @@ bool Market::sellItem(NPCEntity& npc, const std::string& item, int quantity) {
     totalSellTransactions[item] += quantity;
     totalRevenue[item] += revenue;
 
-    npc.addReward(10.0f * quantity);
+    // Add reward for NPCs
+    if (auto* npc = dynamic_cast<NPCEntity*>(&entity)) {
+        npc->addReward(10.0f * quantity);
+    }
 
-    getDebugConsole().log("MARKET", "[SELL] " + npc.getName() + " sold " + std::to_string(quantity) + " " + item);
+    getDebugConsole().log("MARKET", "[SELL] Entity sold " + std::to_string(quantity) + " " + item);
     return true;
 }
 
@@ -256,7 +293,7 @@ void Market::simulateMarketDynamics(float deltaTime) {
 
         float newPrice = price * demandFactor * supplyFactor;
 
-        // ✅ Ensure stability: Prices won’t swing too fast
+        // ✅ Ensure stability: Prices won't swing too fast
         prices[item] = std::clamp(newPrice, minimumPrice, maximumPrice);
 
         // Track price history for UI graph

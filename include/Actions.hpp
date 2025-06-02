@@ -3,8 +3,6 @@
 
 #include "Entity.hpp"  // CHANGED: Include Entity instead of NPCEntity
 #include "Tile.hpp"
-#include "House.hpp"
-#include "Market.hpp"
 #include "debug.hpp"
 #include <string>
 #include <memory> // For std::make_unique
@@ -12,6 +10,9 @@
 
 // Forward declarations
 class NPCEntity;
+class PlayerEntity;  // Added forward declaration for PlayerEntity
+class House;
+class Market;
 
 // Base class for all actions, implementing polymorphism and abstraction
 class Action {
