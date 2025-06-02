@@ -2,10 +2,13 @@
 #define HOUSE_HPP
 
 #include "Object.hpp"
-#include "NPCEntity.hpp"
+#include "Entity.hpp"  // CHANGED: Include Entity instead of NPCEntity
 #include <unordered_map>
 #include <string>
 #include "TextureManager.hpp"
+
+// Forward declaration
+class NPCEntity;
 
 class House : public Object {
 private:
@@ -32,11 +35,12 @@ public:
     int getMaxStorageCapacity() const { return maxStorageCapacity; }
     float getEnergyRegenRate() const { return energyRegenRate; }
     float getUpgradeCost() const; 
-    // Actions
-    void regenerateEnergy(NPCEntity& npc);  // Energy regeneration for NPC
+    
+    // FIXED: Actions - now accept Entity base class (works with both NPCs and Players)
+    void regenerateEnergy(Entity& entity);  // Energy regeneration for any entity
     bool storeItem(const std::string& item, int quantity); // Store resources
-    bool takeFromStorage(const std::string& item, int quantity, NPCEntity& npc); // Take resources
-    bool upgrade(float& npcMoney, NPCEntity& npc); // Upgrade house level
+    bool takeFromStorage(const std::string& item, int quantity, Entity& entity); // Take resources
+    bool upgrade(float& entityMoney, Entity& entity); // Upgrade house level
 
     // Stats and Logs
     void displayStorage() const; // Display storage details
@@ -44,7 +48,7 @@ public:
 
     // AI Integration
     bool isStorageFull() const;  // Check if storage is full
-    bool isUpgradeAvailable(float npcMoney) const; // Check if NPC can afford an upgrade
+    bool isUpgradeAvailable(float entityMoney) const; // Check if entity can afford an upgrade
     int getStoredItemCount(const std::string& item) const; // Get quantity of a specific resource
 
     // Rendering
@@ -52,4 +56,4 @@ public:
     ObjectType getType() const override;         // Return object type
 };
 
-#endif 
+#endif

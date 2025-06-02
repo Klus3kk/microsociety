@@ -40,7 +40,6 @@ void StoneAction::perform(NPCEntity& player, Tile& tile, const std::vector<std::
     }
 }
 
-
 // BushAction
 void BushAction::perform(NPCEntity& player, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
     // Check if the tile has a bush object
@@ -60,7 +59,6 @@ void BushAction::perform(NPCEntity& player, Tile& tile, const std::vector<std::v
         getDebugConsole().logOnce("BushAction", "No bush to gather on this tile.");
     }
 }
-
 
 // MoveAction
 void MoveAction::perform(NPCEntity& player, Tile&, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
@@ -87,16 +85,17 @@ void RegenerateEnergyAction::perform(NPCEntity& player, Tile& tile, const std::v
     }
 }
 
-
-
 // UpgradeHouseAction
 void UpgradeHouseAction::perform(NPCEntity& player, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
     // Ensure the tile has a house
     if (auto house = dynamic_cast<House*>(tile.getObject())) {
-        float& npcMoney = player.getMoney(); // Reference to NPC's money
+        // FIXED: Use proper money handling with temporary variable
+        float npcMoney = player.getMoney(); // Get current money value
+        
         if (npcMoney >= house->getUpgradeCost()) {
             // Attempt to upgrade the house
             if (house->upgrade(npcMoney, player)) {
+                player.setMoney(npcMoney); // Update the NPC's money after upgrade
                 player.receiveFeedback(20.0f, tileMap); // Reward for success
                 getDebugConsole().log("Action", "House upgraded successfully.");
             } else {
@@ -121,7 +120,7 @@ void StoreItemAction::perform(NPCEntity& player, Tile& tile, const std::vector<s
     if (auto house = dynamic_cast<House*>(tile.getObject())) {
         const auto& inventory = player.getInventory();
         if (inventory.empty()) {
-            player.receiveFeedback(-5.0f, tileMap); // Kara za pusty ekwipunek
+            player.receiveFeedback(-5.0f, tileMap); // Penalty for empty inventory
             getDebugConsole().logOnce("Action", "No items in inventory to store.");
             return;
         }
@@ -150,29 +149,6 @@ std::string StoreItemAction::getActionName() const {
     return "Store Items in House";
 }
 
-// TakeOutItemsAction::TakeOutItemsAction(const std::string& item, int quantity)
-//     : item(item), quantity(quantity) {}
-
-// void TakeOutItemsAction::perform(NPCEntity& player, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
-//     if (auto house = dynamic_cast<House*>(tile.getObject())) {
-//         if (house->takeFromStorage(item, quantity, player)) {
-//             player.receiveFeedback(10.0f, tileMap); // Nagroda za pobranie przedmiotów
-//             getDebugConsole().log("Action", "Took " + std::to_string(quantity) + " " + item + " from the house.");
-//         } else {
-//             player.receiveFeedback(-5.0f, tileMap); // Kara za brak przedmiotów w magazynie
-//             getDebugConsole().logOnce("Action", "Failed to take items. Not enough in storage.");
-//         }
-//     } else {
-//         player.receiveFeedback(-5.0f, tileMap); // Kara za brak domu
-//         getDebugConsole().logOnce("Action", "No house present on this tile.");
-//     }
-// }
-
-
-// std::string TakeOutItemsAction::getActionName() const {
-//     return "Take Out Items from House";
-// }
-
 // BuyItemAction
 BuyItemAction::BuyItemAction(const std::string& item, int quantity)
     : item(item), quantity(quantity) {}
@@ -192,7 +168,6 @@ void BuyItemAction::perform(NPCEntity& player, Tile& tile, const std::vector<std
         getDebugConsole().logOnce("Action", "No market present on this tile.");
     }
 }
-
 
 std::string BuyItemAction::getActionName() const {
     return "Buy Items from Market";

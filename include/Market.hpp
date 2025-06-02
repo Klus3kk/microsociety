@@ -5,11 +5,14 @@
 #include <string>
 #include <vector>
 #include <SFML/Graphics.hpp>
-#include "NPCEntity.hpp"
+#include "Entity.hpp"  // CHANGED: Include Entity instead of NPCEntity
 #include "Object.hpp"
 #include "debug.hpp"
 #include <cmath>
 #include <numeric>
+
+// Forward declaration
+class NPCEntity;
 
 // Market class: Represents a dynamic in-game trading system
 class Market : public Object {
@@ -40,9 +43,9 @@ public:
     float calculateBuyPrice(const std::string& item) const;  // Determines price when buying
     float calculateSellPrice(const std::string& item) const; // Determines price when selling
 
-    // Core Transactions (Trading with NPCs)
-    bool buyItem(NPCEntity& player, const std::string& item, int quantity); // Handles NPC purchasing an item
-    bool sellItem(NPCEntity& player, const std::string& item, int quantity); // Handles NPC selling an item
+    // FIXED: Core Transactions - now accept Entity base class (works with both NPCs and Players)
+    bool buyItem(Entity& player, const std::string& item, int quantity); // Handles entity purchasing an item
+    bool sellItem(Entity& player, const std::string& item, int quantity); // Handles entity selling an item
 
     // Adjust Prices Dynamically
     float adjustPriceOnBuy(float currentPrice, int demand, int supply, float buyFactor); // Modify price on purchase
@@ -83,4 +86,4 @@ public:
 
 };
 
-#endif // MARKET_HPP
+#endif 
