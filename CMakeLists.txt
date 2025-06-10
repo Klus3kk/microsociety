@@ -46,10 +46,41 @@ include(GoogleTest)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
-# TensorFlow Setup 
+# Smart LLVM Detection and TensorFlow Version Selection
 if(USE_TENSORFLOW)
-    set(TENSORFLOW_VERSION "2.12.0")
+    # Try to find LLVM to detect version
+    find_package(LLVM QUIET CONFIG)
+    
+    if(LLVM_FOUND)
+        message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
+        
+        if(LLVM_PACKAGE_VERSION VERSION_LESS "15.0")
+            message(WARNING "Old LLVM ${LLVM_PACKAGE_VERSION} detected. Using TensorFlow 2.8.0 for compatibility.")
+            set(TENSORFLOW_VERSION "2.8.0")
+            
+            # Add flags to work around LLVM CommandLine conflicts in older versions
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLLVM_DISABLE_ABI_BREAKING_CHECKS_ENFORCING=1")
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=0")
+            
+        elseif(LLVM_PACKAGE_VERSION VERSION_GREATER_EQUAL "19.0")
+            message(STATUS "Modern LLVM ${LLVM_PACKAGE_VERSION} detected (like Arch). Using TensorFlow 2.11.0.")
+            set(TENSORFLOW_VERSION "2.11.0")
+            
+        else()
+            message(STATUS "LLVM ${LLVM_PACKAGE_VERSION} detected. Using TensorFlow 2.11.0.")
+            set(TENSORFLOW_VERSION "2.11.0")
+        endif()
+    else()
+        message(WARNING "LLVM not found. Defaulting to TensorFlow 2.8.0 for maximum compatibility.")
+        set(TENSORFLOW_VERSION "2.8.0")
+        
+        # Add conservative flags when LLVM version is unknown
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLLVM_DISABLE_ABI_BREAKING_CHECKS_ENFORCING=1")
+    endif()
 
+    message(STATUS "Selected TensorFlow version: ${TENSORFLOW_VERSION}")
+
+    # Platform-specific URL setup
     if(WIN32)
         set(TENSORFLOW_URL "https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-windows-x86_64-${TENSORFLOW_VERSION}.zip")
         set(TENSORFLOW_ARCHIVE "${CMAKE_BINARY_DIR}/libtensorflow.zip")
@@ -66,9 +97,9 @@ if(USE_TENSORFLOW)
     set(TENSORFLOW_INCLUDE_DIR "${TENSORFLOW_EXTRACT_DIR}/include")
     set(TENSORFLOW_LIB_DIR "${TENSORFLOW_EXTRACT_DIR}/lib")
     
-    # Try to find existing libraries first to avoid redownloading
+    # Check if we need to download/extract TensorFlow
     if(NOT EXISTS "${TENSORFLOW_LIB_DIR}")
-        message(STATUS "Downloading TensorFlow from ${TENSORFLOW_URL}")
+        message(STATUS "Downloading TensorFlow ${TENSORFLOW_VERSION} from ${TENSORFLOW_URL}")
         file(DOWNLOAD ${TENSORFLOW_URL} ${TENSORFLOW_ARCHIVE} SHOW_PROGRESS STATUS DOWNLOAD_STATUS)
         list(GET DOWNLOAD_STATUS 0 STATUS_CODE)
         
@@ -99,6 +130,7 @@ if(USE_TENSORFLOW)
 
     set(TENSORFLOW_RUNTIME_DIR "${CMAKE_BINARY_DIR}/bin")
 
+    # Copy runtime libraries
     if(WIN32)
         file(GLOB TF_RUNTIME_LIBS "${TENSORFLOW_LIB_DIR}/*.dll")
     else()
@@ -135,6 +167,11 @@ if(USE_TENSORFLOW)
     
     # Add definition for conditional compilation
     add_definitions(-DUSE_TENSORFLOW)
+    
+    # Additional linking flags for older LLVM compatibility
+    if(LLVM_PACKAGE_VERSION VERSION_LESS "15.0")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--allow-multiple-definition")
+    endif()
 endif()
 
 # Source Files
