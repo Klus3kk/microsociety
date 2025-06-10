@@ -1,0 +1,12 @@
+{
+  "timestamp": "20250610_205258",
+  "epochs": 100,
+  "training_samples": 3042,
+  "validation_samples": 761,
+  "final_epsilon": 0.6057704364907278,
+  "final_loss": 12.406158542633056,
+  "validation_loss": 89.61759705753741,
+  "data_file": "latest_training_data.json",
+  "state_size": 7,
+  "action_size": 11
+}
