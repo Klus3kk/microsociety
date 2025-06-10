@@ -172,7 +172,6 @@ void NPCEntity::performAction(ActionType action, Tile& tile,
     float actionReward = 0.0f;
     bool actionSuccess = false;
 
-    // FIXED: Add action cooldown to prevent spam
     if (currentActionCooldown > 0) {
         getDebugConsole().log("Action", getName() + " is on cooldown, skipping action");
         return;
@@ -184,11 +183,12 @@ void NPCEntity::performAction(ActionType action, Tile& tile,
                 actionPtr = std::make_unique<TreeAction>();
                 actionReward = 10.0f;
                 actionSuccess = true;
-                reduceHealth(0.5f);  // FIXED: Reduced damage
-                consumeEnergy(3.0f); // FIXED: Reasonable energy cost
-                currentActionCooldown = 1.0f; // FIXED: Add cooldown
+                // FIXED: Reduced damage to prevent quick deaths
+                reduceHealth(0.1f);  // Was 0.5f
+                consumeEnergy(1.0f); // Was 3.0f
+                currentActionCooldown = 0.5f; // Was 1.0f
             } else {
-                actionReward = -5.0f;
+                actionReward = -2.0f; // Was -5.0f
             }
             break;
 
@@ -197,11 +197,11 @@ void NPCEntity::performAction(ActionType action, Tile& tile,
                 actionPtr = std::make_unique<StoneAction>();
                 actionReward = 10.0f;
                 actionSuccess = true;
-                reduceHealth(0.8f);
-                consumeEnergy(4.0f);
-                currentActionCooldown = 1.2f;
+                reduceHealth(0.2f);  // Was 0.8f
+                consumeEnergy(1.5f); // Was 4.0f
+                currentActionCooldown = 0.6f; // Was 1.2f
             } else {
-                actionReward = -5.0f;
+                actionReward = -2.0f;
             }
             break;
 
@@ -210,39 +210,34 @@ void NPCEntity::performAction(ActionType action, Tile& tile,
                 actionPtr = std::make_unique<BushAction>();
                 actionReward = 8.0f;
                 actionSuccess = true;
-                reduceHealth(0.3f);
-                consumeEnergy(2.0f);
-                currentActionCooldown = 0.8f;
+                reduceHealth(0.05f); // Was 0.3f
+                consumeEnergy(0.8f); // Was 2.0f
+                currentActionCooldown = 0.4f; // Was 0.8f
             } else {
-                actionReward = -5.0f;
+                actionReward = -2.0f;
             }
             break;
 
         case ActionType::RegenerateEnergy:
-            // FIXED: Only allow energy regeneration at houses, with limits
             if (auto houseObj = dynamic_cast<House*>(tile.getObject())) {
-                if (getEnergy() < getMaxEnergy() * 0.8f) { // Only regenerate if below 80%
+                if (getEnergy() < getMaxEnergy() * 0.9f) { // Was 0.8f - allow more regeneration
                     float energyBefore = getEnergy();
                     houseObj->regenerateEnergy(*this);
                     float energyGained = getEnergy() - energyBefore;
                     
                     if (energyGained > 0) {
-                        actionReward = 5.0f;
+                        actionReward = 8.0f; // Was 5.0f - higher reward
                         actionSuccess = true;
-                        restoreHealth(1.0f); // FIXED: Reduced healing
-                        currentActionCooldown = 2.0f; // FIXED: Longer cooldown to prevent abuse
-                        getDebugConsole().log("Energy", getName() + " regenerated " + 
-                                            std::to_string(energyGained) + " energy at house");
+                        restoreHealth(2.0f); // Was 1.0f - more healing
+                        currentActionCooldown = 1.0f; // Was 2.0f - shorter cooldown
                     } else {
-                        actionReward = -2.0f; // Penalty for unnecessary regeneration
+                        actionReward = -1.0f; // Was -2.0f
                     }
                 } else {
-                    actionReward = -5.0f; // Penalty for trying to regenerate when not needed
-                    getDebugConsole().log("Energy", getName() + " tried to regenerate but energy is already high");
+                    actionReward = -1.0f; // Was -5.0f
                 }
             } else {
-                actionReward = -10.0f; // Big penalty for trying to regenerate without house
-                getDebugConsole().log("Error", getName() + " tried to regenerate energy without a house");
+                actionReward = -3.0f; // Was -10.0f
             }
             break;
 
@@ -418,18 +413,12 @@ void NPCEntity::performAction(ActionType action, Tile& tile,
             break;
     }
 
-    // Execute the action if we have one
     if (actionPtr) {
         actionPtr->perform(*this, tile, tileMap);
     }
     
-    // FIXED: Always provide feedback for learning
     receiveFeedback(actionReward, tileMap);
-    
-    // FIXED: Set state back to idle properly
     setState(NPCState::Idle);
-    
-    // Record the action for stuck detection
     lastAction = action;
 }
 
@@ -485,36 +474,42 @@ void NPCEntity::handleDeath() {
 void NPCEntity::receiveFeedback(float reward, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
     if (useQLearning) {
         if (lastAction == ActionType::None) {
-            lastAction = ActionType::Rest; // Default fallback action.
+            lastAction = ActionType::Rest;
         }
         
         State previousState = currentQLearningState;  
         State nextState = agent.extractState(tileMap, getPosition(), getEnergy(), getInventorySize(), getMaxInventorySize());
 
-        // NEW: Record experience for training data collection
-        if (useTensorFlow) {
-            // Determine if this is a terminal state
+        // DEBUG: Log the feedback call
+        getDebugConsole().log("Feedback", getName() + " receiving feedback: " +
+                            "Action=" + std::to_string(static_cast<int>(lastAction)) +
+                            ", Reward=" + std::to_string(reward) +
+                            ", Collecting=" + (getDataCollector().isCollectingData() ? "YES" : "NO"));
+
+        // Always collect data when data collection is active
+        if (getDataCollector().isCollectingData()) {
             bool isTerminal = (health <= 0.0f) || (energy <= 0.0f) || (getInventorySize() >= getMaxInventorySize());
             
-            // Record the experience
             getDataCollector().recordExperience(
-                previousState,      // Current state
-                lastAction,         // Action taken
-                reward,            // Reward received
-                nextState,         // Next state
-                isTerminal,        // Done flag
-                getName()          // NPC name for tracking
+                previousState,
+                lastAction,
+                reward,
+                nextState,
+                isTerminal,
+                getName()
             );
-            
-            getDebugConsole().log("DataCollection", getName() + " recorded experience: " + 
-                                std::to_string(static_cast<int>(lastAction)) + " -> reward: " + std::to_string(reward));
+        } else {
+            getDebugConsole().log("DataCollection", getName() + " - Data collection not active, skipping experience");
         }
 
-        // Continue with existing Q-learning update
+        // Continue with Q-learning update
         agent.updateQValue(previousState, lastAction, reward, nextState);
         currentQLearningState = nextState;
+    } else {
+        getDebugConsole().log("Feedback", getName() + " - Q-learning disabled, no feedback recorded");
     }
 }
+
 
 // Inventory Capacity Upgrades
 void NPCEntity::upgradeInventoryCapacity(int extraSlots) {
@@ -533,26 +528,25 @@ void NPCEntity::setStrength(float newStrength) { strength = newStrength; }
 void NPCEntity::setSpeed(float newSpeed) { speed = newSpeed; }
 
 void NPCEntity::update(float deltaTime) {
-    // FIXED: Update cooldowns properly
     if (currentActionCooldown > 0) {
         currentActionCooldown -= deltaTime;
         currentActionCooldown = std::max(0.0f, currentActionCooldown);
     }
 
-    // FIXED: Gradual energy decay (not too fast)
+    // FIXED: Much slower energy decay
     if (energy > 0) {
-        float energyDecay = deltaTime * 2.0f; // Slower decay
+        float energyDecay = deltaTime * 0.5f; // Was 2.0f - much slower
         energy = std::max(0.0f, energy - energyDecay);
     }
 
-    // FIXED: Health regeneration over time (slow)
-    if (health > 0 && health < getMaxEnergy()) {
-        float healthRegen = deltaTime * 0.5f;
+    // FIXED: Faster health regeneration
+    if (health > 0 && health < GameConfig::MAX_HEALTH) {
+        float healthRegen = deltaTime * 1.0f; // Was 0.5f - faster regen
         health = std::min(GameConfig::MAX_HEALTH, health + healthRegen);
     }
 
-    // Check for death
-    if (health <= 0.0f || energy <= 0.0f) {
+    // FIXED: Don't die from low energy immediately
+    if (health <= 0.0f) {  // Only die from health, not energy
         setDead(true);
         handleDeath();
     }

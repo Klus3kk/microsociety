@@ -107,6 +107,7 @@ void DebugConsole::logOnce(const std::string& category, const std::string& messa
     }
 }
 
+
 // Log system stats such as FPS and memory usage
 void DebugConsole::logSystemStats(float fps, size_t memoryUsage) {
     std::ostringstream oss;

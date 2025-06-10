@@ -42,19 +42,20 @@ Game::Game()
 
     ui.updateNPCEntityList(npcs);
     
+    getDebugConsole().log("DataCollection", "Initializing data collection system...");
+    getDataCollector().startCollection();
+    getDataCollector().setMaxExperiencesPerFile(100); // Lower threshold for testing
+    
+    // TEST
+    State testState = {5, 5, 1, 1, 1, 2, 1};
+    State testNextState = {5, 5, 1, 1, 1, 1, 2};
+    getDataCollector().recordExperience(testState, ActionType::ChopTree, 10.0f, testNextState, false, "TEST_NPC");
+    
+    
     // Initialize TensorFlow if enabled
     if (tensorFlowEnabled) {
-        getDebugConsole().log("TensorFlow", "Initializing TensorFlow integration...");
-        getDebugConsole().log("DataCollection", "Starting data collection mode for training...");
-        
-        // Start data collection
-        getDataCollector().startCollection();
-        getDataCollector().setMaxExperiencesPerFile(5000); // Save every 5000 experiences
-        
         initializeNPCTensorFlow();
     }
-    
-    // Player will be created when enableSinglePlayerMode(true) is called
 }
 
 // Destructor
@@ -251,6 +252,14 @@ void Game::handlePlayerInput() {
     } else {
         eKeyPressed = false;
     }
+}
+
+void Game::updatePersistentStats() {
+    persistentStats.totalItemsGatheredAllTime += getTotalItemsGathered();
+    persistentStats.totalItemsSoldAllTime += market.getTotalItemsSold();
+    persistentStats.totalMoneySpentAllTime += MoneyManager::getTotalMoneySpent();
+    persistentStats.totalMoneyEarnedAllTime += MoneyManager::getTotalMoneyEarned();
+    persistentStats.totalIterations++;
 }
 
 void Game::updatePlayer() {
@@ -535,12 +544,41 @@ void Game::simulateNPCEntityBehavior(float deltaTime) {
         ++it;
     }
     
-    // Restart simulation if all NPCs die (only in non-single player mode)
     if (npcs.empty() && !singlePlayerMode) {
-        getDebugConsole().log("SYSTEM", "All NPCs have died. Restarting simulation...");
+        getDebugConsole().log("SYSTEM", "All NPCs died. Processing final data...");
+        
+        // DETAILED: Save and export all data before reset
+        if (getDataCollector().isCollectingData()) {
+            size_t currentBatchSize = getDataCollector().getCurrentBatchSize();
+            size_t totalExp = getDataCollector().getTotalExperiences();
+            
+            getDebugConsole().log("DataCollection", 
+                "Final data state: " + std::to_string(currentBatchSize) + " in current batch, " +
+                std::to_string(totalExp) + " total saved experiences");
+            
+            if (currentBatchSize > 0) {
+                getDebugConsole().log("DataCollection", "Force-saving final batch...");
+                getDataCollector().forceSaveCurrentBatch();
+            }
+            
+            // Export everything to CSV and JSON for training
+            std::string timestamp = std::to_string(std::time(nullptr));
+            getDataCollector().exportToCSV("final_training_data_" + timestamp + ".csv");
+            getDataCollector().exportToJSON("final_training_data_" + timestamp + ".json");
+            
+            // Print final statistics
+            getDataCollector().printStatistics();
+            getDataCollector().analyzeDataQuality();
+        }
+        
+        // Log stats while data is still available
+        logIterationStats(timeManager.getSocietyIteration() + 1);
+        
+        getDebugConsole().log("SYSTEM", "Restarting simulation...");
         resetSimulation();
     }
 }
+
 
 void Game::handleMarketActions(NPCEntity& npc, Tile& targetTile, ActionType actionType) {
     if (!targetTile.hasObject()) {
@@ -912,7 +950,10 @@ std::vector<NPCEntity> Game::generateNPCEntitys() const {
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> distX(0, GameConfig::mapWidth - 1);
     std::uniform_int_distribution<> distY(0, GameConfig::mapHeight - 1);
-    std::uniform_int_distribution<> statDist(50, 150);
+    // FIXED: Better stat distribution - higher minimums
+    std::uniform_int_distribution<> healthDist(80, 120);  // Was 50-150
+    std::uniform_int_distribution<> energyDist(80, 120);  // Was 50-150
+    std::uniform_int_distribution<> moneyDist(100, 200);  // Was 50-150
 
     for (int i = 0; i < GameConfig::NPCEntityCount; ++i) {
         int x, y;
@@ -924,22 +965,26 @@ std::vector<NPCEntity> Game::generateNPCEntitys() const {
         occupiedPositions.insert({x, y});
 
         sf::Color NPCEntityColor(rand() % 256, rand() % 256, rand() % 256);
-        bool enableQLearning = (i % 2 == 0); // Enable Q-learning for every other NPC
+        bool enableQLearning = true; // Enable for all NPCs for better data collection
 
         try {
-            NPCEntity npc("NPC" + std::to_string(i + 1), statDist(gen), statDist(gen), statDist(gen),
-                          150.0f, 10, statDist(gen), enableQLearning);
+            NPCEntity npc("NPC" + std::to_string(i + 1), 
+                         healthDist(gen),    // Better health
+                         70.0f,              // Fixed hunger
+                         energyDist(gen),    // Better energy
+                         150.0f,             // Speed
+                         10,                 // Strength
+                         moneyDist(gen),     // Better starting money
+                         enableQLearning);
+            
             npc.setTexture(playerTexture, NPCEntityColor);
             npc.setPosition(x * GameConfig::tileSize, y * GameConfig::tileSize);
-            
-            // FIXED: Assign house reference - use const_cast for this special case
             npc.setHouse(const_cast<House*>(&house));
 
-            if (enableQLearning) {
-                getDebugConsole().log("DEBUG", npc.getName() + " has Q-Learning enabled.");
-            } else {
-                getDebugConsole().log("DEBUG", npc.getName() + " uses simple behavior.");
-            }
+            getDebugConsole().log("NPC", "Created " + npc.getName() + 
+                                " with Health=" + std::to_string(npc.getHealth()) + 
+                                ", Energy=" + std::to_string(npc.getEnergy()) + 
+                                ", Money=" + std::to_string(npc.getMoney()));
 
             npcs.emplace_back(std::move(npc));
         } catch (const std::exception& e) {
@@ -1008,6 +1053,9 @@ void Game::drawTileBorders() {
 }
 
 void Game::logIterationStats(int iteration) {
+    // Update persistent stats before logging
+    updatePersistentStats();
+    
     nlohmann::json statsJson;
     statsJson["iteration"] = iteration;
     statsJson["total_npcs"] = npcs.size();
@@ -1018,26 +1066,62 @@ void Game::logIterationStats(int iteration) {
     statsJson["items_gathered"] = getTotalItemsGathered();
     statsJson["market_prices"] = market.getPrices();
     
+    // ADDED: Persistent stats
+    statsJson["persistent_stats"] = {
+        {"total_iterations", persistentStats.totalIterations},
+        {"total_items_gathered_all_time", persistentStats.totalItemsGatheredAllTime},
+        {"total_items_sold_all_time", persistentStats.totalItemsSoldAllTime},
+        {"total_money_spent_all_time", persistentStats.totalMoneySpentAllTime},
+        {"total_money_earned_all_time", persistentStats.totalMoneyEarnedAllTime}
+    };
+    
+    // ADDED: Data collection stats
+    if (getDataCollector().isCollectingData()) {
+        statsJson["data_collection"] = {
+            {"total_experiences", getDataCollector().getTotalExperiences()},
+            {"current_batch_size", getDataCollector().getCurrentBatchSize()}
+        };
+    }
+    
     std::ofstream file("stats.json", std::ios::app);
     file << statsJson.dump(4) << std::endl;
+    
+    getDebugConsole().log("STATS", "Logged iteration " + std::to_string(iteration) + " stats: " +
+                        "NPCs=" + std::to_string(npcs.size()) + 
+                        ", Items=" + std::to_string(getTotalItemsGathered()) +
+                        ", Experiences=" + std::to_string(getDataCollector().getTotalExperiences()));
 }
 
 int Game::getTotalItemsGathered() const {
     int totalGathered = 0;
+    
+    // Count from living NPCs
     for (const auto& npc : npcs) {
-        totalGathered += npc.getTotalItemsGathered(); // Use the new method
+        if (!npc.isDead()) {
+            totalGathered += npc.getTotalItemsGathered();
+        }
     }
     
     // Add player's gathered items in single player mode
     if (singlePlayerMode && player) {
-        // For players, we can count their current inventory as "gathered"
         const auto& inventory = player->getInventory();
         for (const auto& [item, quantity] : inventory) {
             totalGathered += quantity;
         }
     }
     
-    getDebugConsole().log("STATS", "Total items gathered: " + std::to_string(totalGathered));
+    // FIXED: Also count items in house storage and market transactions
+    const auto& houseStorage = house.getStorage();
+    for (const auto& [item, quantity] : houseStorage) {
+        totalGathered += quantity;
+    }
+    
+    // Add items sold to market
+    totalGathered += market.getTotalItemsSold();
+    
+    getDebugConsole().log("STATS", "Total items gathered (NPCs: " + std::to_string(totalGathered - market.getTotalItemsSold()) + 
+                        ", Sold: " + std::to_string(market.getTotalItemsSold()) + 
+                        ", Total: " + std::to_string(totalGathered) + ")");
     return totalGathered;
 }
 
@@ -1059,7 +1143,6 @@ void Game::resetSimulation() {
         getDataCollector().startCollection(); // Restart for next iteration
         getDebugConsole().log("DataCollection", "Saved iteration " + std::to_string(iterationCounter) + " training data");
     }
-    logIterationStats(iterationCounter);
 
     clockGUI.reset();
     timeManager.incrementSocietyIteration();

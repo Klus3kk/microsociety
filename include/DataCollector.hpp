@@ -63,7 +63,7 @@ private:
     bool isCollecting = false;
     size_t maxExperiencesPerFile = 10000;
     size_t currentFileIndex = 0;
-    std::mutex dataMutex;
+    mutable std::mutex dataMutex;
     
     // Statistics
     size_t totalExperiences = 0;
@@ -80,6 +80,10 @@ public:
     DataCollector(const std::string& outputDir = "training_data");
     ~DataCollector();
     
+    void forceSaveCurrentBatch();
+
+    std::vector<ExperienceData> getCurrentBatch() const;
+
     // Main interface
     void startCollection();
     void stopCollection();

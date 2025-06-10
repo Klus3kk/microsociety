@@ -10,32 +10,30 @@ void TreeAction::perform(Entity& entity, Tile& tile, const std::vector<std::vect
         if (auto* npc = dynamic_cast<NPCEntity*>(&entity)) {
             if (npc->addToInventory("wood", 1)) {
                 tile.removeObject();
-                npc->consumeEnergy(5.0f);
+                npc->consumeEnergy(1.0f); // Reduced from 5.0f
                 npc->receiveFeedback(10.0f, tileMap);
                 
-                // FIXED: Track items gathered
+                // ENSURE: Track items gathered
                 npc->incrementItemsGathered("wood", 1);
                 
-                getDebugConsole().log("TreeAction", "Tree chopped! Wood added to inventory.");
+                getDebugConsole().log("TreeAction", npc->getName() + " chopped tree! Wood added to inventory. Total gathered: " + 
+                                    std::to_string(npc->getTotalItemsGathered()));
             } else {
                 npc->receiveFeedback(-2.0f, tileMap);
-                getDebugConsole().logOnce("TreeAction", "Inventory full. Cannot chop tree.");
+                getDebugConsole().log("TreeAction", npc->getName() + " inventory full. Cannot chop tree.");
             }
         }
         else if (auto* player = dynamic_cast<PlayerEntity*>(&entity)) {
             if (player->addToInventory("wood", 1)) {
                 tile.removeObject();
-                player->consumeEnergy(5.0f);
-                getDebugConsole().log("TreeAction", "Tree chopped! Wood added to inventory.");
-            } else {
-                getDebugConsole().logOnce("TreeAction", "Inventory full. Cannot chop tree.");
+                player->consumeEnergy(1.0f);
+                getDebugConsole().log("TreeAction", "Player chopped tree! Wood added to inventory.");
             }
         }
     } else {
         if (auto* npc = dynamic_cast<NPCEntity*>(&entity)) {
-            npc->receiveFeedback(-5.0f, tileMap);
+            npc->receiveFeedback(-2.0f, tileMap); // Reduced penalty
         }
-        getDebugConsole().logOnce("TreeAction", "No tree to chop on this tile.");
     }
 }
 

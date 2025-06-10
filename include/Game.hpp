@@ -85,6 +85,16 @@ private:
     // Player cleanup helper
     void cleanupPlayer();
 
+    struct SimulationStats {
+        int totalItemsGatheredAllTime = 0;
+        int totalItemsSoldAllTime = 0;
+        int totalIterations = 0;
+        int totalMoneySpentAllTime = 0;
+        int totalMoneyEarnedAllTime = 0;
+    } persistentStats;
+    
+    void updatePersistentStats();
+
 public:
     // Constructor
     Game();
