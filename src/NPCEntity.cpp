@@ -105,26 +105,29 @@ bool NPCEntity::addToInventory(const std::string& item, int quantity) {
 
 bool NPCEntity::removeFromInventory(const std::string& item, int quantity) {
     if (item.empty()) {
-        getDebugConsole().log("ERROR", getName() + " removeFromInventory() received an EMPTY item name.");
+        getDebugConsole().log("ERROR", name + " removeFromInventory() received an EMPTY item name.");
         return false;
     }
 
     auto it = inventory.find(item);
     if (it == inventory.end()) {
-        getDebugConsole().log("ERROR", getName() + " attempted to remove an item that DOES NOT EXIST: " + item);
+        getDebugConsole().log("ERROR", name + " attempted to remove an item that DOES NOT EXIST: " + item);
         return false;
     }
 
     if (it->second < quantity) {
-        getDebugConsole().log("ERROR", getName() + " tried to remove more items than they HAVE: " + item);
+        getDebugConsole().log("ERROR", name + " tried to remove more items than they HAVE: " + item);
         return false;
     }
 
-    std::string itemCopy = item;
+    // FIXED: Store item name BEFORE modifying iterator
+    std::string itemName = it->first;
     it->second -= quantity;
-    if (it->second <= 0) inventory.erase(it); // Remove if quantity reaches zero
+    if (it->second <= 0) {
+        inventory.erase(it); // Remove if quantity reaches zero
+    }
 
-    getDebugConsole().log("Inventory", getName() + " removed " + std::to_string(quantity) + " " + item);
+    getDebugConsole().log("Inventory", name + " removed " + std::to_string(quantity) + " " + itemName);
     return true;
 }
 
@@ -289,33 +292,43 @@ void NPCEntity::performAction(ActionType action, Tile& tile,
             }
             break;
 
-        case ActionType::SellItem:
-            // FIXED: Proper market selling with tracking
+            case ActionType::SellItem:
+            // FIXED: Proper market selling with tracking and null checks
             if (tile.hasObject() && tile.getObject()->getType() == ObjectType::Market) {
                 auto* marketObj = dynamic_cast<Market*>(tile.getObject());
                 if (marketObj) {
-                    // Find items to sell (keep some for upgrades)
+                    // Find items to sell (keep some for upgrades) - safer iteration
                     std::vector<std::pair<std::string, int>> itemsToSell;
-                    for (const auto& [item, quantity] : inventory) {
+                    for (const auto& inventoryPair : inventory) {
+                        const std::string& itemName = inventoryPair.first;
+                        int quantity = inventoryPair.second;
                         if (quantity > 2) { // Keep 2 of each item
-                            itemsToSell.push_back({item, std::min(quantity - 2, 3)}); // Sell max 3
+                            itemsToSell.push_back({itemName, std::min(quantity - 2, 3)}); // Sell max 3
                         }
                     }
                     
                     bool soldSomething = false;
                     if (!itemsToSell.empty()) {
-                        auto [selectedItem, sellQuantity] = itemsToSell[0];
-                        float expectedRevenue = marketObj->calculateSellPrice(selectedItem) * sellQuantity;
+                        const auto& sellPair = itemsToSell[0];
+                        const std::string& selectedItem = sellPair.first;
+                        int sellQuantity = sellPair.second;
                         
-                        if (marketObj->sellItem(*this, selectedItem, sellQuantity)) {
-                            actionReward = 12.0f;
-                            soldSomething = true;
-                            restoreHealth(1.0f);
-                            consumeEnergy(1.0f);
-                            currentActionCooldown = 1.5f;
-                            getDebugConsole().log("MARKET", getName() + " sold " + 
-                                                std::to_string(sellQuantity) + " " + selectedItem + 
-                                                " for $" + std::to_string(expectedRevenue));
+                        // Validate we still have the item before selling
+                        if (getInventoryItemCount(selectedItem) >= sellQuantity) {
+                            float expectedRevenue = marketObj->calculateSellPrice(selectedItem) * sellQuantity;
+                            
+                            if (marketObj->sellItem(*this, selectedItem, sellQuantity)) {
+                                actionReward = 12.0f;
+                                soldSomething = true;
+                                restoreHealth(1.0f);
+                                consumeEnergy(1.0f);
+                                currentActionCooldown = 1.5f;
+                                getDebugConsole().log("MARKET", getName() + " sold " + 
+                                                    std::to_string(sellQuantity) + " " + selectedItem + 
+                                                    " for $" + std::to_string(expectedRevenue));
+                            }
+                        } else {
+                            getDebugConsole().log("MARKET", getName() + " inventory changed, cannot sell " + selectedItem);
                         }
                     }
                     
@@ -331,21 +344,33 @@ void NPCEntity::performAction(ActionType action, Tile& tile,
                 actionReward = -5.0f;
             }
             break;
-
+            
         case ActionType::StoreItem:
             if (auto houseObj = dynamic_cast<House*>(tile.getObject())) {
                 bool storedSomething = false;
-                for (const auto& [item, quantity] : inventory) {
+                // FIXED: Safer inventory iteration to avoid iterator invalidation
+                std::vector<std::pair<std::string, int>> inventorySnapshot;
+                for (const auto& inventoryPair : inventory) {
+                    inventorySnapshot.push_back({inventoryPair.first, inventoryPair.second});
+                }
+                
+                for (const auto& itemPair : inventorySnapshot) {
+                    const std::string& itemName = itemPair.first;
+                    int quantity = itemPair.second;
                     if (quantity > 0) {
                         int storeAmount = std::min(quantity, 5); // Store up to 5 at a time
-                        if (houseObj->storeItem(item, storeAmount)) {
-                            removeFromInventory(item, storeAmount);
-                            actionReward = 3.0f * storeAmount;
-                            storedSomething = true;
-                            currentActionCooldown = 1.0f;
-                            getDebugConsole().log("HOUSE", getName() + " stored " + 
-                                                std::to_string(storeAmount) + " " + item);
-                            break; // Store one type at a time
+                        // Verify we still have this amount
+                        if (getInventoryItemCount(itemName) >= storeAmount) {
+                            if (houseObj->storeItem(itemName, storeAmount)) {
+                                if (removeFromInventory(itemName, storeAmount)) {
+                                    actionReward = 3.0f * storeAmount;
+                                    storedSomething = true;
+                                    currentActionCooldown = 1.0f;
+                                    getDebugConsole().log("HOUSE", getName() + " stored " + 
+                                                        std::to_string(storeAmount) + " " + itemName);
+                                    break; // Store one type at a time
+                                }
+                            }
                         }
                     }
                 }

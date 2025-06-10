@@ -92,7 +92,10 @@ void Game::enableSinglePlayerMode(bool enable) {
     if (enable) {
         getDebugConsole().log("Player", "Enabling single player mode...");
         
-        // Clear existing NPCs and create exactly ONE companion
+        // Clean up existing player first
+        cleanupPlayer();
+        
+        // Clear existing NPCs
         npcs.clear();
         
         // Create exactly one NPC for single player mode
@@ -101,48 +104,48 @@ void Game::enableSinglePlayerMode(bool enable) {
         std::uniform_int_distribution<> distX(1, GameConfig::mapWidth - 2);
         std::uniform_int_distribution<> distY(1, GameConfig::mapHeight - 2);
         
-        // Create NPC companion
-        NPCEntity singleNPC("Companion", 100, 50, 100, 150.0f, 10, 100, reinforcementLearningEnabled);
-        singleNPC.setTexture(playerTexture, sf::Color::Blue); // Blue color to distinguish from player
-        
-        float npcX = distX(gen) * GameConfig::tileSize;
-        float npcY = distY(gen) * GameConfig::tileSize;
-        singleNPC.setPosition(npcX, npcY);
-        
-        npcs.emplace_back(std::move(singleNPC));
-        getDebugConsole().log("Player", "Created NPC companion at (" + std::to_string(npcX) + ", " + std::to_string(npcY) + ")");
-        
-        // Clean up existing player if any
-        cleanupPlayer();
+        try {
+            // Create NPC companion with proper initialization
+            NPCEntity singleNPC("Companion", 100, 50, 100, 150.0f, 10, 100, reinforcementLearningEnabled);
+            singleNPC.setTexture(playerTexture, sf::Color::Blue); // Blue color to distinguish from player
+            
+            float npcX = distX(gen) * GameConfig::tileSize;
+            float npcY = distY(gen) * GameConfig::tileSize;
+            singleNPC.setPosition(npcX, npcY);
+            singleNPC.setHouse(&house); // Assign house reference
+            
+            npcs.emplace_back(std::move(singleNPC));
+            getDebugConsole().log("Player", "Created NPC companion at (" + std::to_string(npcX) + ", " + std::to_string(npcY) + ")");
+        } catch (const std::exception& e) {
+            getDebugConsole().log("ERROR", "Failed to create NPC companion: " + std::string(e.what()));
+            return;
+        }
         
         // Create player
-        player = new PlayerEntity(
-            "Player", 
-            120.0f,     // Health
-            60.0f,      // Hunger  
-            100.0f,     // Energy
-            200.0f,     // Speed
-            15.0f,      // Strength
-            200.0f      // Money
-        );
-        
-        // Set player texture and position
-        player->setTexture(playerTexture, sf::Color::White);
-        
-        float playerX = distX(gen) * GameConfig::tileSize;
-        float playerY = distY(gen) * GameConfig::tileSize;
-        player->setPosition(playerX, playerY);
-        
-        getDebugConsole().log("Player", "Created player at (" + std::to_string(playerX) + ", " + std::to_string(playerY) + ")");
-        getDebugConsole().log("Player", "Single player mode: Created 1 player + 1 NPC companion");
-        
-        // Verify creation
-        if (!player) {
-            getDebugConsole().log("ERROR", "Failed to create player!");
-        } else if (npcs.empty()) {
-            getDebugConsole().log("ERROR", "Failed to create NPC companion!");
-        } else {
+        try {
+            player = new PlayerEntity(
+                "Player", 
+                120.0f,     // Health
+                60.0f,      // Hunger  
+                100.0f,     // Energy
+                200.0f,     // Speed
+                15.0f,      // Strength
+                200.0f      // Money
+            );
+            
+            // Set player texture and position
+            player->setTexture(playerTexture, sf::Color::White);
+            
+            float playerX = distX(gen) * GameConfig::tileSize;
+            float playerY = distY(gen) * GameConfig::tileSize;
+            player->setPosition(playerX, playerY);
+            
+            getDebugConsole().log("Player", "Created player at (" + std::to_string(playerX) + ", " + std::to_string(playerY) + ")");
             getDebugConsole().log("SUCCESS", "Single player mode setup complete");
+        } catch (const std::exception& e) {
+            getDebugConsole().log("ERROR", "Failed to create player: " + std::string(e.what()));
+            cleanupPlayer();
+            return;
         }
         
     } else if (!enable && player) {
@@ -939,18 +942,25 @@ std::vector<NPCEntity> Game::generateNPCEntitys() const {
         sf::Color NPCEntityColor(rand() % 256, rand() % 256, rand() % 256);
         bool enableQLearning = (i % 2 == 0); // Enable Q-learning for every other NPC
 
-        NPCEntity npc("NPC" + std::to_string(i + 1), statDist(gen), statDist(gen), statDist(gen),
-                      150.0f, 10, statDist(gen), enableQLearning);
-        npc.setTexture(playerTexture, NPCEntityColor);
-        npc.setPosition(x * GameConfig::tileSize, y * GameConfig::tileSize);
+        try {
+            NPCEntity npc("NPC" + std::to_string(i + 1), statDist(gen), statDist(gen), statDist(gen),
+                          150.0f, 10, statDist(gen), enableQLearning);
+            npc.setTexture(playerTexture, NPCEntityColor);
+            npc.setPosition(x * GameConfig::tileSize, y * GameConfig::tileSize);
+            
+            // FIXED: Assign house reference - use const_cast for this special case
+            npc.setHouse(const_cast<House*>(&house));
 
-        if (enableQLearning) {
-            getDebugConsole().log("DEBUG", npc.getName() + " has Q-Learning enabled.");
-        } else {
-            getDebugConsole().log("DEBUG", npc.getName() + " uses simple behavior.");
+            if (enableQLearning) {
+                getDebugConsole().log("DEBUG", npc.getName() + " has Q-Learning enabled.");
+            } else {
+                getDebugConsole().log("DEBUG", npc.getName() + " uses simple behavior.");
+            }
+
+            npcs.emplace_back(std::move(npc));
+        } catch (const std::exception& e) {
+            getDebugConsole().log("ERROR", "Failed to create NPC " + std::to_string(i + 1) + ": " + std::string(e.what()));
         }
-
-        npcs.emplace_back(std::move(npc));
     }
     return npcs;
 }
