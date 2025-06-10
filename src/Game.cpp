@@ -44,6 +44,12 @@ Game::Game()
     // Initialize TensorFlow if enabled
     if (tensorFlowEnabled) {
         getDebugConsole().log("TensorFlow", "Initializing TensorFlow integration...");
+        getDebugConsole().log("DataCollection", "Starting data collection mode for training...");
+        
+        // Start data collection
+        getDataCollector().startCollection();
+        getDataCollector().setMaxExperiencesPerFile(5000); // Save every 5000 experiences
+        
         initializeNPCTensorFlow();
     }
     
@@ -53,6 +59,23 @@ Game::Game()
 // Destructor
 Game::~Game() {
     cleanupPlayer();
+    
+    // Save collected training data when exiting
+    if (tensorFlowEnabled) {
+        getDebugConsole().log("DataCollection", "Saving collected training data...");
+        getDataCollector().stopCollection();
+        
+        // Export data in multiple formats for Python training
+        getDataCollector().exportToJSON("training_data.json");
+        getDataCollector().exportToCSV("training_data.csv");
+        
+        // Print collection statistics
+        getDataCollector().printStatistics();
+        getDataCollector().analyzeDataQuality();
+        
+        getDebugConsole().log("DataCollection", "Data collection complete. Total experiences: " + 
+                            std::to_string(getDataCollector().getTotalExperiences()));
+    }
 }
 
 void Game::cleanupPlayer() {
@@ -139,38 +162,66 @@ void Game::enableSinglePlayerMode(bool enable) {
 }
 
 void Game::initializeNPCTensorFlow() {
-#ifdef USE_TENSORFLOW
-    getDebugConsole().log("TensorFlow", "TensorFlow C API version: " + std::string(TF_Version()));
-    
-    // Check if TF model file exists
-    std::ifstream modelFile("models/npc_rl_model.tflite");
-    if (!modelFile.good()) {
-        getDebugConsole().log("TensorFlow", "TensorFlow model file not found. Using default Q-learning instead.", LogLevel::Warning);
-        tensorFlowEnabled = false;
-        return;
-    }
-    
-    getDebugConsole().log("TensorFlow", "TensorFlow model found, integration enabled.");
-    
-    // Initialize TensorFlow models for NPCs
-    auto tfModel = std::make_shared<TensorFlowWrapper>();
-    if (tfModel->initialize("models/npc_rl_model.tflite")) {
-        getDebugConsole().log("TensorFlow", "TensorFlow model loaded successfully.");
+    #ifdef USE_TENSORFLOW
+        getDebugConsole().log("TensorFlow", "TensorFlow C API version: " + std::string(TF_Version()));
         
-        // Apply TF model to NPCs
-        for (auto& npc : npcs) {
-            npc.setTensorFlowModel(tfModel);
-            npc.enableTensorFlow(true);
+        // Check if TF model file exists
+        std::ifstream modelFile("models/npc_rl_model.tflite");
+        if (!modelFile.good()) {
+            getDebugConsole().log("TensorFlow", "No pre-trained model found. Running in DATA COLLECTION mode.", LogLevel::Warning);
+            getDebugConsole().log("TensorFlow", "NPCs will use random/exploration actions to gather training data.");
+            
+            // Enable TensorFlow mode on NPCs but without model (for data collection)
+            for (auto& npc : npcs) {
+                npc.setTensorFlowModel(nullptr); // No model = data collection mode
+                npc.enableTensorFlow(true);      // Enable TF flag for data collection
+            }
+            
+            return;
         }
-    } else {
-        getDebugConsole().log("TensorFlow", "Failed to load TensorFlow model", LogLevel::Error);
+        
+        getDebugConsole().log("TensorFlow", "Pre-trained model found, loading for inference...");
+        
+        // Initialize TensorFlow models for NPCs
+        auto tfModel = std::make_shared<TensorFlowWrapper>();
+        if (tfModel->initialize("models/npc_rl_model.tflite")) {
+            getDebugConsole().log("TensorFlow", "TensorFlow model loaded successfully.");
+            
+            // Apply TF model to NPCs
+            for (auto& npc : npcs) {
+                npc.setTensorFlowModel(tfModel);
+                npc.enableTensorFlow(true);
+            }
+        } else {
+            getDebugConsole().log("TensorFlow", "Failed to load TensorFlow model, switching to data collection mode", LogLevel::Error);
+            
+            // Fallback to data collection mode
+            for (auto& npc : npcs) {
+                npc.setTensorFlowModel(nullptr);
+                npc.enableTensorFlow(true);
+            }
+        }
+        
+    #else
+        getDebugConsole().log("TensorFlow", "TensorFlow support not compiled in. Using default Q-learning instead.", LogLevel::Warning);
         tensorFlowEnabled = false;
+    #endif
+}
+
+void Game::checkDataCollectionProgress() {
+    if (tensorFlowEnabled && getDataCollector().isCollectingData()) {
+        size_t totalExperiences = getDataCollector().getTotalExperiences();
+        
+        // Auto-export every 10,000 experiences for training
+        if (totalExperiences > 0 && totalExperiences % 10000 == 0) {
+            getDebugConsole().log("DataCollection", "Reached " + std::to_string(totalExperiences) + 
+                                " experiences. Exporting batch for training...");
+            
+            std::string filename = "batch_" + std::to_string(totalExperiences / 10000) + "_data.csv";
+            getDataCollector().exportToCSV(filename);
+            getDataCollector().printStatistics();
+        }
     }
-    
-#else
-    getDebugConsole().log("TensorFlow", "TensorFlow support not compiled in. Using default Q-learning instead.", LogLevel::Warning);
-    tensorFlowEnabled = false;
-#endif
 }
 
 void Game::handlePlayerInput() {
@@ -294,6 +345,9 @@ void Game::run() {
         // Always simulate NPCs (1 in single player, many in other modes)
         simulateNPCEntityBehavior(deltaTime * simulationSpeed);
         simulateSocietalGrowth(deltaTime * simulationSpeed);
+
+        // NEW: Check data collection progress
+        checkDataCollectionProgress();
 
         // Update UI
         ui.updateMoney(singlePlayerMode && player ? 
@@ -890,6 +944,12 @@ void Game::resetSimulation() {
 
     getDebugConsole().log("SYSTEM", "Resetting simulation... Iteration " + std::to_string(iterationCounter));
 
+    if (tensorFlowEnabled) {
+        getDataCollector().stopCollection();
+        getDataCollector().exportToJSON("iteration_" + std::to_string(iterationCounter) + "_data.json");
+        getDataCollector().startCollection(); // Restart for next iteration
+        getDebugConsole().log("DataCollection", "Saved iteration " + std::to_string(iterationCounter) + " training data");
+    }
     logIterationStats(iterationCounter);
 
     clockGUI.reset();

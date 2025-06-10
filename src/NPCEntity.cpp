@@ -2,6 +2,7 @@
 #include "House.hpp"
 #include "Market.hpp" 
 #include "Actions.hpp"
+#include "DataCollector.hpp"
 
 #include <algorithm>
 #include <numeric>
@@ -441,6 +442,26 @@ void NPCEntity::receiveFeedback(float reward, const std::vector<std::vector<std:
         State previousState = currentQLearningState;  
         State nextState = agent.extractState(tileMap, getPosition(), getEnergy(), getInventorySize(), getMaxInventorySize());
 
+        // NEW: Record experience for training data collection
+        if (useTensorFlow) {
+            // Determine if this is a terminal state
+            bool isTerminal = (health <= 0.0f) || (energy <= 0.0f) || (getInventorySize() >= getMaxInventorySize());
+            
+            // Record the experience
+            getDataCollector().recordExperience(
+                previousState,      // Current state
+                lastAction,         // Action taken
+                reward,            // Reward received
+                nextState,         // Next state
+                isTerminal,        // Done flag
+                getName()          // NPC name for tracking
+            );
+            
+            getDebugConsole().log("DataCollection", getName() + " recorded experience: " + 
+                                std::to_string(static_cast<int>(lastAction)) + " -> reward: " + std::to_string(reward));
+        }
+
+        // Continue with existing Q-learning update
         agent.updateQValue(previousState, lastAction, reward, nextState);
         currentQLearningState = nextState;
     }
@@ -535,12 +556,37 @@ ActionType NPCEntity::decideNextAction(const std::vector<std::vector<std::unique
                                     const House& house, Market& market) {
     ActionType action = ActionType::None;  
 
-    if (useTensorFlow && tfModel) {
+    if (useTensorFlow && tfModel && tfModel->isModelLoaded()) {
         // Use TensorFlow for decision making
         currentQLearningState = extractState(tileMap);
         action = tfModel->predictAction(currentQLearningState);
         getDebugConsole().log("TensorFlow", getName() + " used TF model to choose action: " + 
                             std::to_string(static_cast<int>(action)));
+    }
+    else if (useTensorFlow && !tfModel) {
+        // DATA COLLECTION MODE: Use random/exploration actions to gather diverse training data
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<int> actionDist(1, static_cast<int>(ActionType::Rest));
+        
+        // 80% random exploration, 20% rule-based for some structure
+        std::uniform_real_distribution<float> exploration(0.0f, 1.0f);
+        if (exploration(gen) < 0.8f) {
+            action = static_cast<ActionType>(actionDist(gen));
+            getDebugConsole().log("DataCollection", getName() + " using random exploration action: " + 
+                                std::to_string(static_cast<int>(action)));
+        } else {
+            // Use simple rule-based behavior for 20% of actions
+            if (getEnergy() < 10.0f) {
+                action = ActionType::RegenerateEnergy;
+            } else if (getInventorySize() >= getMaxInventorySize()) {
+                action = ActionType::StoreItem;
+            } else {
+                action = static_cast<ActionType>(actionDist(gen));
+            }
+            getDebugConsole().log("DataCollection", getName() + " using rule-based action: " + 
+                                std::to_string(static_cast<int>(action)));
+        }
     }
     else if (useQLearning) {
         // Use Q-learning (existing code)
@@ -554,7 +600,6 @@ ActionType NPCEntity::decideNextAction(const std::vector<std::vector<std::unique
         } 
         else if (getInventorySize() >= getMaxInventorySize()) {
             if (house.isStorageFull()) {
-                // If house storage is also full, randomly sell items
                 action = ActionType::SellItem;
             } else {
                 action = ActionType::StoreItem;
@@ -563,7 +608,7 @@ ActionType NPCEntity::decideNextAction(const std::vector<std::vector<std::unique
         else if (getInventoryItemCount("wood") >= house.getWoodRequirement() &&
                 getInventoryItemCount("stone") >= house.getStoneRequirement() &&
                 getInventoryItemCount("bush") >= house.getBushRequirement()) {
-            action = ActionType::StoreItem; // Store before upgrading
+            action = ActionType::StoreItem;
         } 
         else if (house.isUpgradeAvailable(getMoney())) {  
             action = ActionType::UpgradeHouse; 
@@ -593,7 +638,7 @@ ActionType NPCEntity::decideNextAction(const std::vector<std::vector<std::unique
     if (action == ActionType::None) {
         static std::mt19937 rng(std::random_device{}()); 
         std::uniform_int_distribution<int> actionDist(1, static_cast<int>(ActionType::SellItem));
-        action = static_cast<ActionType>(actionDist(rng));  // Randomize actions
+        action = static_cast<ActionType>(actionDist(rng));
         getDebugConsole().log("DEBUG", getName() + " was stuck, randomizing action to: " + std::to_string(static_cast<int>(action)));
     }
 
