@@ -6,102 +6,161 @@
 
 ## Description
 
-MicroSociety is an object-oriented simulation project that models a dynamic society with AI-driven behaviors, events, and interactions. The project uses AI to create a lively, ever-changing environment.
+MicroSociety is an object-oriented simulation project that models a dynamic society with AI-driven behaviors, events, and interactions. The project uses AI to create a lively, ever-changing environment with support for both traditional Q-learning and advanced TensorFlow-based deep learning.
 
 ## Setup Options
 
-MicroSociety offers two setup options:
+MicroSociety offers flexible setup options depending on your platform and AI requirements:
 
-- **With TensorFlow (Docker-based)**: Enables advanced AI capabilities using TensorFlow.
-- **Without TensorFlow (Local build)**: Provides a simpler setup without TensorFlow dependencies.
+- **With TensorFlow (Linux/macOS/Docker)**: Full AI capabilities including deep Q-learning with TensorFlow
+- **Without TensorFlow (All platforms)**: Q-learning based AI without TensorFlow dependencies
+- **Windows**: Automatic fallback to Q-learning (TensorFlow C API has incomplete headers on Windows)
 
-### Docker Setup with TensorFlow
+## Platform-Specific Setup
 
-1. Build the Docker image (TensorFlow-enabled):
+### Linux/macOS (Full TensorFlow Support)
 
-   ```bash
-   docker build -t micro-society .
+**Prerequisites:**
+
+- CMake 3.14+
+- C++17 compatible compiler
+- Git
+
+**Build with TensorFlow:**
+
+```bash
+mkdir build && cd build
+cmake ..
+make -j$(nproc)
+./bin/MicroSociety
+```
+
+**Build without TensorFlow:**
+
+```bash
+mkdir build && cd build
+cmake .. -DUSE_TENSORFLOW=OFF
+make -j$(nproc)
+./bin/MicroSociety
+```
+
+### Windows (Q-Learning Only)
+
+**Prerequisites:**
+
+- Visual Studio 2019/2022 Build Tools or Visual Studio Community
+- CMake 3.14+
+- Git
+
+**Note:** Windows automatically disables TensorFlow due to incomplete C API headers. The simulation uses Q-learning instead.
+
+1. Open **Developer Command Prompt** for Visual Studio
+2. Build the project:
+
+   ```cmd
+   mkdir build && cd build
+   cmake -G "NMake Makefiles" ..
+   nmake
+   bin\MicroSociety.exe
    ```
 
-2. Run the Docker container:
+### Docker Setup (Full TensorFlow Support on Any Platform)
+
+**For Windows users who need TensorFlow support:**
+
+1. Install Docker Desktop
+2. Build and run:
 
    ```bash
-   docker run -it micro-society
+   docker build -t microsociety .
+   docker run -it microsociety
    ```
 
-### Local Setup without TensorFlow (Linux)
+**With X11 forwarding (Linux/macOS):**
 
-1. Rename `CMakeLists_without_tf.txt` to `CMakeLists.txt` in your local folder.
+```bash
+# Allow X11 connections
+xhost +local:docker
 
-2. Create a build directory and compile:
+# Run with GUI support
+docker run -it --rm \
+  -e DISPLAY=$DISPLAY \
+  -v /tmp/.X11-unix:/tmp/.X11-unix \
+  microsociety
+```
+
+### WSL2 Setup (Windows Alternative)
+
+For Windows users who prefer a native Linux environment:
+
+1. Install WSL2 with Ubuntu:
+
+   ```cmd
+   wsl --install -d Ubuntu-22.04
+   ```
+
+2. Enter WSL2 and build:
 
    ```bash
+   wsl
+   cd /mnt/c/path/to/microsociety
    mkdir build && cd build
    cmake ..
-   make clean && make -j$(nproc)
-   ```
-
-3. Run the executable:
-
-   ```bash
+   make -j$(nproc)
    ./bin/MicroSociety
    ```
 
-### Local Setup without TensorFlow (Windows)
+## AI Modes
 
-1. Rename `CMakeLists_without_tf.txt` to `CMakeLists.txt` in your local folder.
+The simulation offers three AI modes selectable at startup:
 
-2. Open the **Developer Command Prompt** for your compiler (e.g., MSVC).
+1. **Single Player Mode**: Play as a character alongside AI NPCs
+2. **Reinforcement Learning C++**: NPCs use Q-learning algorithms
+3. **Deep Q-Learning TensorFlow**: NPCs use neural networks (Linux/macOS/Docker only)
 
-3. Create a build directory:
+## Build Options
 
-   ```bash
-   mkdir build && cd build
-   ```
+| Platform | TensorFlow | Q-Learning | Recommended Setup |
+|----------|------------|------------|-------------------|
+| Linux    | ✅ Full Support | ✅ | Native build |
+| macOS    | ✅ Full Support | ✅ | Native build |
+| Windows  | ❌ Auto-disabled | ✅ | Native build or Docker |
 
-4. Generate the project:
+## Troubleshooting
 
-   ```bash
-   cmake -G "NMake Makefiles" ..
-   ```
+### TensorFlow Issues on Windows
 
-5. Build the project:
-
-   ```bash
-   nmake
-   ```
-
-6. Run the executable:
-
-   ```bash
-   MicroSociety.exe
-   ```
+If you see TensorFlow-related errors on Windows, the build system automatically falls back to Q-learning. For full TensorFlow support on Windows, use Docker or WSL2.
 
 ### Memory Leak/Performance Profiling
 
-If you want to check memory leaks or performance profiling, use Valgrind:
+**Linux/macOS with Valgrind:**
 
 ```bash
 valgrind --leak-check=full --track-origins=yes ./MicroSociety
 ```
+
+**Performance profiling:**
 
 ```bash
 valgrind --tool=callgrind ./MicroSociety
 kcachegrind callgrind.out.<pid>
 ```
 
-Or gdb:
+**Debugging with GDB:**
 
 ```bash
 gdb ./MicroSociety
 run
+# If crash occurs:
+bt full
 ```
 
-If the simulation crashes, write:
+**Windows with Visual Studio:**
 
-```bash
-bt full 
+```cmd
+# Debug build
+cmake -G "NMake Makefiles" .. -DCMAKE_BUILD_TYPE=Debug
+nmake
+# Run with debugger attached in Visual Studio
 ```
-
-
-
