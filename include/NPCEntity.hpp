@@ -51,6 +51,8 @@ private:
     State currentQLearningState;  
     bool useTensorFlow = false;
     std::shared_ptr<TensorFlowWrapper> tfModel; 
+    int totalItemsGathered = 0;
+    std::unordered_map<std::string, int> itemsGatheredByType;
 
 public:
     // Constructor
@@ -73,7 +75,20 @@ public:
     const std::unordered_map<std::string, int>& getInventory() const;
     int getMaxInventorySize() const;
     int getInventorySize() const;
-    int getGatheredResources() const;
+    void incrementItemsGathered(const std::string& itemType, int quantity) {
+        totalItemsGathered += quantity;
+        itemsGatheredByType[itemType] += quantity;
+        getDebugConsole().log("Gather", getName() + " gathered " + std::to_string(quantity) + 
+                            " " + itemType + " (total: " + std::to_string(totalItemsGathered) + ")");
+    }
+    
+    int getTotalItemsGathered() const { return totalItemsGathered; }
+    int getItemsGatheredByType(const std::string& itemType) const {
+        auto it = itemsGatheredByType.find(itemType);
+        return it != itemsGatheredByType.end() ? it->second : 0;
+    }
+    
+    int getGatheredResources() const { return totalItemsGathered; }
 
     // CLEANED UP: Removed redundant getMoney methods - now uses Entity::getMoney() and Entity::setMoney()
     void setTarget(Tile* newTarget);

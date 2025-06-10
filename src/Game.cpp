@@ -336,29 +336,33 @@ void Game::run() {
             updatePlayer();
         }
 
-        // Always simulate market
-        market.simulateMarketDynamics(deltaTime);
+        // FIXED: Apply simulation speed to market dynamics
+        market.simulateMarketDynamics(deltaTime * simulationSpeed);
         
-        // Update resource regeneration
-        resourceRegenerationTimer += deltaTime;
+        // FIXED: Apply simulation speed to resource regeneration
+        resourceRegenerationTimer += deltaTime * simulationSpeed;
         if (resourceRegenerationTimer >= regenerationInterval) {
             regenerateResources();
             resourceRegenerationTimer = 0.0f;
         }
 
-        // Always simulate NPCs (1 in single player, many in other modes)
+        // Simulate NPCs with simulation speed
         simulateNPCEntityBehavior(deltaTime * simulationSpeed);
         simulateSocietalGrowth(deltaTime * simulationSpeed);
 
-        // NEW: Check data collection progress
         checkDataCollectionProgress();
 
-        // Update UI
+        // Update UI with correct money
         ui.updateMoney(singlePlayerMode && player ? 
                       static_cast<int>(player->getMoney()) : 
                       MoneyManager::calculateTotalMoney(npcs));
-        timeManager.update(deltaTime);
+                      
+        // FIXED: Pass simulation speed to time manager
+        timeManager.update(deltaTime, simulationSpeed);
+        
+        // FIXED: Clock GUI should also respect simulation speed for consistency
         clockGUI.update(timeManager.getElapsedTime());
+        
         ui.updateStatus(
             timeManager.getCurrentDay(),
             timeManager.getFormattedTime(),
@@ -368,9 +372,9 @@ void Game::run() {
         ui.updateMarketPanel(market);
         ui.updateNPCList(npcs);
 
-        // ALWAYS render everything - no view switching complexity
+        // Render everything
         window.clear();
-        render(); // Uses default view only
+        render();
         clockGUI.render(window, isClockVisible);
         ui.render(window, market, npcs);
         getDebugConsole().render(window);
@@ -386,7 +390,6 @@ void Game::simulateNPCEntityBehavior(float deltaTime) {
     for (auto it = npcs.begin(); it != npcs.end(); ) {
         NPCEntity& npc = *it;
         
-        // FIXED: Always update NPCs regardless of state
         npc.update(deltaTime);
         
         // Check if NPC is dead
@@ -396,38 +399,47 @@ void Game::simulateNPCEntityBehavior(float deltaTime) {
             continue;
         }
         
-        // FIXED: Anti-stuck mechanism - check if NPC hasn't moved
+        // FIXED: More lenient stuck detection system
         sf::Vector2f currentPos = npc.getPosition();
         if (lastPosition.find(npc.getName()) != lastPosition.end()) {
             sf::Vector2f lastPos = lastPosition[npc.getName()];
             float distanceMoved = std::hypot(currentPos.x - lastPos.x, currentPos.y - lastPos.y);
             
-            if (distanceMoved < 5.0f) { // If moved less than 5 pixels
+            // FIXED: Only consider truly stuck NPCs (less than 1 pixel movement)
+            if (distanceMoved < 1.0f && npc.getState() == NPCState::Walking) {
                 stuckTimer[npc.getName()] += deltaTime;
-                if (stuckTimer[npc.getName()] > 3.0f) { // Stuck for 3 seconds
-                    // Force NPC to move to random position
-                    std::random_device rd;
-                    std::mt19937 gen(rd());
-                    std::uniform_int_distribution<> distX(1, GameConfig::mapWidth - 2);
-                    std::uniform_int_distribution<> distY(1, GameConfig::mapHeight - 2);
-                    
-                    float newX = distX(gen) * GameConfig::tileSize;
-                    float newY = distY(gen) * GameConfig::tileSize;
-                    npc.setPosition(newX, newY);
+                
+                // FIXED: Longer stuck time threshold (10 seconds instead of 3)
+                if (stuckTimer[npc.getName()] > 10.0f) {
+                    // FIXED: Instead of teleporting, just reset state to Idle
                     npc.setState(NPCState::Idle);
                     npc.setTarget(nullptr);
-                    
                     stuckTimer[npc.getName()] = 0.0f;
-                    getDebugConsole().log("UNSTUCK", npc.getName() + " was teleported to unstuck at (" + 
-                                        std::to_string(newX) + ", " + std::to_string(newY) + ")");
+                    
+                    getDebugConsole().log("UNSTUCK", npc.getName() + " was stuck walking, reset to idle");
+                    
+                    // FIXED: Only teleport as absolute last resort after 20 seconds
+                    if (stuckTimer[npc.getName()] > 20.0f) {
+                        std::random_device rd;
+                        std::mt19937 gen(rd());
+                        std::uniform_int_distribution<> distX(1, GameConfig::mapWidth - 2);
+                        std::uniform_int_distribution<> distY(1, GameConfig::mapHeight - 2);
+                        
+                        float newX = distX(gen) * GameConfig::tileSize;
+                        float newY = distY(gen) * GameConfig::tileSize;
+                        npc.setPosition(newX, newY);
+                        
+                        getDebugConsole().log("TELEPORT", npc.getName() + " was severely stuck, teleported to (" + 
+                                            std::to_string(newX) + ", " + std::to_string(newY) + ")");
+                    }
                 }
             } else {
-                stuckTimer[npc.getName()] = 0.0f; // Reset timer if moving
+                stuckTimer[npc.getName()] = 0.0f; // Reset timer if moving or not walking
             }
         }
         lastPosition[npc.getName()] = currentPos;
         
-        // FIXED: Better state machine with forced transitions
+        // Rest of the NPC behavior logic...
         switch (npc.getState()) {
             case NPCState::Idle: {
                 ActionType actionType = npc.decideNextAction(tileMap, house, market);
@@ -435,7 +447,6 @@ void Game::simulateNPCEntityBehavior(float deltaTime) {
                 
                 Tile* nearestTile = nullptr;
                 
-                // FIXED: Better target selection
                 switch (actionType) {
                     case ActionType::ChopTree:
                         nearestTile = npc.findNearestTile(tileMap, ObjectType::Tree);
@@ -456,11 +467,9 @@ void Game::simulateNPCEntityBehavior(float deltaTime) {
                         nearestTile = npc.findNearestTile(tileMap, ObjectType::House);
                         break;
                     case ActionType::Rest:
-                        // Rest in place - no movement needed
                         npc.setState(NPCState::PerformingAction);
                         break;
                     default:
-                        // For unknown actions, just rest
                         npc.setCurrentAction(ActionType::Rest);
                         npc.setState(NPCState::PerformingAction);
                         break;
@@ -469,33 +478,27 @@ void Game::simulateNPCEntityBehavior(float deltaTime) {
                 if (nearestTile) {
                     npc.setTarget(nearestTile);
                     npc.setState(NPCState::Walking);
-                    stuckCounter[npc.getName()] = 0;
-                    getDebugConsole().log("NPC", npc.getName() + " walking to " + 
-                                        std::to_string(static_cast<int>(actionType)));
                 } else if (npc.getCurrentAction() != ActionType::Rest) {
-                    // FIXED: If no target found, force rest action
                     npc.setCurrentAction(ActionType::Rest);
                     npc.setState(NPCState::PerformingAction);
-                    getDebugConsole().log("NPC", npc.getName() + " no target found, resting instead");
                 }
                 break;
             }
             
             case NPCState::Walking: {
                 if (npc.getTarget() && !npc.isAtTarget()) {
-                    // FIXED: Improved pathfinding
                     performPathfinding(npc);
                     
-                    // FIXED: Reasonable costs for movement
-                    npc.reduceHealth(0.01f * deltaTime); // Very small health cost
-                    npc.consumeEnergy(0.5f * deltaTime); // Small energy cost
+                    // FIXED: Reasonable movement costs
+                    npc.reduceHealth(0.001f * deltaTime); // Very minimal health cost
+                    npc.consumeEnergy(0.1f * deltaTime);  // Very minimal energy cost
                     
-                    // FIXED: Check if we're close enough to the target
+                    // Check if close enough to target
                     sf::Vector2f targetPos = npc.getTarget()->getPosition();
                     sf::Vector2f npcPos = npc.getPosition();
                     float distance = std::hypot(targetPos.x - npcPos.x, targetPos.y - npcPos.y);
                     
-                    if (distance < GameConfig::tileSize * 1.5f) { // Close enough
+                    if (distance < GameConfig::tileSize * 1.5f) {
                         npc.setState(NPCState::PerformingAction);
                     }
                 } else {
@@ -524,39 +527,20 @@ void Game::simulateNPCEntityBehavior(float deltaTime) {
             }
             
             case NPCState::EvaluatingState: {
-                // FIXED: Don't stay in this state - move to idle
                 npc.setState(NPCState::Idle);
                 break;
             }
         }
         
-        // FIXED: Force state transition if stuck in same state too long
-        static std::unordered_map<std::string, float> stateTimer;
-        static std::unordered_map<std::string, NPCState> lastState;
-        
-        if (lastState[npc.getName()] == npc.getState()) {
-            stateTimer[npc.getName()] += deltaTime;
-            if (stateTimer[npc.getName()] > 5.0f) { // Stuck in state for 5 seconds
-                npc.setState(NPCState::Idle);
-                npc.setTarget(nullptr);
-                stateTimer[npc.getName()] = 0.0f;
-                getDebugConsole().log("STATE", npc.getName() + " was stuck in state, forced to idle");
-            }
-        } else {
-            stateTimer[npc.getName()] = 0.0f;
-        }
-        lastState[npc.getName()] = npc.getState();
-        
         ++it;
     }
     
-    // FIXED: Restart simulation if all NPCs die (only in non-single player mode)
+    // Restart simulation if all NPCs die (only in non-single player mode)
     if (npcs.empty() && !singlePlayerMode) {
         getDebugConsole().log("SYSTEM", "All NPCs have died. Restarting simulation...");
         resetSimulation();
     }
 }
-
 
 void Game::handleMarketActions(NPCEntity& npc, Tile& targetTile, ActionType actionType) {
     if (!targetTile.hasObject()) {
@@ -1041,8 +1025,19 @@ void Game::logIterationStats(int iteration) {
 int Game::getTotalItemsGathered() const {
     int totalGathered = 0;
     for (const auto& npc : npcs) {
-        totalGathered += npc.getGatheredResources();
+        totalGathered += npc.getTotalItemsGathered(); // Use the new method
     }
+    
+    // Add player's gathered items in single player mode
+    if (singlePlayerMode && player) {
+        // For players, we can count their current inventory as "gathered"
+        const auto& inventory = player->getInventory();
+        for (const auto& [item, quantity] : inventory) {
+            totalGathered += quantity;
+        }
+    }
+    
+    getDebugConsole().log("STATS", "Total items gathered: " + std::to_string(totalGathered));
     return totalGathered;
 }
 

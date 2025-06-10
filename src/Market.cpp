@@ -65,7 +65,45 @@ float Market::calculateSellPrice(const std::string& item) const {
     return std::round(getPrice(item) * sellMargin * 10) / 10.0f;
 }
 
-// FIXED: Changed parameter from NPCEntity& to Entity&
+void Market::resetTransactions() {
+    for (auto& [item, count] : totalBuyTransactions) {
+        count = 0;
+    }
+    for (auto& [item, count] : totalSellTransactions) {
+        count = 0;
+    }
+    for (auto& [item, revenue] : totalRevenue) {
+        revenue = 0.0f;
+    }
+    for (auto& [item, expenditure] : totalExpenditure) {
+        expenditure = 0.0f;
+    }
+}
+
+int Market::getTotalItemsSold() const {
+    int total = 0;
+    for (const auto& [item, count] : totalSellTransactions) {
+        total += count;  // Sum up the actual item quantities sold
+    }
+    getDebugConsole().log("MARKET_STATS", "Total items sold: " + std::to_string(total));
+    return total;
+}
+
+int Market::getTotalItemsBought() const {
+    int total = 0;
+    for (const auto& [item, count] : totalBuyTransactions) {
+        total += count;  // Sum up the actual item quantities bought
+    }
+    getDebugConsole().log("MARKET_STATS", "Total items bought: " + std::to_string(total));
+    return total;
+}
+
+void Market::randomizePrices() {
+    for (auto& [item, price] : prices) {
+        price = 1 + rand() % 50;
+    }
+}
+
 bool Market::buyItem(Entity& entity, const std::string& item, int quantity) {
     if (quantity <= 0 || item.empty()) return false;
     if (prices.find(item) == prices.end()) setPrice(item, 1 + std::rand() % 50);
@@ -94,15 +132,15 @@ bool Market::buyItem(Entity& entity, const std::string& item, int quantity) {
 
     // Process the transaction
     entity.setMoney(entity.getMoney() - totalCost);
-    MoneyManager::recordMoneySpent(totalCost);
+    MoneyManager::recordMoneySpent(static_cast<int>(totalCost));
 
-    // FIXED: Update market state properly
+    // FIXED: Properly update market state and tracking
     demand[item] += quantity;
     supply[item] = std::max(0, supply[item] - quantity);
     prices[item] = adjustPriceOnBuy(prices[item], demand[item], supply[item], priceAdjustmentFactor);
 
-    // FIXED: Ensure transaction tracking works
-    totalBuyTransactions[item] += quantity;
+    // FIXED: Ensure transaction tracking increments correctly
+    totalBuyTransactions[item] += quantity;  // Track number of items bought
     totalExpenditure[item] += totalCost;
 
     // Add reward for NPCs
@@ -110,56 +148,16 @@ bool Market::buyItem(Entity& entity, const std::string& item, int quantity) {
         npc->addReward(5.0f * quantity);
     }
 
-    // FIXED: Log successful transaction with details
     getDebugConsole().log("MARKET", "[BUY SUCCESS] " + 
                         (dynamic_cast<NPCEntity*>(&entity) ? 
                          dynamic_cast<NPCEntity*>(&entity)->getName() : "Player") + 
                         " bought " + std::to_string(quantity) + " " + item + 
                         " for $" + std::to_string(totalCost) + 
-                        " (total buys: " + std::to_string(totalBuyTransactions[item]) + ")");
+                        " (total items bought: " + std::to_string(totalBuyTransactions[item]) + ")");
     
     return true;
 }
 
-void Market::resetTransactions() {
-    for (auto& [item, count] : totalBuyTransactions) {
-        count = 0;
-    }
-    for (auto& [item, count] : totalSellTransactions) {
-        count = 0;
-    }
-    for (auto& [item, revenue] : totalRevenue) {
-        revenue = 0.0f;
-    }
-    for (auto& [item, expenditure] : totalExpenditure) {
-        expenditure = 0.0f;
-    }
-}
-
-int Market::getTotalItemsSold() const {
-    int total = 0;
-    for (const auto& [_, qty] : totalSellTransactions) {
-        total += qty;
-    }
-    return total;
-}
-
-int Market::getTotalItemsBought() const {
-    int total = 0;
-    for (const auto& [_, qty] : totalBuyTransactions) {
-        total += qty;
-    }
-    return total;
-}
-
-
-void Market::randomizePrices() {
-    for (auto& [item, price] : prices) {
-        price = 1 + rand() % 50;
-    }
-}
-
-// FIXED: Changed parameter from NPCEntity& to Entity&
 bool Market::sellItem(Entity& entity, const std::string& item, int quantity) {
     if (item.empty() || quantity <= 0) return false;
     if (prices.find(item) == prices.end()) setPrice(item, 1 + std::rand() % 50);
@@ -197,15 +195,15 @@ bool Market::sellItem(Entity& entity, const std::string& item, int quantity) {
 
     float revenue = calculateSellPrice(item) * quantity;
     entity.setMoney(entity.getMoney() + revenue);
-    MoneyManager::recordMoneyEarned(revenue);
+    MoneyManager::recordMoneyEarned(static_cast<int>(revenue));
 
-    // FIXED: Update market state properly
+    // FIXED: Properly update market state and tracking
     supply[item] += quantity;
     demand[item] = std::max(0, demand[item] - quantity);
     prices[item] = adjustPriceOnSell(prices[item], demand[item], supply[item], priceAdjustmentFactor);
 
-    // FIXED: Ensure transaction tracking works
-    totalSellTransactions[item] += quantity;
+    // FIXED: Ensure transaction tracking increments correctly
+    totalSellTransactions[item] += quantity;  // Track number of items sold
     totalRevenue[item] += revenue;
 
     // Add reward for NPCs
@@ -213,13 +211,12 @@ bool Market::sellItem(Entity& entity, const std::string& item, int quantity) {
         npc->addReward(10.0f * quantity);
     }
 
-    // FIXED: Log successful transaction with details
     getDebugConsole().log("MARKET", "[SELL SUCCESS] " + 
                         (dynamic_cast<NPCEntity*>(&entity) ? 
                          dynamic_cast<NPCEntity*>(&entity)->getName() : "Player") + 
                         " sold " + std::to_string(quantity) + " " + item + 
                         " for $" + std::to_string(revenue) + 
-                        " (total sells: " + std::to_string(totalSellTransactions[item]) + ")");
+                        " (total items sold: " + std::to_string(totalSellTransactions[item]) + ")");
 
     return true;
 }
@@ -295,7 +292,7 @@ void Market::simulateMarketDynamics(float deltaTime) {
     static float timeAccumulator = 0.0f;
     timeAccumulator += deltaTime;
 
-    // ✅ Only update prices every 10-15 seconds
+    // Only update prices every 10-15 seconds
     if (timeAccumulator < 2.0f) return;  
     timeAccumulator = 0.0f;  // Reset timer
 
@@ -313,7 +310,7 @@ void Market::simulateMarketDynamics(float deltaTime) {
 
         float newPrice = price * demandFactor * supplyFactor;
 
-        // ✅ Ensure stability: Prices won't swing too fast
+        // Ensure stability: Prices won't swing too fast
         prices[item] = std::clamp(newPrice, minimumPrice, maximumPrice);
 
         // Track price history for UI graph
