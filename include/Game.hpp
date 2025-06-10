@@ -75,6 +75,9 @@ private:
     // TensorFlow initialization
     void initializeNPCTensorFlow();
     
+    // Data Collection (NEW)
+    void checkDataCollectionProgress();
+    
     // Single player mode helpers
     void handlePlayerInput();
     void updatePlayer();

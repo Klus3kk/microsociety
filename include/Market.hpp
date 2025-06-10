@@ -77,7 +77,7 @@ public:
     void simulateMarketDynamics(float deltaTime); // Simulates price variations due to economic forces
     void resetTransactions(); // Resets all transaction history
     void randomizePrices();   // Introduces random fluctuations in prices
-
+    void debugTransactionState() const; // Logs current market state for debugging
     // UI and Rendering
     void renderPriceGraph(sf::RenderWindow& window, const std::string& item, sf::Vector2f position, sf::Vector2f size) const; // Renders price trends
     void displayPrices() const; // Prints prices to console (for debugging)

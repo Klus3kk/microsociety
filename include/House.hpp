@@ -44,7 +44,7 @@ public:
     // Stats and Logs
     void displayStorage() const; // Display storage details
     void displayStats() const;   // Display house stats
-
+    void resetDailyLimits();
     // AI Integration
     bool isStorageFull() const;  // Check if storage is full
     bool isUpgradeAvailable(float entityMoney) const; // Check if entity can afford an upgrade

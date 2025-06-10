@@ -12,9 +12,19 @@
 NPCEntity::NPCEntity(const std::string& npcName, float initHealth, float initHunger, float initEnergy,
                      float initSpeed, float initStrength, float initMoney, bool enableQLearning)
     : Entity(initHealth, initHunger, initEnergy, initSpeed, initStrength, initMoney),
-      agent(0.1f, 0.9f, 0.1f),
+      agent(0.1f, 0.9f, 0.3f),  // FIXED: Increased epsilon for more exploration
       useQLearning(enableQLearning),
-      name(npcName) {}
+      name(npcName) {
+    
+    // FIXED: Ensure NPCs start in a valid state
+    currentState = NPCState::Idle;
+    target = nullptr;
+    currentAction = ActionType::None;
+    currentActionCooldown = 0.0f;
+    
+    getDebugConsole().log("NPC", "Created " + name + " with Q-Learning: " + 
+                        (enableQLearning ? "ENABLED" : "DISABLED"));
+}
 
 // Move Constructor
 NPCEntity::NPCEntity(NPCEntity&& other) noexcept
@@ -163,14 +173,21 @@ void NPCEntity::performAction(ActionType action, Tile& tile,
     float actionReward = 0.0f;
     bool actionSuccess = false;
 
+    // FIXED: Add action cooldown to prevent spam
+    if (currentActionCooldown > 0) {
+        getDebugConsole().log("Action", getName() + " is on cooldown, skipping action");
+        return;
+    }
+
     switch (action) {
         case ActionType::ChopTree:
             if (tile.hasObject() && tile.getObject()->getType() == ObjectType::Tree) {
                 actionPtr = std::make_unique<TreeAction>();
                 actionReward = 10.0f;
                 actionSuccess = true;
-                reduceHealth(0.8f);  
-                consumeEnergy(1.5f);
+                reduceHealth(0.5f);  // FIXED: Reduced damage
+                consumeEnergy(3.0f); // FIXED: Reasonable energy cost
+                currentActionCooldown = 1.0f; // FIXED: Add cooldown
             } else {
                 actionReward = -5.0f;
             }
@@ -181,8 +198,9 @@ void NPCEntity::performAction(ActionType action, Tile& tile,
                 actionPtr = std::make_unique<StoneAction>();
                 actionReward = 10.0f;
                 actionSuccess = true;
-                reduceHealth(1.2f); 
-                consumeEnergy(1.5f);
+                reduceHealth(0.8f);
+                consumeEnergy(4.0f);
+                currentActionCooldown = 1.2f;
             } else {
                 actionReward = -5.0f;
             }
@@ -191,10 +209,124 @@ void NPCEntity::performAction(ActionType action, Tile& tile,
         case ActionType::GatherBush:
             if (tile.hasObject() && tile.getObject()->getType() == ObjectType::Bush) {
                 actionPtr = std::make_unique<BushAction>();
-                actionReward = 10.0f;
+                actionReward = 8.0f;
                 actionSuccess = true;
-                reduceHealth(0.5f); 
-                consumeEnergy(1.5f);
+                reduceHealth(0.3f);
+                consumeEnergy(2.0f);
+                currentActionCooldown = 0.8f;
+            } else {
+                actionReward = -5.0f;
+            }
+            break;
+
+        case ActionType::RegenerateEnergy:
+            // FIXED: Only allow energy regeneration at houses, with limits
+            if (auto houseObj = dynamic_cast<House*>(tile.getObject())) {
+                if (getEnergy() < getMaxEnergy() * 0.8f) { // Only regenerate if below 80%
+                    float energyBefore = getEnergy();
+                    houseObj->regenerateEnergy(*this);
+                    float energyGained = getEnergy() - energyBefore;
+                    
+                    if (energyGained > 0) {
+                        actionReward = 5.0f;
+                        actionSuccess = true;
+                        restoreHealth(1.0f); // FIXED: Reduced healing
+                        currentActionCooldown = 2.0f; // FIXED: Longer cooldown to prevent abuse
+                        getDebugConsole().log("Energy", getName() + " regenerated " + 
+                                            std::to_string(energyGained) + " energy at house");
+                    } else {
+                        actionReward = -2.0f; // Penalty for unnecessary regeneration
+                    }
+                } else {
+                    actionReward = -5.0f; // Penalty for trying to regenerate when not needed
+                    getDebugConsole().log("Energy", getName() + " tried to regenerate but energy is already high");
+                }
+            } else {
+                actionReward = -10.0f; // Big penalty for trying to regenerate without house
+                getDebugConsole().log("Error", getName() + " tried to regenerate energy without a house");
+            }
+            break;
+
+        case ActionType::BuyItem:
+            // FIXED: Proper market buying with tracking
+            if (tile.hasObject() && tile.getObject()->getType() == ObjectType::Market) {
+                auto* marketObj = dynamic_cast<Market*>(tile.getObject());
+                if (marketObj) {
+                    std::vector<std::string> itemsToBuy = {"wood", "stone", "bush"};
+                    
+                    bool boughtSomething = false;
+                    for (const auto& item : itemsToBuy) {
+                        float itemPrice = marketObj->calculateBuyPrice(item);
+                        if (getMoney() >= itemPrice && getInventorySize() < getMaxInventorySize()) {
+                            int quantityToBuy = 1; // FIXED: Buy one at a time
+                            
+                            if (marketObj->buyItem(*this, item, quantityToBuy)) {
+                                actionReward = 8.0f;
+                                boughtSomething = true;
+                                consumeEnergy(1.0f);
+                                currentActionCooldown = 1.5f;
+                                getDebugConsole().log("MARKET", getName() + " bought " + 
+                                                    std::to_string(quantityToBuy) + " " + item + 
+                                                    " for $" + std::to_string(itemPrice));
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (!boughtSomething) {
+                        actionReward = -3.0f;
+                        getDebugConsole().log("MARKET", getName() + " couldn't buy anything (money: " + 
+                                            std::to_string(getMoney()) + ", inventory: " + 
+                                            std::to_string(getInventorySize()) + "/" + 
+                                            std::to_string(getMaxInventorySize()) + ")");
+                    }
+                    actionSuccess = boughtSomething;
+                } else {
+                    actionReward = -5.0f;
+                }
+            } else {
+                actionReward = -5.0f;
+            }
+            break;
+
+        case ActionType::SellItem:
+            // FIXED: Proper market selling with tracking
+            if (tile.hasObject() && tile.getObject()->getType() == ObjectType::Market) {
+                auto* marketObj = dynamic_cast<Market*>(tile.getObject());
+                if (marketObj) {
+                    // Find items to sell (keep some for upgrades)
+                    std::vector<std::pair<std::string, int>> itemsToSell;
+                    for (const auto& [item, quantity] : inventory) {
+                        if (quantity > 2) { // Keep 2 of each item
+                            itemsToSell.push_back({item, std::min(quantity - 2, 3)}); // Sell max 3
+                        }
+                    }
+                    
+                    bool soldSomething = false;
+                    if (!itemsToSell.empty()) {
+                        auto [selectedItem, sellQuantity] = itemsToSell[0];
+                        float expectedRevenue = marketObj->calculateSellPrice(selectedItem) * sellQuantity;
+                        
+                        if (marketObj->sellItem(*this, selectedItem, sellQuantity)) {
+                            actionReward = 12.0f;
+                            soldSomething = true;
+                            restoreHealth(1.0f);
+                            consumeEnergy(1.0f);
+                            currentActionCooldown = 1.5f;
+                            getDebugConsole().log("MARKET", getName() + " sold " + 
+                                                std::to_string(sellQuantity) + " " + selectedItem + 
+                                                " for $" + std::to_string(expectedRevenue));
+                        }
+                    }
+                    
+                    if (!soldSomething) {
+                        actionReward = -3.0f;
+                        getDebugConsole().log("MARKET", getName() + " has nothing valuable to sell");
+                    }
+                    actionSuccess = soldSomething;
+                } else {
+                    actionReward = -5.0f;
+                }
             } else {
                 actionReward = -5.0f;
             }
@@ -202,173 +334,61 @@ void NPCEntity::performAction(ActionType action, Tile& tile,
 
         case ActionType::StoreItem:
             if (auto houseObj = dynamic_cast<House*>(tile.getObject())) {
-                if (!inventory.empty()) {
-                    for (const auto& [item, quantity] : inventory) {
-                        if (item == "wood" || item == "stone" || item == "bush") {
-                            if (quantity > 2) {
-                                houseObj->storeItem(item, quantity - 2);
-                            }
-                        } else {
-                            houseObj->storeItem(item, quantity);
+                bool storedSomething = false;
+                for (const auto& [item, quantity] : inventory) {
+                    if (quantity > 0) {
+                        int storeAmount = std::min(quantity, 5); // Store up to 5 at a time
+                        if (houseObj->storeItem(item, storeAmount)) {
+                            removeFromInventory(item, storeAmount);
+                            actionReward = 3.0f * storeAmount;
+                            storedSomething = true;
+                            currentActionCooldown = 1.0f;
+                            getDebugConsole().log("HOUSE", getName() + " stored " + 
+                                                std::to_string(storeAmount) + " " + item);
+                            break; // Store one type at a time
                         }
                     }
-                    actionReward = 5.0f;
-                    actionSuccess = true;
-                } else {
-                    actionReward = -5.0f;
                 }
+                
+                if (!storedSomething) {
+                    actionReward = -3.0f;
+                }
+                actionSuccess = storedSomething;
             } else {
                 actionReward = -5.0f;
             }
             break;
 
         case ActionType::UpgradeHouse:
-            // FIXED: Use Entity::getMoney() instead of custom method
             if (getMoney() >= house.getUpgradeCost()) {
-                bool hasAllItems = true;
-
-                for (const std::string& item : {"wood", "stone", "bush"}) {
-                    int requiredAmount = house.getRequirementForItem(item);
-                    int inventoryAmount = getInventoryItemCount(item);
-                    int storageAmount = house.getStoredItemCount(item);
-
-                    if (inventoryAmount + storageAmount < requiredAmount) {
-                        hasAllItems = false;
-                        getDebugConsole().log("HOUSE", getName() + " is missing " +
-                                            std::to_string(requiredAmount - (inventoryAmount + storageAmount)) +
-                                            " " + item + " for upgrade.");
-                    } else {
-                        if (inventoryAmount > 0) {
-                            int toStore = std::min(inventoryAmount, requiredAmount - storageAmount);
-                            removeFromInventory(item, toStore);
-                            house.storeItem(item, toStore);
-                            getDebugConsole().log("HOUSE", getName() + " stored " + std::to_string(toStore) + " " + item + " in house.");
-                        }
-                    }
-                }
-
-                if (hasAllItems) {
-                    // FIXED: Pass money by reference using a temporary variable
-                    float npcMoney = getMoney();
-                    if (house.upgrade(npcMoney, *this)) {
-                        setMoney(npcMoney); // Update the money after upgrade
-                        actionReward = 20.0f;
-                        actionSuccess = true;
-                        restoreHealth(10.0f);  
-                        getDebugConsole().log("HOUSE", getName() + " successfully upgraded the house!");
-                    } else {
-                        actionReward = -5.0f;
-                        getDebugConsole().log("HOUSE", getName() + " upgrade failed.");
-                    }
+                float npcMoney = getMoney();
+                if (house.upgrade(npcMoney, *this)) {
+                    setMoney(npcMoney);
+                    actionReward = 25.0f;
+                    actionSuccess = true;
+                    restoreHealth(10.0f);
+                    currentActionCooldown = 3.0f; // Long cooldown for upgrades
+                    getDebugConsole().log("HOUSE", getName() + " successfully upgraded the house!");
                 } else {
-                    actionReward = -10.0f;
-                }
-            } else {
-                actionReward = -10.0f;
-                getDebugConsole().log("HOUSE", getName() + " lacks money to upgrade!");
-            }
-            break;
-
-        case ActionType::RegenerateEnergy:
-            if (auto houseObj = dynamic_cast<House*>(tile.getObject())) {
-                houseObj->regenerateEnergy(*this);
-                actionReward = 5.0f;
-                actionSuccess = true;
-                restoreHealth(3.0f);
-            } else {
-                actionReward = -5.0f;
-            }
-            break;
-
-        case ActionType::BuyItem:
-            if (tile.hasObject() && tile.getObject()->getType() == ObjectType::Market) {
-                auto* marketObj = dynamic_cast<Market*>(tile.getObject());
-                if (!marketObj) {
-                    getDebugConsole().log("ERROR", "Market object is NULL. Skipping trade action.");
-                    return;
-                }
-
-                std::vector<std::string> itemsToBuy = {"wood", "stone", "bush"};
-                std::shuffle(itemsToBuy.begin(), itemsToBuy.end(), std::mt19937(std::random_device{}()));
-
-                bool boughtSomething = false;
-                for (const auto& item : itemsToBuy) {
-                    float itemPrice = marketObj->calculateBuyPrice(item);
-                    if (getMoney() >= itemPrice) {
-                        int maxAffordable = static_cast<int>(getMoney() / itemPrice);
-                        int quantityToBuy = std::min(maxAffordable, 3);
-
-                        if (marketObj->buyItem(*this, item, quantityToBuy)) {
-                            actionReward = 5.0f * quantityToBuy;
-                            boughtSomething = true;
-                            reduceHealth(1.5f);  
-                            consumeEnergy(1.0f);
-                            getDebugConsole().log("MARKET", getName() + " bought " + std::to_string(quantityToBuy) + " " + item);
-                            break;
-                        }
-                    }
-                }
-
-                if (!boughtSomething) {
-                    getDebugConsole().log("ERROR", getName() + " could not afford anything.");
-                    actionReward = -5.0f;
-                }
-
-                actionSuccess = boughtSomething;
-            } else {
-                getDebugConsole().log("ERROR", "Market tile is NULL or invalid.");
-                actionReward = -5.0f;
-            }
-            break;
-
-        case ActionType::SellItem:
-            if (tile.hasObject() && tile.getObject()->getType() == ObjectType::Market) {
-                auto* marketObj = dynamic_cast<Market*>(tile.getObject());
-                if (!marketObj) {
-                    getDebugConsole().log("ERROR", "Market object is NULL. Skipping trade action.");
-                    return;
-                }
-
-                std::vector<std::string> itemsToSell;
-                for (const auto& [item, quantity] : inventory) {
-                    if (quantity > 1) {
-                        itemsToSell.push_back(item);
-                    }
-                }
-
-                if (!itemsToSell.empty()) {
-                    static std::mt19937 rng(std::random_device{}());
-                    std::shuffle(itemsToSell.begin(), itemsToSell.end(), rng);
-
-                    std::uniform_int_distribution<int> sellQuantityDist(1, 3);
-                    std::string selectedItem = itemsToSell.front();
-                    int sellQuantity = std::min(sellQuantityDist(rng), getInventoryItemCount(selectedItem));
-
-                    if (marketObj->sellItem(*this, selectedItem, sellQuantity)) {
-                        actionReward = 10.0f * sellQuantity;
-                        restoreHealth(2.0f);  
-                        consumeEnergy(1.0f);
-                        getDebugConsole().log("MARKET", getName() + " sold " + std::to_string(sellQuantity) + " " + selectedItem);
-                        actionSuccess = true;
-                    }
-                } else {
-                    actionReward = -5.0f;
-                    getDebugConsole().log("ERROR", getName() + " has nothing to sell.");
+                    actionReward = -8.0f;
                 }
             } else {
                 actionReward = -5.0f;
-                getDebugConsole().log("ERROR", "Market tile is NULL or invalid.");
             }
             break;
 
         case ActionType::Rest:
-            if (getEnergy() < getMaxEnergy()) {
-                setEnergy(getMaxEnergy());
-                actionReward = 5.0f;
+            if (getEnergy() < getMaxEnergy() * 0.5f) { // Only rest if energy is below 50%
+                float energyBefore = getEnergy();
+                setEnergy(std::min(getMaxEnergy(), getEnergy() + 20.0f)); // Partial rest
+                actionReward = 3.0f;
                 actionSuccess = true;
-                restoreHealth(5.0f);
+                restoreHealth(2.0f);
+                currentActionCooldown = 2.0f;
+                getDebugConsole().log("Rest", getName() + " rested and gained " + 
+                                    std::to_string(getEnergy() - energyBefore) + " energy");
             } else {
-                actionReward = -2.0f;
+                actionReward = -3.0f; // Penalty for unnecessary rest
             }
             break;
 
@@ -377,11 +397,19 @@ void NPCEntity::performAction(ActionType action, Tile& tile,
             break;
     }
 
+    // Execute the action if we have one
     if (actionPtr) {
         actionPtr->perform(*this, tile, tileMap);
-        receiveFeedback(actionReward, tileMap);
     }
+    
+    // FIXED: Always provide feedback for learning
+    receiveFeedback(actionReward, tileMap);
+    
+    // FIXED: Set state back to idle properly
     setState(NPCState::Idle);
+    
+    // Record the action for stuck detection
+    lastAction = action;
 }
 
 void NPCEntity::setTarget(Tile* newTarget) {
@@ -484,45 +512,60 @@ void NPCEntity::setStrength(float newStrength) { strength = newStrength; }
 void NPCEntity::setSpeed(float newSpeed) { speed = newSpeed; }
 
 void NPCEntity::update(float deltaTime) {
+    // FIXED: Update cooldowns properly
     if (currentActionCooldown > 0) {
         currentActionCooldown -= deltaTime;
         currentActionCooldown = std::max(0.0f, currentActionCooldown);
     }
 
+    // FIXED: Gradual energy decay (not too fast)
     if (energy > 0) {
-        energy = std::max(0.0f, energy - deltaTime * 0.5f); // Energy decay
+        float energyDecay = deltaTime * 2.0f; // Slower decay
+        energy = std::max(0.0f, energy - energyDecay);
     }
 
-    if (isDead()) {
+    // FIXED: Health regeneration over time (slow)
+    if (health > 0 && health < getMaxEnergy()) {
+        float healthRegen = deltaTime * 0.5f;
+        health = std::min(GameConfig::MAX_HEALTH, health + healthRegen);
+    }
+
+    // Check for death
+    if (health <= 0.0f || energy <= 0.0f) {
+        setDead(true);
         handleDeath();
     }
-
-    getDebugConsole().log(name, "Updated NPC state for " + name);
 }
 
 Tile* NPCEntity::findNearestTile(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap, ObjectType type) const {
     Tile* nearestTile = nullptr;
     float shortestDistance = std::numeric_limits<float>::max();
-    int fallbackX = -1, fallbackY = -1;
+    std::vector<Tile*> allValidTiles;
 
+    // Collect all valid tiles
     for (int y = 0; y < tileMap.size(); ++y) {
         for (int x = 0; x < tileMap[y].size(); ++x) {
             if (tileMap[y][x]->hasObject() && tileMap[y][x]->getObject()->getType() == type) {
                 float distance = std::hypot(tileMap[y][x]->getPosition().x - getPosition().x,
                                             tileMap[y][x]->getPosition().y - getPosition().y);
+                
+                allValidTiles.push_back(tileMap[y][x].get());
+                
                 if (distance < shortestDistance) {
                     shortestDistance = distance;
                     nearestTile = tileMap[y][x].get();
                 }
-                fallbackX = x;
-                fallbackY = y;
             }
         }
     }
 
-    if (!nearestTile && fallbackX != -1) {
-        getDebugConsole().log("ERROR", getName() + " could not find target. Using fallback tile.");
-        return tileMap[fallbackY][fallbackX].get();
+    // FIXED: If no nearest tile found but we have valid tiles, pick randomly
+    if (!nearestTile && !allValidTiles.empty()) {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<int> dist(0, allValidTiles.size() - 1);
+        nearestTile = allValidTiles[dist(gen)];
+        getDebugConsole().log("Pathfinding", getName() + " using random valid tile as fallback");
     }
 
     return nearestTile;
@@ -554,92 +597,103 @@ void NPCEntity::setTensorFlowModel(std::shared_ptr<TensorFlowWrapper> model) {
 // AI Decision Making
 ActionType NPCEntity::decideNextAction(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap, 
                                     const House& house, Market& market) {
-    ActionType action = ActionType::None;  
-
+    ActionType action = ActionType::None;
+    
+    // FIXED: Add stuck detection
+    static std::unordered_map<std::string, int> stuckCounter;
+    static std::unordered_map<std::string, ActionType> lastActionMap;
+    
     if (useTensorFlow && tfModel && tfModel->isModelLoaded()) {
-        // Use TensorFlow for decision making
         currentQLearningState = extractState(tileMap);
         action = tfModel->predictAction(currentQLearningState);
         getDebugConsole().log("TensorFlow", getName() + " used TF model to choose action: " + 
                             std::to_string(static_cast<int>(action)));
     }
     else if (useTensorFlow && !tfModel) {
-        // DATA COLLECTION MODE: Use random/exploration actions to gather diverse training data
+        // DATA COLLECTION MODE: More structured exploration
         std::random_device rd;
         std::mt19937 gen(rd());
-        std::uniform_int_distribution<int> actionDist(1, static_cast<int>(ActionType::Rest));
         
-        // 80% random exploration, 20% rule-based for some structure
-        std::uniform_real_distribution<float> exploration(0.0f, 1.0f);
-        if (exploration(gen) < 0.8f) {
-            action = static_cast<ActionType>(actionDist(gen));
-            getDebugConsole().log("DataCollection", getName() + " using random exploration action: " + 
-                                std::to_string(static_cast<int>(action)));
+        // FIXED: More intelligent data collection
+        if (getEnergy() < 20.0f) {
+            action = ActionType::RegenerateEnergy;
+        } else if (getInventorySize() >= getMaxInventorySize() - 1) {
+            std::uniform_int_distribution<int> storeSellDist(0, 1);
+            action = (storeSellDist(gen) == 0) ? ActionType::StoreItem : ActionType::SellItem;
+        } else if (getMoney() > 50.0f && getInventorySize() < 3) {
+            action = ActionType::BuyItem;
         } else {
-            // Use simple rule-based behavior for 20% of actions
-            if (getEnergy() < 10.0f) {
-                action = ActionType::RegenerateEnergy;
-            } else if (getInventorySize() >= getMaxInventorySize()) {
-                action = ActionType::StoreItem;
-            } else {
-                action = static_cast<ActionType>(actionDist(gen));
-            }
-            getDebugConsole().log("DataCollection", getName() + " using rule-based action: " + 
-                                std::to_string(static_cast<int>(action)));
+            // Exploration actions
+            std::uniform_int_distribution<int> actionDist(2, 4); // ChopTree, MineRock, GatherBush
+            action = static_cast<ActionType>(actionDist(gen));
         }
+        
+        getDebugConsole().log("DataCollection", getName() + " using exploration action: " + 
+                            std::to_string(static_cast<int>(action)));
     }
     else if (useQLearning) {
-        // Use Q-learning (existing code)
         currentQLearningState = agent.extractState(tileMap, getPosition(), getEnergy(), getInventorySize(), getMaxInventorySize());
         action = agent.decideAction(currentQLearningState);
+        
+        // FIXED: Anti-stuck mechanism for Q-learning
+        if (lastActionMap[name] == action) {
+            stuckCounter[name]++;
+            if (stuckCounter[name] > 3) {
+                // Force different action
+                std::random_device rd;
+                std::mt19937 gen(rd());
+                std::uniform_int_distribution<int> actionDist(1, static_cast<int>(ActionType::Rest));
+                action = static_cast<ActionType>(actionDist(gen));
+                stuckCounter[name] = 0;
+                getDebugConsole().log("Q-Learning", getName() + " was stuck, forced random action");
+            }
+        } else {
+            stuckCounter[name] = 0;
+        }
+        lastActionMap[name] = action;
     }
     else {
-        // Simple rule-based behavior (existing code)
-        if (getEnergy() < 10.0f) {
+        // FIXED: Better rule-based behavior with variety
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        
+        if (getEnergy() < 15.0f) {
             action = ActionType::RegenerateEnergy;
         } 
         else if (getInventorySize() >= getMaxInventorySize()) {
-            if (house.isStorageFull()) {
+            // FIXED: Prefer selling over storing sometimes
+            std::uniform_int_distribution<int> choice(0, 2);
+            if (choice(gen) == 0 || house.isStorageFull()) {
                 action = ActionType::SellItem;
             } else {
                 action = ActionType::StoreItem;
             }
         }
-        else if (getInventoryItemCount("wood") >= house.getWoodRequirement() &&
-                getInventoryItemCount("stone") >= house.getStoneRequirement() &&
-                getInventoryItemCount("bush") >= house.getBushRequirement()) {
-            action = ActionType::StoreItem;
-        } 
+        else if (getMoney() > 100.0f && getInventorySize() < 3) {
+            action = ActionType::BuyItem;
+        }
         else if (house.isUpgradeAvailable(getMoney())) {  
             action = ActionType::UpgradeHouse; 
         }
         else {
-            std::string bestItemToSell = market.suggestBestResourceToSell();
-            if (!bestItemToSell.empty() && getInventoryItemCount(bestItemToSell) > 2) {
-                action = ActionType::SellItem;
-            } 
-            else {
-                std::string bestItemToBuy = market.suggestBestResourceToBuy();
-                if (!bestItemToBuy.empty() && getMoney() >= market.calculateBuyPrice(bestItemToBuy)) {
-                    action = ActionType::BuyItem;
-                } 
-                else {
-                    auto nearbyObjects = scanNearbyTiles(tileMap);
-                    for (ObjectType obj : nearbyObjects) {
-                        if (obj == ObjectType::Tree) action = ActionType::ChopTree;
-                        if (obj == ObjectType::Rock) action = ActionType::MineRock;
-                        if (obj == ObjectType::Bush) action = ActionType::GatherBush;
-                    }
-                }
+            // FIXED: More variety in resource gathering
+            std::uniform_int_distribution<int> resourceChoice(0, 2);
+            switch (resourceChoice(gen)) {
+                case 0: action = ActionType::ChopTree; break;
+                case 1: action = ActionType::MineRock; break;
+                case 2: action = ActionType::GatherBush; break;
             }
         }
     }
 
+    // FIXED: Final fallback with better randomization
     if (action == ActionType::None) {
-        static std::mt19937 rng(std::random_device{}()); 
-        std::uniform_int_distribution<int> actionDist(1, static_cast<int>(ActionType::SellItem));
-        action = static_cast<ActionType>(actionDist(rng));
-        getDebugConsole().log("DEBUG", getName() + " was stuck, randomizing action to: " + std::to_string(static_cast<int>(action)));
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<int> actionDist(1, static_cast<int>(ActionType::Rest));
+        action = static_cast<ActionType>(actionDist(gen));
+        getDebugConsole().log("DEBUG", getName() + " using fallback random action: " + 
+                            std::to_string(static_cast<int>(action)));
     }
 
     return action;

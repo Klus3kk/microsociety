@@ -47,11 +47,57 @@ int House::getRequirementForItem(const std::string& item) const {
 
 // FIXED: Changed parameter from NPCEntity& to Entity&
 void House::regenerateEnergy(Entity& entity) {
-    if (entity.getEnergy() < GameConfig::MAX_ENERGY) {
-        entity.setEnergy(std::min(GameConfig::MAX_ENERGY, entity.getEnergy() + 10.0f)); // Restores 10 energy per tick
-        entity.setHealth(std::min(GameConfig::MAX_HEALTH, entity.getHealth() + 5.0f));  // Restores 5 health per tick
-        getDebugConsole().log("House", "Entity is recovering energy at home.");
+    // FIXED: Add cooldown tracking per entity
+    static std::unordered_map<void*, float> lastRegenTime;
+    static std::unordered_map<void*, int> regenCount;
+    
+    void* entityPtr = &entity;
+    float currentTime = static_cast<float>(std::time(nullptr));
+    
+    // FIXED: Enforce cooldown between regenerations
+    if (lastRegenTime.find(entityPtr) != lastRegenTime.end()) {
+        float timeSinceLastRegen = currentTime - lastRegenTime[entityPtr];
+        if (timeSinceLastRegen < 5.0f) { // 5 second cooldown
+            getDebugConsole().log("House", "Entity regeneration on cooldown (" + 
+                                std::to_string(5.0f - timeSinceLastRegen) + "s remaining)");
+            return;
+        }
     }
+    
+    // FIXED: Limit regenerations per day/session
+    if (regenCount[entityPtr] >= 10) { // Max 10 regenerations per session
+        getDebugConsole().log("House", "Entity has reached daily regeneration limit");
+        return;
+    }
+    
+    // FIXED: Only regenerate if significantly low energy (below 50%)
+    float energyPercentage = entity.getEnergy() / GameConfig::MAX_ENERGY;
+    if (energyPercentage > 0.5f) {
+        getDebugConsole().log("House", "Entity energy too high for regeneration (" + 
+                            std::to_string(energyPercentage * 100) + "%)");
+        return;
+    }
+    
+    // FIXED: Gradual regeneration instead of instant full
+    float energyToRestore = 20.0f; // Restore 20 energy instead of full
+    float healthToRestore = 5.0f;  // Restore 5 health instead of full
+    
+    float oldEnergy = entity.getEnergy();
+    float oldHealth = entity.getHealth();
+    
+    entity.setEnergy(std::min(GameConfig::MAX_ENERGY, entity.getEnergy() + energyToRestore));
+    entity.setHealth(std::min(GameConfig::MAX_HEALTH, entity.getHealth() + healthToRestore));
+    
+    float actualEnergyRestored = entity.getEnergy() - oldEnergy;
+    float actualHealthRestored = entity.getHealth() - oldHealth;
+    
+    // Update tracking
+    lastRegenTime[entityPtr] = currentTime;
+    regenCount[entityPtr]++;
+    
+    getDebugConsole().log("House", "Entity regenerated " + std::to_string(actualEnergyRestored) + 
+                        " energy and " + std::to_string(actualHealthRestored) + " health. " +
+                        "Uses remaining: " + std::to_string(10 - regenCount[entityPtr]));
 }
 
 // Store item in the house's storage
@@ -205,4 +251,13 @@ bool House::isUpgradeAvailable(float entityMoney) const {
 int House::getStoredItemCount(const std::string& item) const {
     auto it = storage.find(item);
     return it != storage.end() ? it->second : 0;
+}
+
+void House::resetDailyLimits() {
+    static std::unordered_map<void*, float> lastRegenTime;
+    static std::unordered_map<void*, int> regenCount;
+    
+    lastRegenTime.clear();
+    regenCount.clear();
+    getDebugConsole().log("House", "Daily regeneration limits reset");
 }

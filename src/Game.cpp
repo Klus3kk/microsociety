@@ -8,6 +8,7 @@
 #include "House.hpp"
 #include "Market.hpp"
 #include "Actions.hpp"
+#include "DataCollector.hpp"
 
 #include <random>
 #include <set>
@@ -376,89 +377,177 @@ void Game::run() {
 
 void Game::simulateNPCEntityBehavior(float deltaTime) {
     static std::unordered_map<std::string, int> stuckCounter;
-    static std::unordered_map<std::string, int> idleCounter;  
-
+    static std::unordered_map<std::string, sf::Vector2f> lastPosition;
+    static std::unordered_map<std::string, float> stuckTimer;
+    
     for (auto it = npcs.begin(); it != npcs.end(); ) {
         NPCEntity& npc = *it;
-
+        
+        // FIXED: Always update NPCs regardless of state
         npc.update(deltaTime);
-
-        if (it->isDead() || it->getHealth() <= 0 || it->getEnergy() <= 0) {
-            getDebugConsole().log("DEATH", it->getName() + " has died.");
+        
+        // Check if NPC is dead
+        if (npc.isDead() || npc.getHealth() <= 0 || npc.getEnergy() <= 0) {
+            getDebugConsole().log("DEATH", npc.getName() + " has died.");
             it = npcs.erase(it);
             continue;
         }
-
-        switch (it->getState()) {
+        
+        // FIXED: Anti-stuck mechanism - check if NPC hasn't moved
+        sf::Vector2f currentPos = npc.getPosition();
+        if (lastPosition.find(npc.getName()) != lastPosition.end()) {
+            sf::Vector2f lastPos = lastPosition[npc.getName()];
+            float distanceMoved = std::hypot(currentPos.x - lastPos.x, currentPos.y - lastPos.y);
+            
+            if (distanceMoved < 5.0f) { // If moved less than 5 pixels
+                stuckTimer[npc.getName()] += deltaTime;
+                if (stuckTimer[npc.getName()] > 3.0f) { // Stuck for 3 seconds
+                    // Force NPC to move to random position
+                    std::random_device rd;
+                    std::mt19937 gen(rd());
+                    std::uniform_int_distribution<> distX(1, GameConfig::mapWidth - 2);
+                    std::uniform_int_distribution<> distY(1, GameConfig::mapHeight - 2);
+                    
+                    float newX = distX(gen) * GameConfig::tileSize;
+                    float newY = distY(gen) * GameConfig::tileSize;
+                    npc.setPosition(newX, newY);
+                    npc.setState(NPCState::Idle);
+                    npc.setTarget(nullptr);
+                    
+                    stuckTimer[npc.getName()] = 0.0f;
+                    getDebugConsole().log("UNSTUCK", npc.getName() + " was teleported to unstuck at (" + 
+                                        std::to_string(newX) + ", " + std::to_string(newY) + ")");
+                }
+            } else {
+                stuckTimer[npc.getName()] = 0.0f; // Reset timer if moving
+            }
+        }
+        lastPosition[npc.getName()] = currentPos;
+        
+        // FIXED: Better state machine with forced transitions
+        switch (npc.getState()) {
             case NPCState::Idle: {
-                ActionType actionType = it->decideNextAction(tileMap, house, market);
-                it->setCurrentAction(actionType);
-
+                ActionType actionType = npc.decideNextAction(tileMap, house, market);
+                npc.setCurrentAction(actionType);
+                
                 Tile* nearestTile = nullptr;
-
-                if (actionType == ActionType::ChopTree) nearestTile = it->findNearestTile(tileMap, ObjectType::Tree);
-                else if (actionType == ActionType::MineRock) nearestTile = it->findNearestTile(tileMap, ObjectType::Rock);
-                else if (actionType == ActionType::GatherBush) nearestTile = it->findNearestTile(tileMap, ObjectType::Bush);
-                else if (actionType == ActionType::BuyItem || actionType == ActionType::SellItem)
-                    nearestTile = it->findNearestTile(tileMap, ObjectType::Market);
-                else if (actionType == ActionType::RegenerateEnergy || actionType == ActionType::UpgradeHouse)
-                    nearestTile = it->findNearestTile(tileMap, ObjectType::House);
-
+                
+                // FIXED: Better target selection
+                switch (actionType) {
+                    case ActionType::ChopTree:
+                        nearestTile = npc.findNearestTile(tileMap, ObjectType::Tree);
+                        break;
+                    case ActionType::MineRock:
+                        nearestTile = npc.findNearestTile(tileMap, ObjectType::Rock);
+                        break;
+                    case ActionType::GatherBush:
+                        nearestTile = npc.findNearestTile(tileMap, ObjectType::Bush);
+                        break;
+                    case ActionType::BuyItem:
+                    case ActionType::SellItem:
+                        nearestTile = npc.findNearestTile(tileMap, ObjectType::Market);
+                        break;
+                    case ActionType::RegenerateEnergy:
+                    case ActionType::UpgradeHouse:
+                    case ActionType::StoreItem:
+                        nearestTile = npc.findNearestTile(tileMap, ObjectType::House);
+                        break;
+                    case ActionType::Rest:
+                        // Rest in place - no movement needed
+                        npc.setState(NPCState::PerformingAction);
+                        break;
+                    default:
+                        // For unknown actions, just rest
+                        npc.setCurrentAction(ActionType::Rest);
+                        npc.setState(NPCState::PerformingAction);
+                        break;
+                }
+                
                 if (nearestTile) {
                     npc.setTarget(nearestTile);
                     npc.setState(NPCState::Walking);
                     stuckCounter[npc.getName()] = 0;
-                    idleCounter[npc.getName()] = 0;
-                    getDebugConsole().log("NPC", npc.getName() + " is walking to action: " +
-                                          std::to_string(static_cast<int>(actionType)));
-                } else {
-                    stuckCounter[npc.getName()]++;
-                    if (stuckCounter[npc.getName()] > 3) {
-                        ActionType randomAction = static_cast<ActionType>(1 + rand() % (static_cast<int>(ActionType::SellItem)));
-                        npc.setCurrentAction(randomAction);
-                        stuckCounter[npc.getName()] = 0;
-                        getDebugConsole().log("FIX", npc.getName() + " was stuck, forced random action.");
-                    }
-                    npc.setState(NPCState::Idle);
+                    getDebugConsole().log("NPC", npc.getName() + " walking to " + 
+                                        std::to_string(static_cast<int>(actionType)));
+                } else if (npc.getCurrentAction() != ActionType::Rest) {
+                    // FIXED: If no target found, force rest action
+                    npc.setCurrentAction(ActionType::Rest);
+                    npc.setState(NPCState::PerformingAction);
+                    getDebugConsole().log("NPC", npc.getName() + " no target found, resting instead");
                 }
                 break;
             }
-
-            case NPCState::Walking:
-                if (it->getTarget() && !it->isAtTarget()) {
-                    performPathfinding(*it);
-                    it->reduceHealth(0.05f);
-                    it->consumeEnergy(0.1f);
+            
+            case NPCState::Walking: {
+                if (npc.getTarget() && !npc.isAtTarget()) {
+                    // FIXED: Improved pathfinding
+                    performPathfinding(npc);
+                    
+                    // FIXED: Reasonable costs for movement
+                    npc.reduceHealth(0.01f * deltaTime); // Very small health cost
+                    npc.consumeEnergy(0.5f * deltaTime); // Small energy cost
+                    
+                    // FIXED: Check if we're close enough to the target
+                    sf::Vector2f targetPos = npc.getTarget()->getPosition();
+                    sf::Vector2f npcPos = npc.getPosition();
+                    float distance = std::hypot(targetPos.x - npcPos.x, targetPos.y - npcPos.y);
+                    
+                    if (distance < GameConfig::tileSize * 1.5f) { // Close enough
+                        npc.setState(NPCState::PerformingAction);
+                    }
                 } else {
-                    it->setState(NPCState::PerformingAction);
+                    npc.setState(NPCState::PerformingAction);
                 }
                 break;
-
-            case NPCState::PerformingAction:
-                if (it->getTarget()) {
-                    it->performAction(it->getCurrentAction(), *it->getTarget(), tileMap, market, house);
-                    it->setTarget(nullptr);
+            }
+            
+            case NPCState::PerformingAction: {
+                if (npc.getTarget()) {
+                    npc.performAction(npc.getCurrentAction(), *npc.getTarget(), tileMap, market, house);
+                } else {
+                    // Perform action without target (like Rest)
+                    sf::Vector2f npcPos = npc.getPosition();
+                    int tileX = static_cast<int>(npcPos.x / GameConfig::tileSize);
+                    int tileY = static_cast<int>(npcPos.y / GameConfig::tileSize);
+                    
+                    if (tileX >= 0 && tileX < tileMap[0].size() && tileY >= 0 && tileY < tileMap.size()) {
+                        npc.performAction(npc.getCurrentAction(), *tileMap[tileY][tileX], tileMap, market, house);
+                    }
                 }
-                it->setState(NPCState::Idle);
+                
+                npc.setTarget(nullptr);
+                npc.setState(NPCState::Idle);
                 break;
+            }
+            
+            case NPCState::EvaluatingState: {
+                // FIXED: Don't stay in this state - move to idle
+                npc.setState(NPCState::Idle);
+                break;
+            }
         }
-
-        // Enforce activity if idle too long
-        if (it->getState() == NPCState::Idle) {
-            idleCounter[it->getName()]++;
-            if (idleCounter[it->getName()] > 5) {
-                ActionType randomAction = static_cast<ActionType>(1 + rand() % (static_cast<int>(ActionType::SellItem)));
-                it->setCurrentAction(randomAction);
-                idleCounter[it->getName()] = 0;
-                getDebugConsole().log("FIX", it->getName() + " was idle too long, forced random action.");
+        
+        // FIXED: Force state transition if stuck in same state too long
+        static std::unordered_map<std::string, float> stateTimer;
+        static std::unordered_map<std::string, NPCState> lastState;
+        
+        if (lastState[npc.getName()] == npc.getState()) {
+            stateTimer[npc.getName()] += deltaTime;
+            if (stateTimer[npc.getName()] > 5.0f) { // Stuck in state for 5 seconds
+                npc.setState(NPCState::Idle);
+                npc.setTarget(nullptr);
+                stateTimer[npc.getName()] = 0.0f;
+                getDebugConsole().log("STATE", npc.getName() + " was stuck in state, forced to idle");
             }
         } else {
-            idleCounter[it->getName()] = 0;
+            stateTimer[npc.getName()] = 0.0f;
         }
-
+        lastState[npc.getName()] = npc.getState();
+        
         ++it;
     }
-
+    
+    // FIXED: Restart simulation if all NPCs die (only in non-single player mode)
     if (npcs.empty() && !singlePlayerMode) {
         getDebugConsole().log("SYSTEM", "All NPCs have died. Restarting simulation...");
         resetSimulation();
@@ -649,27 +738,42 @@ void Game::simulateSocietalGrowth(float deltaTime) {
 void Game::performPathfinding(NPCEntity& npc) {
     Tile* targetTile = npc.getTarget();
     if (!targetTile) {
-        getDebugConsole().log("ERROR", npc.getName() + " has no target. Staying idle.");
+        getDebugConsole().log("ERROR", npc.getName() + " has no target. Setting to idle.");
+        npc.setState(NPCState::Idle);
         return;
     }
 
     sf::Vector2f targetPos = targetTile->getPosition();
-    sf::Vector2f direction = targetPos - npc.getPosition();
+    sf::Vector2f npcPos = npc.getPosition();
+    sf::Vector2f direction = targetPos - npcPos;
     float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
 
-    if (distance > GameConfig::tileSize / 2.0f) {
-        direction /= distance;
-        sf::Vector2f newPosition = npc.getPosition() + direction * npc.getSpeed() * deltaTime * simulationSpeed;
-
-        if (newPosition.x >= 0 && newPosition.x < GameConfig::mapWidth * GameConfig::tileSize &&
-            newPosition.y >= 0 && newPosition.y < GameConfig::mapHeight * GameConfig::tileSize) {
-            npc.setPosition(newPosition.x, newPosition.y);
-            getDebugConsole().log("Pathfinding", npc.getName() + " moved to (" +
-                                std::to_string(newPosition.x) + ", " + std::to_string(newPosition.y) + ")");
+    if (distance > GameConfig::tileSize * 0.8f) { // FIXED: Better distance threshold
+        // Normalize direction
+        if (distance > 0) {
+            direction /= distance;
         }
+        
+        // FIXED: Reasonable movement speed
+        float moveSpeed = npc.getSpeed() * deltaTime * simulationSpeed;
+        sf::Vector2f newPosition = npcPos + direction * moveSpeed;
+
+        // FIXED: Boundary checking
+        float mapWidth = GameConfig::mapWidth * GameConfig::tileSize;
+        float mapHeight = GameConfig::mapHeight * GameConfig::tileSize;
+        
+        newPosition.x = std::clamp(newPosition.x, 0.0f, mapWidth - GameConfig::tileSize);
+        newPosition.y = std::clamp(newPosition.y, 0.0f, mapHeight - GameConfig::tileSize);
+        
+        npc.setPosition(newPosition.x, newPosition.y);
+        
+        getDebugConsole().log("Pathfinding", npc.getName() + " moved to (" +
+                            std::to_string(newPosition.x) + ", " + std::to_string(newPosition.y) + 
+                            "), distance to target: " + std::to_string(distance));
     } else {
+        // Close enough to target
         npc.setState(NPCState::PerformingAction);
-        getDebugConsole().log("Pathfinding", npc.getName() + " reached the target.");
+        getDebugConsole().log("Pathfinding", npc.getName() + " reached target");
     }
 }
 
