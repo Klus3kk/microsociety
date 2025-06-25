@@ -6,15 +6,15 @@
 
 ## Description
 
-MicroSociety is an object-oriented simulation project that models a dynamic society with AI-driven behaviors, events, and interactions. The project uses AI to create a lively, ever-changing environment with support for both traditional Q-learning and advanced TensorFlow-based deep learning.
+MicroSociety is an object-oriented simulation project that models a dynamic society with AI-driven behaviors, events, and interactions. The project uses AI to create a lively environment with support for both traditional Q-learning and TensorFlow-based deep learning.
 
 ## Setup Options
 
-MicroSociety offers flexible setup options depending on your platform and AI requirements:
+MicroSociety offers some setup options depending on your platform and AI requirements:
 
 - **With TensorFlow (Linux/macOS/Docker)**: Full AI capabilities including deep Q-learning with TensorFlow
 - **Without TensorFlow (All platforms)**: Q-learning based AI without TensorFlow dependencies
-- **Windows**: Automatic fallback to Q-learning (TensorFlow C API has incomplete headers on Windows)
+- **Windows**: Automatic fallback to Q-learning (TensorFlow C API has incomplete headers on Windows, will be fixed in the future)
 
 ## Platform-Specific Setup
 
@@ -52,7 +52,7 @@ make -j$(nproc)
 - CMake 3.14+
 - Git
 
-**Note:** Windows automatically disables TensorFlow due to incomplete C API headers. The simulation uses Q-learning instead.
+**Note:** Windows automatically disables TensorFlow due to incomplete C API headers. The simulation can use Q-learning instead.
 
 1. Open **Developer Command Prompt** for Visual Studio
 2. Build the project:
@@ -79,10 +79,8 @@ make -j$(nproc)
 **With X11 forwarding (Linux/macOS):**
 
 ```bash
-# Allow X11 connections
 xhost +local:docker
 
-# Run with GUI support
 docker run -it --rm \
   -e DISPLAY=$DISPLAY \
   -v /tmp/.X11-unix:/tmp/.X11-unix \
@@ -126,41 +124,3 @@ The simulation offers three AI modes selectable at startup:
 | macOS    | ✅ Full Support | ✅ | Native build |
 | Windows  | ❌ Auto-disabled | ✅ | Native build or Docker |
 
-## Troubleshooting
-
-### TensorFlow Issues on Windows
-
-If you see TensorFlow-related errors on Windows, the build system automatically falls back to Q-learning. For full TensorFlow support on Windows, use Docker or WSL2.
-
-### Memory Leak/Performance Profiling
-
-**Linux/macOS with Valgrind:**
-
-```bash
-valgrind --leak-check=full --track-origins=yes ./MicroSociety
-```
-
-**Performance profiling:**
-
-```bash
-valgrind --tool=callgrind ./MicroSociety
-kcachegrind callgrind.out.<pid>
-```
-
-**Debugging with GDB:**
-
-```bash
-gdb ./MicroSociety
-run
-# If crash occurs:
-bt full
-```
-
-**Windows with Visual Studio:**
-
-```cmd
-# Debug build
-cmake -G "NMake Makefiles" .. -DCMAKE_BUILD_TYPE=Debug
-nmake
-# Run with debugger attached in Visual Studio
-```
