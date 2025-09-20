@@ -6,25 +6,12 @@
 
 ## Description
 
-MicroSociety is an object-oriented simulation project that models a dynamic society with AI-driven behaviors, events, and interactions. The project uses AI to create a lively environment with support for both traditional Q-learning and TensorFlow-based deep learning.
-
-## Setup Options
-
-MicroSociety offers some setup options depending on your platform and AI requirements:
-
-- **With TensorFlow (Linux/macOS/Docker)**: Full AI capabilities including deep Q-learning with TensorFlow
-- **Without TensorFlow (All platforms)**: Q-learning based AI without TensorFlow dependencies
-- **Windows**: Automatic fallback to Q-learning (TensorFlow C API has incomplete headers on Windows, will be fixed in the future)
+MicroSociety is an object-oriented simulation project that models a dynamic society with AI-driven behaviors, events, and interactions. 
+The project uses AI to create a lively environment with support for both traditional Q-learning and TensorFlow-based deep learning.
 
 ## Platform-Specific Setup
 
 ### Linux/macOS (Full TensorFlow Support)
-
-**Prerequisites:**
-
-- CMake 3.14+
-- C++17 compatible compiler
-- Git
 
 **Build with TensorFlow:**
 
@@ -46,12 +33,6 @@ make -j$(nproc)
 
 ### Windows (Q-Learning Only)
 
-**Prerequisites:**
-
-- Visual Studio 2019/2022 Build Tools or Visual Studio Community
-- CMake 3.14+
-- Git
-
 **Note:** Windows automatically disables TensorFlow due to incomplete C API headers. The simulation can use Q-learning instead.
 
 1. Open **Developer Command Prompt** for Visual Studio
@@ -64,17 +45,14 @@ make -j$(nproc)
    bin\MicroSociety.exe
    ```
 
-### Docker Setup (Full TensorFlow Support on Any Platform)
+### Docker Setup 
 
-**For Windows users who need TensorFlow support:**
+**For Windows users**
 
-1. Install Docker Desktop
-2. Build and run:
-
-   ```bash
-   docker build -t microsociety .
-   docker run -it microsociety
-   ```
+```bash
+docker build -t microsociety .
+docker run -it microsociety
+```
 
 **With X11 forwarding (Linux/macOS):**
 
@@ -87,40 +65,12 @@ docker run -it --rm \
   microsociety
 ```
 
-### WSL2 Setup (Windows Alternative)
-
-For Windows users who prefer a native Linux environment:
-
-1. Install WSL2 with Ubuntu:
-
-   ```cmd
-   wsl --install -d Ubuntu-22.04
-   ```
-
-2. Enter WSL2 and build:
-
-   ```bash
-   wsl
-   cd /mnt/c/path/to/microsociety
-   mkdir build && cd build
-   cmake ..
-   make -j$(nproc)
-   ./bin/MicroSociety
-   ```
-
 ## AI Modes
 
 The simulation offers three AI modes selectable at startup:
 
-1. **Single Player Mode**: Play as a character alongside AI NPCs
-2. **Reinforcement Learning C++**: NPCs use Q-learning algorithms
-3. **Deep Q-Learning TensorFlow**: NPCs use neural networks (Linux/macOS/Docker only)
+1. **Single player**: Play as a character alongside AI NPCs
+2. **Reinforcement learning C++**: NPCs use Q-learning algorithms
+3. **Deep Q-learning TensorFlow**: NPCs use neural networks 
 
-## Build Options
-
-| Platform | TensorFlow | Q-Learning | Recommended Setup |
-|----------|------------|------------|-------------------|
-| Linux    | ✅ Full Support | ✅ | Native build |
-| macOS    | ✅ Full Support | ✅ | Native build |
-| Windows  | ❌ Auto-disabled | ✅ | Native build or Docker |
 
