@@ -6,7 +6,8 @@
 
 ## Description
 
-MicroSociety is an object-oriented simulation project that models a dynamic society with AI-driven behaviors, events, and interactions. 
+MicroSociety is an object-oriented simulation project that models a dynamic society with AI-driven behaviors, events, and interactions.
+
 The project uses AI to create a lively environment with support for both traditional Q-learning and TensorFlow-based deep learning.
 
 ## Platform-Specific Setup
