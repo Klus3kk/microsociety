@@ -1,17 +1,16 @@
 # MicroSociety
 
-
 ![CI](https://github.com/Klus3kk/microsociety/actions/workflows/ci.yml/badge.svg)
 ![License](https://img.shields.io/badge/License-MIT-blue)
 ![Language](https://img.shields.io/badge/C++-blue)
 
 ## Description
 
-MicroSociety is an object-oriented simulation project that models a dynamic society with AI-driven behaviors, events, and interactions.
+MicroSociety is an object-oriented simulation project that models a society with AI-driven behaviors, events and interactions.
 
 The project uses AI to create a lively environment with support for both traditional Q-learning and TensorFlow-based deep learning.
 
-## Platform-Specific Setup
+## Platform-specific Setup
 
 ### Linux/macOS (Full TensorFlow Support)
 
@@ -69,10 +68,9 @@ docker run -it --rm \
 
 ## AI Modes
 
-The simulation offers three AI modes selectable at startup:
+The simulation offers two AI modes selectable at startup:
 
-1. **Single player**: Play as a character alongside AI NPCs
-2. **Reinforcement learning C++**: NPCs use Q-learning algorithms
-3. **Deep Q-learning TensorFlow**: NPCs use neural networks 
+1. **Reinforcement learning C++**: NPCs use Q-learning algorithms
+2. **Deep Q-learning TensorFlow**: NPCs use neural networks 
 
 

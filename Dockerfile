@@ -1,7 +1,6 @@
-# Use Ubuntu 22.04 as the base image
 FROM ubuntu:22.04
 
-# Install system dependencies
+# system dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
     cmake \
@@ -33,10 +32,10 @@ RUN apt-get update && apt-get install -y \
     libtiff-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
+# working directory
 WORKDIR /app
 
-# Clone and Build TensorFlow Lite (FINAL FIX)
+# clone/build TensorFlow Lite 
 RUN wget -q https://github.com/tensorflow/tensorflow/archive/refs/tags/v2.11.0.zip && \
     unzip v2.11.0.zip && \
     mv tensorflow-2.11.0 tensorflow-lite && \
@@ -50,16 +49,16 @@ RUN wget -q https://github.com/tensorflow/tensorflow/archive/refs/tags/v2.11.0.z
     cp /usr/local/tensorflow-lite/tensorflow/lite/build/libtensorflow-lite.a /usr/local/tflite/lib/ && \
     ls -lh /usr/local/tflite/lib  
 
-# Copy project files
+# copy project files
 COPY . .
 
-# Set TensorFlow Lite Environment Variable (FINAL FIX)
+# set TensorFlow Lite environment variable
 ENV TFLITE_DIR="/usr/local/tflite"
 
-# Build MicroSociety
+# build microsociety
 RUN rm -rf build && mkdir build && cd build && \
     cmake .. -DTFLITE_DIR=${TFLITE_DIR} && \
     cmake --build .
 
-# Run the application
+# run the application
 CMD ["./build/MicroSociety"]
