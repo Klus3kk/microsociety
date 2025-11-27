@@ -9,7 +9,7 @@
 
 DataCollector::DataCollector(const std::string& outputDir) 
     : outputDirectory(outputDir) {
-    createOutputDirectory();
+    createOutputDirectory(); 
     currentSessionFile = generateFilename();
 }
 
@@ -19,6 +19,13 @@ DataCollector::~DataCollector() {
     }
 }
 
+DataCollector& getDataCollector() {
+    static DataCollector instance;
+    return instance;
+}
+
+
+// create output directories
 void DataCollector::createOutputDirectory() {
     try {
         std::filesystem::create_directories(outputDirectory);
@@ -30,6 +37,7 @@ void DataCollector::createOutputDirectory() {
     }
 }
 
+// save data to file
 void DataCollector::startCollection() {
     std::lock_guard<std::mutex> lock(dataMutex);
     isCollecting = true;
@@ -38,6 +46,8 @@ void DataCollector::startCollection() {
     getDebugConsole().log("DataCollector", "Started data collection session: " + currentSessionFile);
 }
 
+
+// stop data collection
 void DataCollector::stopCollection() {
     std::lock_guard<std::mutex> lock(dataMutex);
     if (isCollecting) {
@@ -48,10 +58,11 @@ void DataCollector::stopCollection() {
     }
 }
 
+//  record experience
 void DataCollector::recordExperience(const State& state, ActionType action, float reward, 
                                     const State& nextState, bool done, const std::string& npcName) {
     if (!isCollecting) {
-        getDebugConsole().log("DataCollection", "WARNING: Not collecting, ignoring experience", LogLevel::Warning);
+        getDebugConsole().log("DataCollector", "WARNING: Not collecting, ignoring experience", LogLevel::Warning);
         return;
     }
     
@@ -61,10 +72,9 @@ void DataCollector::recordExperience(const State& state, ActionType action, floa
     ExperienceData exp(state, action, reward, nextState, done, npcName, timestamp);
     experiences.push_back(exp);
     
-    // Update statistics BEFORE incrementing total
     updateStatistics(exp);
     
-    // Log detailed info for debugging
+    // log info for debugging
     getDebugConsole().log("DataCollection", 
         "RECORDED: " + npcName + 
         " | Action=" + std::to_string(static_cast<int>(action)) + 
@@ -76,21 +86,22 @@ void DataCollector::recordExperience(const State& state, ActionType action, floa
     
     experiencesThisSession++;
     
-    // Auto-save when batch is full
+    // auto-save when batch is full
     if (experiences.size() >= maxExperiencesPerFile) {
-        getDebugConsole().log("DataCollection", "Batch full (" + std::to_string(experiences.size()) + 
+        getDebugConsole().log("DataCollector", "Batch full (" + std::to_string(experiences.size()) + 
                             "), auto-saving...");
         saveCurrentBatch();
     }
     
-    // Log every 10 experiences for monitoring
+    // log every 10 experiences for monitoring
     if (experiencesThisSession % 10 == 0) {
-        getDebugConsole().log("DataCollection", "Session progress: " + 
+        getDebugConsole().log("DataCollector", "Session progress: " + 
                             std::to_string(experiencesThisSession) + " experiences, " +
                             "Current batch: " + std::to_string(experiences.size()));
     }
 }
 
+// force save current batch
 void DataCollector::forceSaveCurrentBatch() {
     std::lock_guard<std::mutex> lock(dataMutex);
     if (!experiences.empty()) {
@@ -98,15 +109,16 @@ void DataCollector::forceSaveCurrentBatch() {
     }
 }
 
+// get current batch
 std::vector<ExperienceData> DataCollector::getCurrentBatch() const {
     std::lock_guard<std::mutex> lock(dataMutex);
     return experiences;
 }
 
-
+// save current batch to file
 void DataCollector::saveCurrentBatch() {
     if (experiences.empty()) {
-        getDebugConsole().log("DataCollection", "saveCurrentBatch called but experiences is empty");
+        getDebugConsole().log("DataCollector", "saveCurrentBatch called but experiences is empty");
         return;
     }
     
@@ -121,7 +133,7 @@ void DataCollector::saveCurrentBatch() {
         {"session_file", currentSessionFile},
         {"batch_index", currentFileIndex},
         {"timestamp", std::time(nullptr)},
-        {"cumulative_total", totalExperiences + batchSize}  // What total will be after this save
+        {"cumulative_total", totalExperiences + batchSize}  
     };
     
     jsonData["experiences"] = nlohmann::json::array();
@@ -133,21 +145,21 @@ void DataCollector::saveCurrentBatch() {
     if (file.is_open()) {
         file << jsonData.dump(2);
         file.close();
-        
-        // NOW increment totalExperiences after successful save
+    
         totalExperiences += batchSize;
         
-        getDebugConsole().log("DataCollection", 
+        getDebugConsole().log("DataCollector", 
             "SAVED BATCH: " + std::to_string(batchSize) + " experiences to " + filename + 
             " | Total experiences now: " + std::to_string(totalExperiences));
         
         experiences.clear();
         currentFileIndex++;
     } else {
-        getDebugConsole().log("DataCollection", "FAILED to save batch to: " + filename, LogLevel::Error);
+        getDebugConsole().log("DataCollector", "FAILED to save batch to: " + filename, LogLevel::Error);
     }
 }
 
+// generate filename based on timestamp
 std::string DataCollector::generateFilename() {
     auto now = std::time(nullptr);
     auto tm = *std::localtime(&now);
@@ -157,11 +169,12 @@ std::string DataCollector::generateFilename() {
     return oss.str();
 }
 
+// update statistics based on new experience
 void DataCollector::updateStatistics(const ExperienceData& exp) {
-    experiencesThisSession++;
     actionCounts[static_cast<int>(exp.action)]++;
 }
 
+// export current experiences to JSON file
 void DataCollector::exportToJSON(const std::string& filename) {
     std::lock_guard<std::mutex> lock(dataMutex);
     
@@ -189,6 +202,7 @@ void DataCollector::exportToJSON(const std::string& filename) {
     }
 }
 
+// export current experiences to JSON file
 void DataCollector::exportToCSV(const std::string& filename) {
     std::lock_guard<std::mutex> lock(dataMutex);
     
@@ -210,7 +224,7 @@ void DataCollector::exportToCSV(const std::string& filename) {
     
     size_t rowsWritten = 0;
     
-    // FIRST: Export current batch (in-memory experiences)
+    // export current batch (in-memory experiences)
     for (const auto& exp : experiences) {
         file << exp.state.posX << "," << exp.state.posY << ","
              << exp.state.nearbyTrees << "," << exp.state.nearbyRocks << ","
@@ -224,7 +238,7 @@ void DataCollector::exportToCSV(const std::string& filename) {
         rowsWritten++;
     }
     
-    // SECOND: Read and append all saved batch files
+    // read and append all saved batch files
     try {
         for (size_t i = 0; i < currentFileIndex; i++) {
             std::string batchFile = outputDirectory + "/sessions/" + currentSessionFile + 
@@ -237,7 +251,6 @@ void DataCollector::exportToCSV(const std::string& filename) {
                 
                 if (batchData.contains("experiences")) {
                     for (const auto& expJson : batchData["experiences"]) {
-                        // Extract data from JSON and write to CSV
                         file << expJson["state"]["posX"] << "," << expJson["state"]["posY"] << ","
                              << expJson["state"]["nearbyTrees"] << "," << expJson["state"]["nearbyRocks"] << ","
                              << expJson["state"]["nearbyBushes"] << "," << expJson["state"]["energyLevel"] << ","
@@ -265,6 +278,7 @@ void DataCollector::exportToCSV(const std::string& filename) {
         ", Saved batches: " + std::to_string(currentFileIndex) + ")");
 }
 
+// get action distribution
 std::unordered_map<int, float> DataCollector::getActionDistribution() const {
     std::unordered_map<int, float> distribution;
     size_t total = std::accumulate(actionCounts.begin(), actionCounts.end(), 0,
@@ -279,6 +293,7 @@ std::unordered_map<int, float> DataCollector::getActionDistribution() const {
     return distribution;
 }
 
+// get average reward
 float DataCollector::getAverageReward() const {
     if (experiences.empty()) return 0.0f;
     
@@ -287,6 +302,7 @@ float DataCollector::getAverageReward() const {
     return sum / experiences.size();
 }
 
+// print statistics
 void DataCollector::printStatistics() const {
     getDebugConsole().log("DataCollector", "=== Data Collection Statistics ===");
     getDebugConsole().log("DataCollector", "Total experiences: " + std::to_string(totalExperiences));
@@ -301,10 +317,12 @@ void DataCollector::printStatistics() const {
     }
 }
 
+
+// analyze data quality
 void DataCollector::analyzeDataQuality() const {
     getDebugConsole().log("DataCollector", "=== Data Quality Analysis ===");
     
-    // Check action balance
+    // check action balance
     auto distribution = getActionDistribution();
     float maxPercentage = 0.0f, minPercentage = 1.0f;
     for (const auto& [action, percentage] : distribution) {
@@ -319,12 +337,13 @@ void DataCollector::analyzeDataQuality() const {
         getDebugConsole().log("DataCollector", "WARNING: High action imbalance detected!", LogLevel::Warning);
     }
     
-    // Check reward distribution
+    // check reward distribution
     auto [minReward, maxReward] = getRewardRange();
     getDebugConsole().log("DataCollector", "Reward range: [" + std::to_string(minReward) + 
                         ", " + std::to_string(maxReward) + "]");
 }
 
+// get reward range
 std::pair<float, float> DataCollector::getRewardRange() const {
     if (experiences.empty()) return {0.0f, 0.0f};
     
@@ -334,10 +353,4 @@ std::pair<float, float> DataCollector::getRewardRange() const {
         });
     
     return {minMaxReward.first->reward, minMaxReward.second->reward};
-}
-
-// Singleton instance
-DataCollector& getDataCollector() {
-    static DataCollector instance;
-    return instance;
 }

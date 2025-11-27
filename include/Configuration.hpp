@@ -3,9 +3,10 @@
 
 // GameConfig stores all game-related constant values
 struct GameConfig {
-    // Window dimensions in pixels
+    // Window configuration
     static constexpr int windowWidth = 800;      
-    static constexpr int windowHeight = 800;     
+    static constexpr int windowHeight = 800;    
+    static constexpr int WINDOW_FPS_LIMIT = 60;
 
     // Tile configuration
     static constexpr int tileSize = 32;          // Each tile's size in pixels

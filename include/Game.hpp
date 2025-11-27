@@ -16,44 +16,41 @@
 #include "Configuration.hpp"
 #include "TextureManager.hpp"
 
-// Forward declaration for the NPCEntity class
 class NPCEntity;
-
-// Forward declaration for PlayerEntity - we'll include it in Game.cpp
 class PlayerEntity;
 
 class Game {
 private:
-    // UI and Market
     UI ui;
     Market market;
     House house;
-    // Window and Graphics
-    sf::RenderWindow window;
     ClockGUI clockGUI;
-    std::unordered_map<std::string, int> aggregateResources(const std::vector<NPCEntity>& npcs) const;
+    sf::RenderWindow window;
     sf::Texture playerTexture;
+    std::unordered_map<std::string, int> aggregateResources(const std::vector<NPCEntity>& npcs) const;
 
-    // Simulation Control
+    // simulation control
     float deltaTime;
     bool showTileBorders = false;
     bool isClockVisible = true;
     float simulationSpeed = 1.0f;
+    float resourceRegenerationTimer = 0.0f;
+    const float regenerationInterval = 7.0f; // regenerate resources every 7 seconds
 
-    // Map and Environment
+    // map and tiles
     std::vector<std::vector<std::unique_ptr<Tile>>> tileMap;
     int mapWidth;
     int mapHeight;
     int tileSize;
 
-    // Time and Resources Management
+    // time/resources management
     TimeManager timeManager;
     MoneyManager moneyManager;
 
-    // NPCEntity Management
+    // NPC management
     std::vector<NPCEntity> npcs;
     
-    // Player Entity (for single player mode) - using raw pointer to avoid incomplete type issues
+    // Player Entity (for single player mode) - TO REMOVE!
     PlayerEntity* player = nullptr;
     bool singlePlayerMode = false;
     
@@ -61,30 +58,28 @@ private:
     bool reinforcementLearningEnabled = true;
     bool tensorFlowEnabled = false;
 
-    // Private Helper Methods
-    std::vector<NPCEntity> generateNPCEntitys() const;  
+    // generate NPCs
+    std::vector<NPCEntity> generateNPCEntities() const;  
 
-    // Rendering Helpers
+    // render
     void render();
     void drawTileBorders();
-
-    float resourceRegenerationTimer = 0.0f;
-    const float regenerationInterval = 7.0f; // Regenerate every 3 seconds
     void regenerateResources();
-    
+
     // TensorFlow initialization
     void initializeNPCTensorFlow();
     
-    // Data Collection (NEW)
+    // data collection
     void checkDataCollectionProgress();
     
-    // Single player mode helpers
-    void handlePlayerInput();
+    // Single player mode helpers - TO REMOVE!
+    void handlePlayerInput(); 
     void updatePlayer();
     
-    // Player cleanup helper
-    void cleanupPlayer();
+    // Player cleanup - TO REMOVE!
+    void cleanupPlayer(); // I think it's for single-player, so remove!
 
+    // Statistics across simulations
     struct SimulationStats {
         int totalItemsGatheredAllTime = 0;
         int totalItemsSoldAllTime = 0;
@@ -92,47 +87,43 @@ private:
         int totalMoneySpentAllTime = 0;
         int totalMoneyEarnedAllTime = 0;
     } persistentStats;
-    
+
+    // Update persistent stats
     void updatePersistentStats();
 
 public:
-    // Constructor
     Game();
-    
-    // Destructor to handle cleanup
     ~Game();
 
-    // Main Run Loop
+    // main loop
     void run();
 
-    // Simulation Management
+    // simulation management
+    void generateMap();
     void resetSimulation();
     void logIterationStats(int iteration);
+    void setSimulationSpeed(float speedFactor);
+    void toggleTileBorders();
+    const std::vector<std::vector<std::unique_ptr<Tile>>>& getTileMap() const;
+
     int getTotalItemsGathered() const;
     int getTotalItemsMined() const; 
-    void toggleTileBorders();
-    void setSimulationSpeed(float speedFactor);
+    
+    void storeItems(NPCEntity& npc, Tile& tile);
+    bool detectCollision(Entity& entity);
     void simulateNPCEntityBehavior(float deltaTime);
     void simulateSocietalGrowth(float deltaTime);
     void evaluateNPCEntityState(NPCEntity& NPCEntity);
     void performPathfinding(NPCEntity& NPCEntity);
-    void handleMarketActions(NPCEntity& npc, Tile& targetTile, ActionType actionType);
-    
-    // Collision Detection - FIXED to work with Entity base class
-    bool detectCollision(Entity& entity);
-    
-    void generateMap();
-    void storeItems(NPCEntity& npc, Tile& tile);
     void moveToResource(NPCEntity& npc, ActionType actionType);
-    // Accessor for TileMap
-    const std::vector<std::vector<std::unique_ptr<Tile>>>& getTileMap() const;
-    
-    // Simulation Mode Settings
-    void enableSinglePlayerMode(bool enable);
+    void handleMarketActions(NPCEntity& npc, Tile& targetTile, ActionType actionType);
+
+    // simulation mode settings
+    void enableSinglePlayerMode(bool enable); // TO REMOVE!
     void enableReinforcementLearning(bool enable) { reinforcementLearningEnabled = enable; }
-    void enableTensorFlow(bool enable) { tensorFlowEnabled = enable; }
+    void enableTensorFlow(bool enable);
     
-    bool isSinglePlayerMode() const { return singlePlayerMode; }
+    bool isSinglePlayerMode() const { return singlePlayerMode; } // TO REMOVE!
     bool isReinforcementLearningEnabled() const { return reinforcementLearningEnabled; }
     bool isTensorFlowEnabled() const { return tensorFlowEnabled; }
 };
