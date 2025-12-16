@@ -14,6 +14,9 @@
 *.tmp
 *.bak
 
+# IGNORE LOG DIRECTORY
+logs/
+
 # IGNORE CMAKE FIELS
 CMakeCache.txt
 

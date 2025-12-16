@@ -33,12 +33,11 @@ void ResourceGatherAction::performGather(Entity& entity, Tile& tile, const std::
     auto* npc = dynamic_cast<NPCEntity*>(&entity);
 
     // Check if tile has the expected object type
-    bool hasCorrectObject = tile.hasObject() && 
-                           (expectedObjectType == ObjectType::Tree || 
-                            tile.getObject()->getType() == expectedObjectType);
+    bool hasCorrectObject = tile.hasObject() && tile.getObject()->getType() == expectedObjectType;
     
     if (!hasCorrectObject) {
         if (npc) {
+            // Different penalties for different resource types
             float penalty = (expectedObjectType == ObjectType::Tree) ? -2.0f : -5.0f;
             npc->receiveFeedback(penalty, tileMap);
         }

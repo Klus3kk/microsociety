@@ -34,16 +34,15 @@ protected:
     ObjectType expectedObjectType;
     float energyCost;
     float rewardValue;
-    float healthCost;
 
     // template method pattern - subclasses configure parameters
     virtual void performGather(Entity& entity, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap);
 
 public:
     ResourceGatherAction(const std::string& resource, const std::string& action, 
-                        ObjectType objectType, float energy, float reward, float health = 0.0f)
+                        ObjectType objectType, float energy, float reward)
         : resourceName(resource), actionName(action), expectedObjectType(objectType),
-          energyCost(energy), rewardValue(reward), healthCost(health) {}
+          energyCost(energy), rewardValue(reward) {}
 
     void perform(Entity& entity, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override {
         performGather(entity, tile, tileMap);
