@@ -4,7 +4,6 @@
 
 #include <nlohmann/json.hpp>
 #include "NPCEntity.hpp"
-#include "PlayerEntity.hpp"
 #include "House.hpp"
 #include "Market.hpp"
 #include "Actions.hpp"
@@ -38,7 +37,7 @@ Game::Game()
     market.setPrice("bush", 1 + std::rand() % 50);
 
     generateMap();
-    npcs = generateNPCEntitys(); 
+    npcs = generateNPCEntities(); 
 
     ui.updateNPCEntityList(npcs);
 
@@ -48,8 +47,6 @@ Game::Game()
 }
 
 Game::~Game() {
-    cleanupPlayer();
-    
     if (getDataCollector().isCollectingData()) {
         getDebugConsole().log("DataCollector", "Saving collected training data...");
         getDataCollector().stopCollection();
@@ -70,94 +67,6 @@ Game::~Game() {
                             std::to_string(getDataCollector().getTotalExperiences()));
     }
 }
-
-// Cleans up the player entity if it exists
-void Game::cleanupPlayer() {
-    if (player) {
-        delete player;
-        player = nullptr;
-    }
-}
-
-// TO REMOVE!
-// void Game::enableSinglePlayerMode(bool enable) { 
-//     singlePlayerMode = enable; 
-    
-//     if (enable) {
-//         getDebugConsole().log("Player", "Enabling single player mode...");
-        
-//         // Clean up existing player first
-//         cleanupPlayer();
-        
-//         // Clear existing NPCs
-//         npcs.clear();
-        
-//         // Create exactly one NPC for single player mode
-//         std::random_device rd;
-//         std::mt19937 gen(rd());
-//         std::uniform_int_distribution<> distX(1, GameConfig::mapWidth - 2);
-//         std::uniform_int_distribution<> distY(1, GameConfig::mapHeight - 2);
-        
-//         try {
-//             // Create NPC companion with proper initialization
-//             NPCEntity singleNPC("Companion", 100, 50, 100, 150.0f, 10, 100, reinforcementLearningEnabled);
-//             singleNPC.setTexture(playerTexture, sf::Color::Blue); // Blue color to distinguish from player
-            
-//             float npcX = distX(gen) * GameConfig::tileSize;
-//             float npcY = distY(gen) * GameConfig::tileSize;
-//             singleNPC.setPosition(npcX, npcY);
-//             singleNPC.setHouse(&house); // Assign house reference
-            
-//             npcs.emplace_back(std::move(singleNPC));
-//             getDebugConsole().log("Player", "Created NPC companion at (" + std::to_string(npcX) + ", " + std::to_string(npcY) + ")");
-//         } catch (const std::exception& e) {
-//             getDebugConsole().log("ERROR", "Failed to create NPC companion: " + std::string(e.what()));
-//             return;
-//         }
-        
-//         // Create player
-//         try {
-//             player = new PlayerEntity(
-//                 "Player", 
-//                 120.0f,     // Health
-//                 60.0f,      // Hunger  
-//                 100.0f,     // Energy
-//                 200.0f,     // Speed
-//                 15.0f,      // Strength
-//                 200.0f      // Money
-//             );
-            
-//             // Set player texture and position
-//             player->setTexture(playerTexture, sf::Color::White);
-            
-//             float playerX = distX(gen) * GameConfig::tileSize;
-//             float playerY = distY(gen) * GameConfig::tileSize;
-//             player->setPosition(playerX, playerY);
-            
-//             getDebugConsole().log("Player", "Created player at (" + std::to_string(playerX) + ", " + std::to_string(playerY) + ")");
-//             getDebugConsole().log("SUCCESS", "Single player mode setup complete");
-//         } catch (const std::exception& e) {
-//             getDebugConsole().log("ERROR", "Failed to create player: " + std::string(e.what()));
-//             cleanupPlayer();
-//             return;
-//         }
-        
-//     } else if (!enable && player) {
-//         getDebugConsole().log("Player", "Disabling single player mode...");
-        
-//         // Reset to normal NPC count for other modes
-//         npcs.clear();
-//         npcs = generateNPCEntitys();
-        
-//         // Clean up player
-//         cleanupPlayer();
-//         getDebugConsole().log("Game", "Returned to multi-NPC mode with " + std::to_string(npcs.size()) + " NPCs");
-//     }
-    
-//     // Update UI
-//     ui.updateNPCList(npcs);
-//     getDebugConsole().log("UI", "Updated NPC list for single player mode: " + std::string(enable ? "ON" : "OFF"));
-// }
 
 // enable TensorFlow mode for NPCs
 void Game::enableTensorFlow(bool enable) {
@@ -242,33 +151,6 @@ void Game::checkDataCollectionProgress() {
     }
 }
 
-// handle player input in single player mode - TO REMOVE!
-// void Game::handlePlayerInput() {
-//     if (!singlePlayerMode || !player) return;
-    
-//     // Handle player movement
-//     player->handleInput(deltaTime * simulationSpeed);
-    
-//     // Handle interaction with E key
-//     static bool eKeyPressed = false;
-//     if (sf::Keyboard::isKeyPressed(sf::Keyboard::E)) {
-//         if (!eKeyPressed) {
-//             eKeyPressed = true;
-            
-//             // Find target tile under player's position
-//             sf::Vector2f playerPos = player->getPosition();
-//             Tile* targetTile = player->getTargetTileAt(tileMap, playerPos.x, playerPos.y);
-            
-//             if (targetTile) {
-//                 player->interactWithTile(*targetTile, tileMap, market, house);
-//             }
-//         }
-//     } else {
-//         eKeyPressed = false;
-//     }
-// }
-
-
 // update persistent statistics across simulations
 void Game::updatePersistentStats() {
     persistentStats.totalItemsGatheredAllTime += getTotalItemsGathered();
@@ -277,32 +159,6 @@ void Game::updatePersistentStats() {
     persistentStats.totalMoneyEarnedAllTime += MoneyManager::getTotalMoneyEarned();
     persistentStats.totalIterations++;
 }
-
-// update player state in single player mode - TO REMOVE!
-// void Game::updatePlayer() {
-//     if (!singlePlayerMode || !player) return;
-    
-//     player->update(deltaTime * simulationSpeed);
-    
-//     // Check if player died
-//     if (player->isDead()) {
-//         getDebugConsole().log("Player", "Player has died. Restarting...");
-        
-//         // Reset player
-//         std::random_device rd;
-//         std::mt19937 gen(rd());
-//         std::uniform_int_distribution<> distX(1, GameConfig::mapWidth - 2);
-//         std::uniform_int_distribution<> distY(1, GameConfig::mapHeight - 2);
-        
-//         player->setHealth(120.0f);
-//         player->setEnergy(100.0f);
-//         player->setDead(false);
-//         player->setPosition(distX(gen) * GameConfig::tileSize, distY(gen) * GameConfig::tileSize);
-//     }
-    
-//     // Check collision
-//     detectCollision(*player);
-// }
 
 // get the tile map
 const std::vector<std::vector<std::unique_ptr<Tile>>>& Game::getTileMap() const {
@@ -321,14 +177,9 @@ bool Game::detectCollision(Entity& entity) {
         if (targetTile.hasObject()) {
             ObjectType objType = targetTile.getObject()->getType();
             
-            // Different handling for NPCs vs Players
             if (auto* npc = dynamic_cast<NPCEntity*>(&entity)) {
                 // NPC-specific collision handling
                 npc->performAction(ActionType::RegenerateEnergy, targetTile, tileMap, market, house);
-            } else if (auto* player = dynamic_cast<PlayerEntity*>(&entity)) {
-                // Player-specific collision handling (if needed)
-                getDebugConsole().log("Player", "Player collision detected with object type: " + 
-                                    std::to_string(static_cast<int>(objType)));
             }
         }
     }
@@ -339,7 +190,7 @@ bool Game::detectCollision(Entity& entity) {
 // run the main game loop
 void Game::run() {
     sf::Clock clock;
-    window.setFramerateLimit(WINDOW_FPS_LIMIT);
+    window.setFramerateLimit(GameConfig::WINDOW_FPS_LIMIT);
     
     while (window.isOpen()) {
         sf::Event event;
@@ -359,12 +210,6 @@ void Game::run() {
         sf::Time dt = clock.restart();
         deltaTime = dt.asSeconds();
 
-        // // Handle player input in single player mode
-        // if (singlePlayerMode) {
-        //     handlePlayerInput();
-        //     updatePlayer();
-        // }
-
         // apply simulation speed to market dynamics
         market.simulateMarketDynamics(deltaTime * simulationSpeed);
         
@@ -381,10 +226,8 @@ void Game::run() {
 
         checkDataCollectionProgress();
 
-        // update UI with correct money
-        ui.updateMoney(singlePlayerMode && player ? 
-                      static_cast<int>(player->getMoney()) : 
-                      MoneyManager::calculateTotalMoney(npcs));
+        // update UI with total money
+        ui.updateMoney(MoneyManager::calculateTotalMoney(npcs));
                       
         // pass simulation speed to time manager
         timeManager.update(deltaTime, simulationSpeed);
@@ -561,7 +404,7 @@ void Game::simulateNPCEntityBehavior(float deltaTime) {
         ++it;
     }
     
-    if (npcs.empty() && !singlePlayerMode) {
+    if (npcs.empty()) {
         getDebugConsole().log("SYSTEM", "All NPCs died. Processing final data...");
         
         // save and export all data before reset
@@ -961,7 +804,7 @@ void Game::generateMap() {
 }
 
 // generate NPC entities with improved stat distribution and logging
-std::vector<NPCEntity> Game::generateNPCEntitys() const {
+std::vector<NPCEntity> Game::generateNPCEntities() const {
     std::vector<NPCEntity> npcs;
     std::set<std::pair<int, int>> occupiedPositions;
 
@@ -1025,34 +868,13 @@ void Game::render() {
         }
     }
 
-    // render entities based on mode
-    // if (singlePlayerMode) { // <--- remove this
-    //     // Single player mode: render the player first
-    //     if (player && !player->isDead()) {
-    //         player->draw(window);
-    //         getDebugConsole().log("Render", "Player rendered at (" + 
-    //                             std::to_string(player->getPosition().x) + ", " + 
-    //                             std::to_string(player->getPosition().y) + ")");
-    //     } else {
-    //         getDebugConsole().log("ERROR", "Player is NULL or dead in single player mode!");
-    //     }
-        
-    //     // Single player mode: render exactly ONE NPC companion if it exists
-    //     if (!npcs.empty() && !npcs[0].isDead()) {
-    //         npcs[0].draw(window); 
-    //         getDebugConsole().log("Render", "NPC companion rendered");
-    //     } else if (npcs.empty()) {
-    //         getDebugConsole().log("ERROR", "No NPC companion found in single player mode!");
-    //     }
-    // } else {
-        // render all NPCs
+    // render all NPCs
     for (const auto& npc : npcs) {
         if (!npc.isDead()) {
             npc.draw(window);
         }
     }
     getDebugConsole().log("Render", "Rendered " + std::to_string(npcs.size()) + " NPCs");
-    // }
 
     // render tile borders if enabled
     if (showTileBorders) drawTileBorders();
@@ -1123,14 +945,6 @@ int Game::getTotalItemsGathered() const {
         }
     }
     
-    // // add players gathered items in single player mode
-    // if (singlePlayerMode && player) {
-    //     const auto& inventory = player->getInventory();
-    //     for (const auto& [item, quantity] : inventory) {
-    //         totalGathered += quantity;
-    //     }
-    // }
-    
     // also count items in house storage and market transactions
     const auto& houseStorage = house.getStorage();
     for (const auto& [item, quantity] : houseStorage) {
@@ -1178,7 +992,7 @@ void Game::resetSimulation() {
 
     npcs.clear();
     npcs.shrink_to_fit();
-    npcs = generateNPCEntitys();
+    npcs = generateNPCEntities();
     ui.updateNPCEntityList(npcs);
     getDebugConsole().log("NPC", "NPCs reset with fresh random stats.");
 
@@ -1189,20 +1003,6 @@ void Game::resetSimulation() {
 
     regenerateResources();
     getDebugConsole().log("RESOURCES", "Resources regenerated.");
-
-    // Reset player in single player mode
-    // if (singlePlayerMode && player) {
-    //     std::random_device rd;
-    //     std::mt19937 gen(rd());
-    //     std::uniform_int_distribution<> distX(1, GameConfig::mapWidth - 2);
-    //     std::uniform_int_distribution<> distY(1, GameConfig::mapHeight - 2);
-        
-    //     player->setHealth(120.0f);
-    //     player->setEnergy(100.0f);
-    //     player->setDead(false);
-    //     player->setPosition(distX(gen) * GameConfig::tileSize, distY(gen) * GameConfig::tileSize);
-    //     getDebugConsole().log("PLAYER", "Player reset to new position.");
-    // }
 
     ui.updateStatus(timeManager.getCurrentDay(), timeManager.getFormattedTime(), timeManager.getSocietyIteration());
 

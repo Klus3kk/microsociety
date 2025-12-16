@@ -35,7 +35,7 @@ public:
     float getEnergyRegenRate() const { return energyRegenRate; }
     float getUpgradeCost() const; 
     
-    // FIXED: Actions - now accept Entity base class (works with both NPCs and Players)
+    // Actions accept Entity base class (used by NPCs)
     void regenerateEnergy(Entity& entity);  // Energy regeneration for any entity
     bool storeItem(const std::string& item, int quantity); // Store resources
     bool takeFromStorage(const std::string& item, int quantity, Entity& entity); // Take resources

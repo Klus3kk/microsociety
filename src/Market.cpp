@@ -1,6 +1,5 @@
 #include "Market.hpp"
 #include "NPCEntity.hpp"
-#include "PlayerEntity.hpp"
 #include "MoneyManager.hpp"
 
 #include <algorithm>
@@ -108,30 +107,28 @@ bool Market::buyItem(Entity& entity, const std::string& item, int quantity) {
     if (quantity <= 0 || item.empty()) return false;
     if (prices.find(item) == prices.end()) setPrice(item, 1 + std::rand() % 50);
 
-    float itemPrice = calculateBuyPrice(item);
-    float totalCost = itemPrice * quantity;
-
-    if (entity.getMoney() < totalCost) {  
-        getDebugConsole().log("MARKET", "Entity cannot afford " + std::to_string(quantity) + " " + item + 
-                            " (needs $" + std::to_string(totalCost) + ", has $" + std::to_string(entity.getMoney()) + ")");
+    auto* npc = dynamic_cast<NPCEntity*>(&entity);
+    if (!npc) {
+        getDebugConsole().log("MARKET", "Non-NPC entity tried to buy items");
         return false;
     }
 
-    // Check if entity can add to inventory
-    bool inventorySuccess = false;
-    if (auto* npc = dynamic_cast<NPCEntity*>(&entity)) {
-        inventorySuccess = npc->addToInventory(item, quantity);
-    } else if (auto* player = dynamic_cast<PlayerEntity*>(&entity)) {
-        inventorySuccess = player->addToInventory(item, quantity);
+    float itemPrice = calculateBuyPrice(item);
+    float totalCost = itemPrice * quantity;
+
+    if (npc->getMoney() < totalCost) {  
+        getDebugConsole().log("MARKET", npc->getName() + " cannot afford " + std::to_string(quantity) + " " + item + 
+                            " (needs $" + std::to_string(totalCost) + ", has $" + std::to_string(npc->getMoney()) + ")");
+        return false;
     }
-    
-    if (!inventorySuccess) {
-        getDebugConsole().log("MARKET", "Entity inventory FULL. Cannot buy " + item);
+
+    if (!npc->addToInventory(item, quantity)) {
+        getDebugConsole().log("MARKET", npc->getName() + " inventory FULL. Cannot buy " + item);
         return false;
     }
 
     // Process the transaction
-    entity.setMoney(entity.getMoney() - totalCost);
+    npc->setMoney(npc->getMoney() - totalCost);
     MoneyManager::recordMoneySpent(static_cast<int>(totalCost));
 
     // FIXED: Properly update market state and tracking
@@ -139,18 +136,13 @@ bool Market::buyItem(Entity& entity, const std::string& item, int quantity) {
     supply[item] = std::max(0, supply[item] - quantity);
     prices[item] = adjustPriceOnBuy(prices[item], demand[item], supply[item], priceAdjustmentFactor);
 
-    // FIXED: Ensure transaction tracking increments correctly
-    totalBuyTransactions[item] += quantity;  // Track number of items bought
+    // Track number of items bought
+    totalBuyTransactions[item] += quantity;
     totalExpenditure[item] += totalCost;
 
-    // Add reward for NPCs
-    if (auto* npc = dynamic_cast<NPCEntity*>(&entity)) {
-        npc->addReward(5.0f * quantity);
-    }
+    npc->addReward(5.0f * quantity);
 
-    getDebugConsole().log("MARKET", "[BUY SUCCESS] " + 
-                        (dynamic_cast<NPCEntity*>(&entity) ? 
-                         dynamic_cast<NPCEntity*>(&entity)->getName() : "Player") + 
+    getDebugConsole().log("MARKET", "[BUY SUCCESS] " + npc->getName() + 
                         " bought " + std::to_string(quantity) + " " + item + 
                         " for $" + std::to_string(totalCost) + 
                         " (total items bought: " + std::to_string(totalBuyTransactions[item]) + ")");
@@ -162,39 +154,26 @@ bool Market::sellItem(Entity& entity, const std::string& item, int quantity) {
     if (item.empty() || quantity <= 0) return false;
     if (prices.find(item) == prices.end()) setPrice(item, 1 + std::rand() % 50);
 
-    int inventoryCount = 0;
-    
-    // Check inventory count based on entity type
-    if (auto* npc = dynamic_cast<NPCEntity*>(&entity)) {
-        inventoryCount = npc->getInventoryItemCount(item);
-    } else if (auto* player = dynamic_cast<PlayerEntity*>(&entity)) {
-        inventoryCount = player->getInventoryItemCount(item);
-    } else {
-        getDebugConsole().log("MARKET", "Unknown entity type trying to sell items");
+    auto* npc = dynamic_cast<NPCEntity*>(&entity);
+    if (!npc) {
+        getDebugConsole().log("MARKET", "Non-NPC entity tried to sell items");
         return false;
     }
 
+    int inventoryCount = npc->getInventoryItemCount(item);
     if (inventoryCount < quantity) {
-        getDebugConsole().log("MARKET", "Entity tried to sell " + std::to_string(quantity) + 
+        getDebugConsole().log("MARKET", npc->getName() + " tried to sell " + std::to_string(quantity) + 
                             " " + item + " but only has " + std::to_string(inventoryCount));
         return false;
     }
 
-    // Remove from inventory based on entity type
-    bool removeSuccess = false;
-    if (auto* npc = dynamic_cast<NPCEntity*>(&entity)) {
-        removeSuccess = npc->removeFromInventory(item, quantity);
-    } else if (auto* player = dynamic_cast<PlayerEntity*>(&entity)) {
-        removeSuccess = player->removeFromInventory(item, quantity);
-    }
-
-    if (!removeSuccess) {
-        getDebugConsole().log("MARKET", "Failed to remove " + std::to_string(quantity) + " " + item + " from inventory");
+    if (!npc->removeFromInventory(item, quantity)) {
+        getDebugConsole().log("MARKET", "Failed to remove " + std::to_string(quantity) + " " + item + " from " + npc->getName() + "'s inventory");
         return false;
     }
 
     float revenue = calculateSellPrice(item) * quantity;
-    entity.setMoney(entity.getMoney() + revenue);
+    npc->setMoney(npc->getMoney() + revenue);
     MoneyManager::recordMoneyEarned(static_cast<int>(revenue));
 
     // FIXED: Properly update market state and tracking
@@ -202,18 +181,13 @@ bool Market::sellItem(Entity& entity, const std::string& item, int quantity) {
     demand[item] = std::max(0, demand[item] - quantity);
     prices[item] = adjustPriceOnSell(prices[item], demand[item], supply[item], priceAdjustmentFactor);
 
-    // FIXED: Ensure transaction tracking increments correctly
-    totalSellTransactions[item] += quantity;  // Track number of items sold
+    // Track number of items sold
+    totalSellTransactions[item] += quantity;
     totalRevenue[item] += revenue;
 
-    // Add reward for NPCs
-    if (auto* npc = dynamic_cast<NPCEntity*>(&entity)) {
-        npc->addReward(10.0f * quantity);
-    }
+    npc->addReward(10.0f * quantity);
 
-    getDebugConsole().log("MARKET", "[SELL SUCCESS] " + 
-                        (dynamic_cast<NPCEntity*>(&entity) ? 
-                         dynamic_cast<NPCEntity*>(&entity)->getName() : "Player") + 
+    getDebugConsole().log("MARKET", "[SELL SUCCESS] " + npc->getName() + 
                         " sold " + std::to_string(quantity) + " " + item + 
                         " for $" + std::to_string(revenue) + 
                         " (total items sold: " + std::to_string(totalSellTransactions[item]) + ")");
@@ -469,4 +443,3 @@ const std::unordered_map<std::string, float>& Market::getPrices() const {
 const std::unordered_map<std::string, std::vector<float>>& Market::getPriceTrendMap() const {
     return priceHistory;
 }
-

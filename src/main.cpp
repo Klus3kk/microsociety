@@ -54,11 +54,6 @@ int main() {
     
     // Configure game based on selected mode
     switch (selectedMode) {
-        case SimulationMode::SinglePlayer:
-            getDebugConsole().log("Main", "Starting Single Player mode");
-            game.enableSinglePlayerMode(true);
-            break;
-            
         case SimulationMode::ReinforcementLearningCPP:
             getDebugConsole().log("Main", "Starting Reinforcement Learning C++ mode");
             game.enableReinforcementLearning(true);

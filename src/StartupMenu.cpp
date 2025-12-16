@@ -39,14 +39,12 @@ void StartupMenu::createMenuOptions() {
     
     // Create menu options
     std::vector<std::string> options = {
-        "1. Single Player Mode",
-        "2. Reinforcement Learning C++",
-        "3. Deep Q-Learning TensorFlow",
-        "4. Exit"
+        "1. Reinforcement Learning C++",
+        "2. Deep Q-Learning TensorFlow",
+        "3. Exit"
     };
     
     optionDescriptions = {
-        "Play as a character in the simulation and interact with the environment and NPCs.",
         "Run simulation with NPCs using classic reinforcement learning algorithms.",
         "Run simulation with NPCs using TensorFlow Deep Q-Learning neural networks.",
         "Exit the application."
@@ -117,10 +115,9 @@ void StartupMenu::updateSelection(int newSelection) {
     
     // Update the selected mode
     switch (selectedOption) {
-        case 0: selectedMode = SimulationMode::SinglePlayer; break;
-        case 1: selectedMode = SimulationMode::ReinforcementLearningCPP; break;
-        case 2: selectedMode = SimulationMode::DeepQLearningTF; break;
-        case 3: selectedMode = SimulationMode::Exit; break;
+        case 0: selectedMode = SimulationMode::ReinforcementLearningCPP; break;
+        case 1: selectedMode = SimulationMode::DeepQLearningTF; break;
+        case 2: selectedMode = SimulationMode::Exit; break;
         default: selectedMode = SimulationMode::ReinforcementLearningCPP; break;
     }
     
@@ -177,10 +174,6 @@ void StartupMenu::handleInput() {
                     
                 case sf::Keyboard::Num3:
                     updateSelection(2);
-                    break;
-                    
-                case sf::Keyboard::Num4:
-                    updateSelection(3);
                     break;
                     
                 case sf::Keyboard::Escape:

@@ -127,7 +127,6 @@ bool House::takeFromStorage(const std::string& item, int quantity, Entity& entit
             }
             npc->addToInventory(item, quantity);
         }
-        // For PlayerEntity, we would need similar logic but it's not in the current implementation
         
         it->second -= quantity;
         if (it->second == 0) {

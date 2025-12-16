@@ -1,27 +1,30 @@
 .vscode
-# Ignorowanie folderu build
+# IGNORE BUILD FILES
 /build/
 
-# Ignorowanie plików binarnych i tymczasowych
+# IGNORE COMPILER FILES
 *.exe
 *.out
 *.o
 *.obj
 
-# Ignorowanie Docker-related
+# IGNORE DOCKER FILES
 .dockerignore
 *.log
 *.tmp
 *.bak
 
-# Ignorowanie pliku cache CMake
+# IGNORE CMAKE FIELS
 CMakeCache.txt
 
-# Pliki systemowe
+# SUSTEM FILES
 .DS_Store
 Thumbs.db
 
-# Plik testowy
+# TEST FILES
 test
 todo
+
+# DOCUMENTATION FILES
 PLAN.md
+TODO.md

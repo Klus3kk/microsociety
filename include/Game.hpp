@@ -17,7 +17,6 @@
 #include "TextureManager.hpp"
 
 class NPCEntity;
-class PlayerEntity;
 
 class Game {
 private:
@@ -50,10 +49,6 @@ private:
     // NPC management
     std::vector<NPCEntity> npcs;
     
-    // Player Entity (for single player mode) - TO REMOVE!
-    PlayerEntity* player = nullptr;
-    bool singlePlayerMode = false;
-    
     // AI Settings
     bool reinforcementLearningEnabled = true;
     bool tensorFlowEnabled = false;
@@ -72,13 +67,6 @@ private:
     // data collection
     void checkDataCollectionProgress();
     
-    // Single player mode helpers - TO REMOVE!
-    void handlePlayerInput(); 
-    void updatePlayer();
-    
-    // Player cleanup - TO REMOVE!
-    void cleanupPlayer(); // I think it's for single-player, so remove!
-
     // Statistics across simulations
     struct SimulationStats {
         int totalItemsGatheredAllTime = 0;
@@ -119,11 +107,9 @@ public:
     void handleMarketActions(NPCEntity& npc, Tile& targetTile, ActionType actionType);
 
     // simulation mode settings
-    void enableSinglePlayerMode(bool enable); // TO REMOVE!
     void enableReinforcementLearning(bool enable) { reinforcementLearningEnabled = enable; }
     void enableTensorFlow(bool enable);
     
-    bool isSinglePlayerMode() const { return singlePlayerMode; } // TO REMOVE!
     bool isReinforcementLearningEnabled() const { return reinforcementLearningEnabled; }
     bool isTensorFlowEnabled() const { return tensorFlowEnabled; }
 };

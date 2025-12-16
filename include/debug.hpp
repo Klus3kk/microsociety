@@ -81,7 +81,6 @@ void debugTileInfo(int tileX, int tileY, const Game& game); // Logs tile informa
 void debugMarketPrices(const std::unordered_map<std::string, float>& marketPrices); // Logs market price changes
 void debugCollisionEvent(const std::string& message, int throttleMs = 500); // Logs collision detection messages
 void debugActionPerformed(const std::string& actionName, const std::string& objectType); // Logs NPC actions
-void debugPlayerSpeed(float speed); // Logs player movement speed
 void debugNPCStats(const std::string& npcName, float health, float energy, float money); // Logs NPC attributes
 void debugSimulationIteration(int iteration, float elapsedTime); // Logs simulation progress
 void debugMarketTransactions(const std::unordered_map<std::string, int>& transactions); // Logs market trading details

@@ -10,7 +10,6 @@
 
 // Forward declarations only - complete type definitions will be in .cpp file
 class NPCEntity;
-class PlayerEntity;  
 class House;
 class Market;
 

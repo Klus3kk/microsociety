@@ -12,8 +12,6 @@
 #include <numeric>
 
 class NPCEntity;
-class PlayerEntity;
-
 
 // Market class: Represents a dynamic in-game trading system
 class Market : public Object {
@@ -44,9 +42,9 @@ public:
     float calculateBuyPrice(const std::string& item) const;  // Determines price when buying
     float calculateSellPrice(const std::string& item) const; // Determines price when selling
 
-    // FIXED: Core Transactions - now accept Entity base class (works with both NPCs and Players)
-    bool buyItem(Entity& player, const std::string& item, int quantity); // Handles entity purchasing an item
-    bool sellItem(Entity& player, const std::string& item, int quantity); // Handles entity selling an item
+    // Core transactions accept Entity base class (used by NPCs)
+    bool buyItem(Entity& entity, const std::string& item, int quantity); // Handles entity purchasing an item
+    bool sellItem(Entity& entity, const std::string& item, int quantity); // Handles entity selling an item
 
     // Adjust Prices Dynamically
     float adjustPriceOnBuy(float currentPrice, int demand, int supply, float buyFactor); // Modify price on purchase

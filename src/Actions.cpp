@@ -1,105 +1,90 @@
 #include "Actions.hpp"
 #include "NPCEntity.hpp"
-#include "PlayerEntity.hpp"
 #include "House.hpp"
 #include "Market.hpp"
 
 // Base class method is overridden by each action type
 void TreeAction::perform(Entity& entity, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
-    if (tile.hasObject()) {
-        if (auto* npc = dynamic_cast<NPCEntity*>(&entity)) {
-            if (npc->addToInventory("wood", 1)) {
-                tile.removeObject();
-                npc->consumeEnergy(1.0f); // Reduced from 5.0f
-                npc->receiveFeedback(10.0f, tileMap);
-                
-                // ENSURE: Track items gathered
-                npc->incrementItemsGathered("wood", 1);
-                
-                getDebugConsole().log("TreeAction", npc->getName() + " chopped tree! Wood added to inventory. Total gathered: " + 
-                                    std::to_string(npc->getTotalItemsGathered()));
-            } else {
-                npc->receiveFeedback(-2.0f, tileMap);
-                getDebugConsole().log("TreeAction", npc->getName() + " inventory full. Cannot chop tree.");
-            }
-        }
-        else if (auto* player = dynamic_cast<PlayerEntity*>(&entity)) {
-            if (player->addToInventory("wood", 1)) {
-                tile.removeObject();
-                player->consumeEnergy(1.0f);
-                getDebugConsole().log("TreeAction", "Player chopped tree! Wood added to inventory.");
-            }
-        }
-    } else {
-        if (auto* npc = dynamic_cast<NPCEntity*>(&entity)) {
+    auto* npc = dynamic_cast<NPCEntity*>(&entity);
+
+    if (!tile.hasObject()) {
+        if (npc) {
             npc->receiveFeedback(-2.0f, tileMap); // Reduced penalty
         }
+        return;
+    }
+
+    if (!npc) return;
+
+    if (npc->addToInventory("wood", 1)) {
+        tile.removeObject();
+        npc->consumeEnergy(1.0f); // Reduced from 5.0f
+        npc->receiveFeedback(10.0f, tileMap);
+        
+        // Track items gathered
+        npc->incrementItemsGathered("wood", 1);
+        
+        getDebugConsole().log("TreeAction", npc->getName() + " chopped tree! Wood added to inventory. Total gathered: " + 
+                            std::to_string(npc->getTotalItemsGathered()));
+    } else {
+        npc->receiveFeedback(-2.0f, tileMap);
+        getDebugConsole().log("TreeAction", npc->getName() + " inventory full. Cannot chop tree.");
     }
 }
 
 void StoneAction::perform(Entity& entity, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
-    if (tile.hasObject() && tile.getObject()->getType() == ObjectType::Rock) {
-        if (auto* npc = dynamic_cast<NPCEntity*>(&entity)) {
-            if (npc->addToInventory("stone", 1)) {
-                tile.removeObject();
-                npc->consumeEnergy(5.0f);
-                npc->receiveFeedback(10.0f, tileMap);
-                
-                // FIXED: Track items gathered
-                npc->incrementItemsGathered("stone", 1);
-                
-                getDebugConsole().log("StoneAction", "Rock mined! Stone added to inventory.");
-            } else {
-                npc->receiveFeedback(-2.0f, tileMap);
-                getDebugConsole().logOnce("StoneAction", "Inventory full. Cannot mine rock.");
-            }
-        } else if (auto* player = dynamic_cast<PlayerEntity*>(&entity)) {
-            if (player->addToInventory("stone", 1)) {
-                tile.removeObject();
-                player->consumeEnergy(5.0f);
-                getDebugConsole().log("StoneAction", "Rock mined! Stone added to inventory.");
-            } else {
-                getDebugConsole().logOnce("StoneAction", "Inventory full. Cannot mine rock.");
-            }
-        }
-    } else {
-        if (auto* npc = dynamic_cast<NPCEntity*>(&entity)) {
+    auto* npc = dynamic_cast<NPCEntity*>(&entity);
+
+    if (!tile.hasObject() || tile.getObject()->getType() != ObjectType::Rock) {
+        if (npc) {
             npc->receiveFeedback(-5.0f, tileMap);
         }
         getDebugConsole().logOnce("StoneAction", "No rock to mine on this tile.");
+        return;
+    }
+
+    if (!npc) return;
+
+    if (npc->addToInventory("stone", 1)) {
+        tile.removeObject();
+        npc->consumeEnergy(5.0f);
+        npc->receiveFeedback(10.0f, tileMap);
+        
+        // Track items gathered
+        npc->incrementItemsGathered("stone", 1);
+        
+        getDebugConsole().log("StoneAction", "Rock mined! Stone added to inventory.");
+    } else {
+        npc->receiveFeedback(-2.0f, tileMap);
+        getDebugConsole().logOnce("StoneAction", "Inventory full. Cannot mine rock.");
     }
 }
 
 void BushAction::perform(Entity& entity, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
-    if (tile.hasObject() && tile.getObject()->getType() == ObjectType::Bush) {
-        if (auto* npc = dynamic_cast<NPCEntity*>(&entity)) {
-            if (npc->addToInventory("bush", 1)) {
-                tile.removeObject();
-                npc->consumeEnergy(5.0f);
-                npc->receiveFeedback(10.0f, tileMap);
-                
-                // FIXED: Track items gathered
-                npc->incrementItemsGathered("bush", 1);
-                
-                getDebugConsole().log("BushAction", "Bush gathered from tile!");
-            } else {
-                npc->receiveFeedback(-2.0f, tileMap);
-                getDebugConsole().logOnce("BushAction", "Inventory full. Cannot gather bush.");
-            }
-        } else if (auto* player = dynamic_cast<PlayerEntity*>(&entity)) {
-            if (player->addToInventory("bush", 1)) {
-                tile.removeObject();
-                player->consumeEnergy(5.0f);
-                getDebugConsole().log("BushAction", "Bush gathered from tile!");
-            } else {
-                getDebugConsole().logOnce("BushAction", "Inventory full. Cannot gather bush.");
-            }
-        }
-    } else {
-        if (auto* npc = dynamic_cast<NPCEntity*>(&entity)) {
+    auto* npc = dynamic_cast<NPCEntity*>(&entity);
+
+    if (!tile.hasObject() || tile.getObject()->getType() != ObjectType::Bush) {
+        if (npc) {
             npc->receiveFeedback(-5.0f, tileMap);
         }
         getDebugConsole().logOnce("BushAction", "No bush to gather on this tile.");
+        return;
+    }
+
+    if (!npc) return;
+
+    if (npc->addToInventory("bush", 1)) {
+        tile.removeObject();
+        npc->consumeEnergy(5.0f);
+        npc->receiveFeedback(10.0f, tileMap);
+        
+        // Track items gathered
+        npc->incrementItemsGathered("bush", 1);
+        
+        getDebugConsole().log("BushAction", "Bush gathered from tile!");
+    } else {
+        npc->receiveFeedback(-2.0f, tileMap);
+        getDebugConsole().logOnce("BushAction", "Inventory full. Cannot gather bush.");
     }
 }
 
@@ -108,8 +93,6 @@ void MoveAction::perform(Entity& entity, Tile&, const std::vector<std::vector<st
     if (auto* npc = dynamic_cast<NPCEntity*>(&entity)) {
         npc->consumeEnergy(1.0f); // Reduce energy per move
         npc->receiveFeedback(1.0f, tileMap); // Reward for movement
-    } else if (auto* player = dynamic_cast<PlayerEntity*>(&entity)) {
-        player->consumeEnergy(1.0f); // Reduce energy per move
     }
     getDebugConsole().log("Action", "Entity moved.");
 }
@@ -179,7 +162,6 @@ StoreItemAction::StoreItemAction(const std::string& item, int quantity)
 
 void StoreItemAction::perform(Entity& entity, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) {
     if (auto house = dynamic_cast<House*>(tile.getObject())) {
-        // For NPCs, check their inventory
         if (auto* npc = dynamic_cast<NPCEntity*>(&entity)) {
             const auto& inventory = npc->getInventory();
             if (inventory.empty()) {
@@ -200,20 +182,6 @@ void StoreItemAction::perform(Entity& entity, Tile& tile, const std::vector<std:
                 }
             } else {
                 npc->receiveFeedback(-5.0f, tileMap);
-                getDebugConsole().logOnce("Action", "Insufficient " + item + " in inventory.");
-            }
-        }
-        // For players, we could implement similar logic
-        else if (auto* player = dynamic_cast<PlayerEntity*>(&entity)) {
-            const auto& inventory = player->getInventory();
-            if (inventory.count(item) > 0 && inventory.at(item) >= quantity) {
-                if (house->storeItem(item, quantity)) {
-                    player->removeFromInventory(item, quantity);
-                    getDebugConsole().log("Action", "Stored " + std::to_string(quantity) + " " + item + " in the house.");
-                } else {
-                    getDebugConsole().logOnce("Action", "House storage is full! Could not store all items.");
-                }
-            } else {
                 getDebugConsole().logOnce("Action", "Insufficient " + item + " in inventory.");
             }
         }
@@ -295,8 +263,6 @@ void ExploreAction::perform(Entity& entity, Tile&, const std::vector<std::vector
     if (auto* npc = dynamic_cast<NPCEntity*>(&entity)) {
         npc->consumeEnergy(2.0f);
         npc->receiveFeedback(5.0f, tileMap); // Reward for exploration
-    } else if (auto* player = dynamic_cast<PlayerEntity*>(&entity)) {
-        player->consumeEnergy(2.0f);
     }
     getDebugConsole().log("Action", "Entity explored the map.");
 }

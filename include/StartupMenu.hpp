@@ -7,7 +7,6 @@
 #include <functional>
 
 enum class SimulationMode {
-    SinglePlayer,
     ReinforcementLearningCPP,
     DeepQLearningTF,
     Exit

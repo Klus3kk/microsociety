@@ -8,8 +8,10 @@
 #include <fstream>
 #include <memory>
 #include <mutex>
+#include <unordered_map>
 #include <nlohmann/json.hpp>
 
+class DataCollector;
 DataCollector &getDataCollector();
 
 // structure for storing experience tuples
