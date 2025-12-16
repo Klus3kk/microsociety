@@ -1,0 +1,115 @@
+[2025-12-16 07:30:55] [NPC] Created Player1 with Q-Learning: DISABLED
+[2025-12-16 07:30:55] [Inventory] Player1 added 1 wood(s) to inventory.
+[2025-12-16 07:30:55] [Tile] Object removed from tile.
+[2025-12-16 07:30:55] [Feedback] Player1 - Q-learning disabled, no feedback recorded
+[2025-12-16 07:30:55] [Gather] Player1 gathered 1 wood (total: 1)
+[2025-12-16 07:30:55] [Chop Tree] Player1 gathered wood! Total gathered: 1
+[2025-12-16 07:30:55] [NPC] Created Player1 with Q-Learning: DISABLED
+[2025-12-16 07:30:55] [Inventory] Player1 added 1 stone(s) to inventory.
+[2025-12-16 07:30:55] [Tile] Object removed from tile.
+[2025-12-16 07:30:55] [Feedback] Player1 - Q-learning disabled, no feedback recorded
+[2025-12-16 07:30:55] [Gather] Player1 gathered 1 stone (total: 1)
+[2025-12-16 07:30:55] [Mine Rock] Player1 gathered stone! Total gathered: 1
+[2025-12-16 07:30:55] [NPC] Created Player1 with Q-Learning: DISABLED
+[2025-12-16 07:30:55] [Inventory] Player1 added 1 bush(s) to inventory.
+[2025-12-16 07:30:55] [Tile] Object removed from tile.
+[2025-12-16 07:30:55] [Feedback] Player1 - Q-learning disabled, no feedback recorded
+[2025-12-16 07:30:55] [Gather] Player1 gathered 1 bush (total: 1)
+[2025-12-16 07:30:55] [Gather Bush] Player1 gathered bush! Total gathered: 1
+[2025-12-16 07:30:55] [NPC] Created Player1 with Q-Learning: DISABLED
+[2025-12-16 07:30:55] [NPC] Created Player1 with Q-Learning: DISABLED
+[2025-12-16 07:30:55] [NPC] Created Player1 with Q-Learning: DISABLED
+[2025-12-16 07:30:55] [Inventory] Player1 added 5 wood(s) to inventory.
+[2025-12-16 07:30:55] [Inventory] Player1 added 2 stone(s) to inventory.
+[2025-12-16 07:30:55] [NPC] Created Player1 with Q-Learning: DISABLED
+[2025-12-16 07:30:55] [Inventory] Player1 added 3 food(s) to inventory.
+[2025-12-16 07:30:55] [Inventory] Player1 removed 1 food
+[2025-12-16 07:30:55] [NPC] Created Player1 with Q-Learning: DISABLED
+[2025-12-16 07:30:55] [Inventory] Player1 added 1 wood(s) to inventory.
+[2025-12-16 07:30:55] [Inventory] Player1 added 1 wood(s) to inventory.
+[2025-12-16 07:30:55] [Inventory] Player1 added 1 wood(s) to inventory.
+[2025-12-16 07:30:55] [Inventory] Player1 added 1 wood(s) to inventory.
+[2025-12-16 07:30:55] [Inventory] Player1 added 1 wood(s) to inventory.
+[2025-12-16 07:30:55] [Inventory] Player1 added 1 wood(s) to inventory.
+[2025-12-16 07:30:55] [Inventory] Player1 added 1 wood(s) to inventory.
+[2025-12-16 07:30:55] [Inventory] Player1 added 1 wood(s) to inventory.
+[2025-12-16 07:30:55] [Inventory] Player1 added 1 wood(s) to inventory.
+[2025-12-16 07:30:55] [Inventory] Player1 added 1 wood(s) to inventory.
+[2025-12-16 07:30:55] [Inventory] Player1's inventory full! Cannot add stone.
+[2025-12-16 07:30:55] [DEBUG] Market initialized with prices:
+[2025-12-16 07:30:55] [DEBUG] - bush: $39.000000
+[2025-12-16 07:30:55] [DEBUG] - stone: $27.000000
+[2025-12-16 07:30:55] [DEBUG] - wood: $19.000000
+[2025-12-16 07:30:55] [NPC] Created Player with Q-Learning: DISABLED
+[2025-12-16 07:30:55] [Inventory] Player added 1 wood(s) to inventory.
+[2025-12-16 07:30:55] [Player] Player received a reward of 5.
+[2025-12-16 07:30:55] [MARKET] [BUY SUCCESS] Player bought 1 wood for $20.900000 (total items bought: 1)
+[2025-12-16 07:30:55] [Inventory] Player added 1 wood(s) to inventory.
+[2025-12-16 07:30:55] [Player] Player received a reward of 5.
+[2025-12-16 07:30:55] [MARKET] [BUY SUCCESS] Player bought 1 wood for $21.799999 (total items bought: 2)
+[2025-12-16 07:30:55] [Inventory] Player added 1 wood(s) to inventory.
+[2025-12-16 07:30:55] [Player] Player received a reward of 5.
+[2025-12-16 07:30:55] [MARKET] [BUY SUCCESS] Player bought 1 wood for $22.799999 (total items bought: 3)
+[2025-12-16 07:30:55] [Inventory] Player added 1 wood(s) to inventory.
+[2025-12-16 07:30:55] [Player] Player received a reward of 5.
+[2025-12-16 07:30:55] [MARKET] [BUY SUCCESS] Player bought 1 wood for $23.900000 (total items bought: 4)
+[2025-12-16 07:30:55] [MARKET] Player cannot afford 1 wood (needs $25.200001, has $10.600000)
+[2025-12-16 07:30:55] [DEBUG] Market initialized with prices:
+[2025-12-16 07:30:55] [DEBUG] - bush: $39.000000
+[2025-12-16 07:30:55] [DEBUG] - stone: $27.000000
+[2025-12-16 07:30:55] [DEBUG] - wood: $19.000000
+[2025-12-16 07:30:55] [NPC] Created TestPlayer with Q-Learning: DISABLED
+[2025-12-16 07:30:55] [NPC] Created Player1 with Q-Learning: DISABLED
+[2025-12-16 07:30:55] [NPC] Created Player1 with Q-Learning: DISABLED
+[2025-12-16 07:30:55] [Inventory] Player1 added 5 wood(s) to inventory.
+[2025-12-16 07:30:55] [NPC] Created Player1 with Q-Learning: DISABLED
+[2025-12-16 07:30:55] [Inventory] Player1 added 3 food(s) to inventory.
+[2025-12-16 07:30:55] [Inventory] Player1 removed 2 food
+[2025-12-16 07:30:55] [ERROR] Player1 tried to remove more items than they HAVE: food
+[2025-12-16 07:30:55] [NPC] Created Player1 with Q-Learning: DISABLED
+[2025-12-16 07:30:55] [NPC] Created Player2 with Q-Learning: DISABLED
+[2025-12-16 07:30:55] [Inventory] Player1 added 3 gold(s) to inventory.
+[2025-12-16 07:30:55] [Inventory] Player2 added 2 silver(s) to inventory.
+[2025-12-16 07:30:55] [NPC] Created Player1 with Q-Learning: DISABLED
+[2025-12-16 07:30:55] [Inventory] Player1 added 1 wood(s) to inventory.
+[2025-12-16 07:30:55] [Inventory] Player1 added 1 wood(s) to inventory.
+[2025-12-16 07:30:55] [Inventory] Player1 added 1 wood(s) to inventory.
+[2025-12-16 07:30:55] [Inventory] Player1 added 1 wood(s) to inventory.
+[2025-12-16 07:30:55] [Inventory] Player1 added 1 wood(s) to inventory.
+[2025-12-16 07:30:55] [Inventory] Player1 added 1 wood(s) to inventory.
+[2025-12-16 07:30:55] [Inventory] Player1 added 1 wood(s) to inventory.
+[2025-12-16 07:30:55] [Inventory] Player1 added 1 wood(s) to inventory.
+[2025-12-16 07:30:55] [Inventory] Player1 added 1 wood(s) to inventory.
+[2025-12-16 07:30:55] [Inventory] Player1 added 1 wood(s) to inventory.
+[2025-12-16 07:30:55] [Inventory] Player1's inventory full! Cannot add wood.
+[2025-12-16 07:30:55] [Feedback] Player1 - Q-learning disabled, no feedback recorded
+[2025-12-16 07:30:55] [Chop Tree] Player1 inventory full. Cannot gather wood.
+[2025-12-16 07:30:55] [NPC] Created Player1 with Q-Learning: DISABLED
+[2025-12-16 07:30:55] [Inventory] Player1 added 1 bush(s) to inventory.
+[2025-12-16 07:30:55] [Tile] Object removed from tile.
+[2025-12-16 07:30:55] [Feedback] Player1 - Q-learning disabled, no feedback recorded
+[2025-12-16 07:30:55] [Gather] Player1 gathered 1 bush (total: 1)
+[2025-12-16 07:30:55] [Gather Bush] Player1 gathered bush! Total gathered: 1
+[2025-12-16 07:30:55] [DEBUG] Market initialized with prices:
+[2025-12-16 07:30:55] [DEBUG] - bush: $39.000000
+[2025-12-16 07:30:55] [DEBUG] - stone: $27.000000
+[2025-12-16 07:30:55] [DEBUG] - wood: $19.000000
+[2025-12-16 07:30:55] [NPC] Created Player1 with Q-Learning: DISABLED
+[2025-12-16 07:30:55] [Inventory] Player1 added 1 wood(s) to inventory.
+[2025-12-16 07:30:55] [Player1] Player1 received a reward of 5.
+[2025-12-16 07:30:55] [MARKET] [BUY SUCCESS] Player1 bought 1 wood for $20.900000 (total items bought: 1)
+[2025-12-16 07:30:55] [DEBUG] Market initialized with prices:
+[2025-12-16 07:30:55] [DEBUG] - bush: $39.000000
+[2025-12-16 07:30:55] [DEBUG] - stone: $27.000000
+[2025-12-16 07:30:55] [DEBUG] - wood: $19.000000
+[2025-12-16 07:30:55] [NPC] Created Player1 with Q-Learning: DISABLED
+[2025-12-16 07:30:55] [MARKET] Player1 cannot afford 1 stone (needs $29.700001, has $5.000000)
+[2025-12-16 07:30:55] [DEBUG] Market initialized with prices:
+[2025-12-16 07:30:55] [DEBUG] - bush: $39.000000
+[2025-12-16 07:30:55] [DEBUG] - stone: $27.000000
+[2025-12-16 07:30:55] [DEBUG] - wood: $19.000000
+[2025-12-16 07:30:55] [NPC] Created Player1 with Q-Learning: DISABLED
+[2025-12-16 07:30:55] [Inventory] Player1 added 2 food(s) to inventory.
+[2025-12-16 07:30:55] [Inventory] Player1 removed 1 food
+[2025-12-16 07:30:55] [Player1] Player1 received a reward of 10.
+[2025-12-16 07:30:55] [MARKET] [SELL SUCCESS] Player1 sold 1 food for $4.500000 (total items sold: 1)

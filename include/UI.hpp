@@ -98,6 +98,10 @@ private:
     void applyShadow(sf::RectangleShape& shape, float offset = 3.0f);
     void populateNPCList(const std::vector<NPCEntity>& npcs);
     void populateNPCDetails(const NPCEntity& npc);
+    
+    // Helper methods to reduce duplication in UI initialization
+    void initializePanel(sf::RectangleShape& panel, float width, float height, float x, float y, const sf::Color& color);
+    void initializeText(sf::Text& text, float x, float y, unsigned int size, const sf::Color& color);
 
 public:
     // Constructor

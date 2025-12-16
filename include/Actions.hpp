@@ -26,33 +26,49 @@ public:
     virtual float getPenalty() const { return 0.0f; }
 };
 
-// action for chopping trees
-class TreeAction : public Action { 
-public:
-    // override perform method
-    void perform(Entity& entity, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
+// base class for resource gathering actions (trees, rocks, bushes)
+class ResourceGatherAction : public Action {
+protected:
+    std::string resourceName;
+    std::string actionName;
+    ObjectType expectedObjectType;
+    float energyCost;
+    float rewardValue;
+    float healthCost;
 
-    // override getters 
-    std::string getActionName() const override { return "Chop Tree"; }
-    float getReward() const override { return 10.0f; }
+    // template method pattern - subclasses configure parameters
+    virtual void performGather(Entity& entity, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap);
+
+public:
+    ResourceGatherAction(const std::string& resource, const std::string& action, 
+                        ObjectType objectType, float energy, float reward, float health = 0.0f)
+        : resourceName(resource), actionName(action), expectedObjectType(objectType),
+          energyCost(energy), rewardValue(reward), healthCost(health) {}
+
+    void perform(Entity& entity, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override {
+        performGather(entity, tile, tileMap);
+    }
+
+    std::string getActionName() const override { return actionName; }
+    float getReward() const override { return rewardValue; }
+};
+
+// action for chopping trees
+class TreeAction : public ResourceGatherAction { 
+public:
+    TreeAction() : ResourceGatherAction("wood", "Chop Tree", ObjectType::Tree, 1.0f, 10.0f) {}
 };
 
 // action for mining rocks
-class StoneAction : public Action {
+class StoneAction : public ResourceGatherAction {
 public:
-    void perform(Entity& entity, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
-    
-    std::string getActionName() const override { return "Mine Rock"; }
-    float getReward() const override { return 8.0f; }
+    StoneAction() : ResourceGatherAction("stone", "Mine Rock", ObjectType::Rock, 5.0f, 10.0f) {}
 };
 
 // action for gathering bushes
-class BushAction : public Action {
+class BushAction : public ResourceGatherAction {
 public:
-    void perform(Entity& entity, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
-
-    std::string getActionName() const override { return "Gather Bush"; }
-    float getReward() const override { return 5.0f; }
+    BushAction() : ResourceGatherAction("bush", "Gather Bush", ObjectType::Bush, 5.0f, 10.0f) {}
 };
 
 // action for moving across the map

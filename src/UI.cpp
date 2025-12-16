@@ -14,71 +14,42 @@ UI::UI()
         throw std::runtime_error("Failed to load font!");
     }
 
-    // Market Panel
-    marketPanel.setSize({600, 400});
-    marketPanel.setPosition(120, 120);
-    marketPanel.setFillColor(UIStyles::PanelBackground);
-    applyShadow(marketPanel);
+    // Initialize panels using helper method
+    initializePanel(marketPanel, 600, 400, 120, 120, UIStyles::PanelBackground);
+    initializePanel(moneyPanel, 100, 50, 20, 20, sf::Color(30, 30, 30));
+    initializePanel(statusPanel, 200, 80, 300, 20, sf::Color(55, 55, 55));
 
-    // Advanced Market Stats Text
-    advancedMarketStatsText.setFont(font);
-    advancedMarketStatsText.setCharacterSize(14);
-    advancedMarketStatsText.setFillColor(sf::Color::White);
+    // Initialize text elements using helper method
+    initializeText(advancedMarketStatsText, 0, 0, 14, sf::Color::White);
+    initializeText(npcDetailText, npcDetailPanel.getBounds().left + 20, npcDetailPanel.getBounds().top + 20, 16, UIStyles::TextColor);
+    initializeText(statsText, statsPanel.getBounds().left + 20, statsPanel.getBounds().top + 20, 16, UIStyles::TextColor);
+    initializeText(moneyText, moneyPanel.getPosition().x + 10, moneyPanel.getPosition().y + 10, 20, UIStyles::TextColor);
+    initializeText(statusText, statusPanel.getPosition().x + 10, statusPanel.getPosition().y + 10, 16, UIStyles::TextColor);
 
     // NPC List Panel
     npcListPanel.setPosition(50, 100);
     npcListPanel.setSize(npcListWidth, npcListHeight);
-    npcDetailText.setFont(font);
-    npcDetailText.setCharacterSize(16);
-    npcDetailText.setFillColor(UIStyles::TextColor);
-    npcDetailText.setPosition(npcDetailPanel.getBounds().left + 20, npcDetailPanel.getBounds().top + 20);
-
-    // Stats Text
-    statsText.setFont(font);
-    statsText.setCharacterSize(16);
-    statsText.setFillColor(UIStyles::TextColor);
-    statsText.setPosition(statsPanel.getBounds().left + 20, statsPanel.getBounds().top + 20);
-
-    // Money Panel
-    moneyPanel.setSize({100, 50});
-    moneyPanel.setPosition(20, 20);
-    moneyPanel.setFillColor(sf::Color(30, 30, 30));
-    applyShadow(moneyPanel);
-
-    moneyText.setFont(font);
-    moneyText.setCharacterSize(20);
-    moneyText.setFillColor(UIStyles::TextColor);
-    moneyText.setPosition(moneyPanel.getPosition().x + 10, moneyPanel.getPosition().y + 10);
-
-    // Status Panel
-    statusPanel.setSize({200, 80});
-    statusPanel.setPosition(300, 20); // Centered horizontally
-    statusPanel.setFillColor(sf::Color(55, 55, 55));
-    applyShadow(statusPanel);
-
-    statusText.setFont(font);
-    statusText.setCharacterSize(16);
-    statusText.setFillColor(UIStyles::TextColor);
-    statusText.setPosition(statusPanel.getPosition().x + 10, statusPanel.getPosition().y + 10);
-
     
     // Buttons (NPC, Stats, Market, Options)
     float buttonWidth = 120.0f;
     float buttonHeight = 40.0f;
     float spacing = 20.0f;
-    float startX = 50.0f; // Left margin
-    float startY = 500.0f; // Bottom
+    float startX = 50.0f;
+    float startY = 500.0f;
 
     npcButton.setProperties(startX, startY, buttonWidth, buttonHeight, "NPC", font);
     statsButton.setProperties(startX + buttonWidth + spacing, startY, buttonWidth, buttonHeight, "STATS", font);
     marketButton.setProperties(startX + 2 * (buttonWidth + spacing), startY, buttonWidth, buttonHeight, "MARKET", font);
     optionsButton.setProperties(startX + 3 * (buttonWidth + spacing), startY, buttonWidth, buttonHeight, "OPTIONS", font);
 
-    // Set Button Colors
-    npcButton.setColors(UIStyles::ButtonNormal, UIStyles::ButtonHover, sf::Color(160, 160, 160, 204), UIStyles::TextColor);
-    statsButton.setColors(UIStyles::ButtonNormal, UIStyles::ButtonHover, sf::Color(160, 160, 160, 204), UIStyles::TextColor);
-    marketButton.setColors(UIStyles::ButtonNormal, UIStyles::ButtonHover, sf::Color(160, 160, 160, 204), UIStyles::TextColor);
-    optionsButton.setColors(UIStyles::ButtonNormal, UIStyles::ButtonHover, sf::Color(160, 160, 160, 204), UIStyles::TextColor);
+    // Set Button Colors (common pattern)
+    auto setButtonColors = [](UIButton& button) {
+        button.setColors(UIStyles::ButtonNormal, UIStyles::ButtonHover, sf::Color(160, 160, 160, 204), UIStyles::TextColor);
+    };
+    setButtonColors(npcButton);
+    setButtonColors(statsButton);
+    setButtonColors(marketButton);
+    setButtonColors(optionsButton);
 }
 
 
@@ -86,6 +57,22 @@ UI::UI()
 void UI::applyShadow(sf::RectangleShape& shape, float offset) {
     shape.setOutlineThickness(offset);
     shape.setOutlineColor(sf::Color(0, 0, 0, 100));
+}
+
+// Helper method to initialize panels with common pattern
+void UI::initializePanel(sf::RectangleShape& panel, float width, float height, float x, float y, const sf::Color& color) {
+    panel.setSize({width, height});
+    panel.setPosition(x, y);
+    panel.setFillColor(color);
+    applyShadow(panel);
+}
+
+// Helper method to initialize text with common pattern
+void UI::initializeText(sf::Text& text, float x, float y, unsigned int size, const sf::Color& color) {
+    text.setFont(font);
+    text.setCharacterSize(size);
+    text.setFillColor(color);
+    text.setPosition(x, y);
 }
 
 // Update Money
