@@ -27,7 +27,7 @@ class UI {
 private:
     sf::Font font; // Font used in UI elements
 
-    // **Panels for different UI elements**
+    // Panels for different UI elements
     sf::RectangleShape statusPanel;     // Status display panel
     sf::Text statusText;                // Status text (day, time, etc.)
 
@@ -80,30 +80,30 @@ private:
     const float npcListWidth = 300.0f;
     const float npcListHeight = 400.0f;
 
-    // **State Variables for UI Toggles**
+    // State Variables for UI Toggles
     bool showNPCList = false;          // NPC list visibility
     bool showNPCDetail = false;        // NPC details visibility
     bool showStatsPanel = false;       // Statistics panel visibility
     bool showMarketPanel = false;      // Market panel visibility
     bool showOptionsPanel = false;     // Options panel visibility
 
-    // **Scroll Offset for large NPC lists**
+    // Scroll Offset for large NPC lists
     float npcListScrollOffset = 0.0f;
     const float scrollSpeed = 20.0f;
 
-    // **Currently Selected NPC**
+    // Currently Selected NPC
     int selectedNPCIndex = -1;
 
-    // **Helper Functions**
+    // Helper Functions
     void applyShadow(sf::RectangleShape& shape, float offset = 3.0f);
     void populateNPCList(const std::vector<NPCEntity>& npcs);
     void populateNPCDetails(const NPCEntity& npc);
 
 public:
-    // **Constructor**
+    // Constructor
     UI();
 
-    // **Update Methods**
+    // Update Methods
     void updateStatus(int day, const std::string& time, int iteration);
     void showNPCDetails(const std::string& npcDetails);
     void updateMarket(const std::unordered_map<std::string, float>& prices);
@@ -112,7 +112,7 @@ public:
     void updateClock(float timeElapsed);
     void updateStats(const std::vector<NPCEntity>& npcs, const TimeManager& timeManager);
 
-    // **User Interaction & Rendering**
+    // User Interaction & Rendering
     void handleButtonClicks(sf::RenderWindow& window, sf::Event& event, std::vector<NPCEntity>& npcs, const TimeManager& timeManager, const Market& market);
     void handleNPCPanel(sf::RenderWindow& window, sf::Event& event, const std::vector<NPCEntity>& npcs);
     void handleStatsPanel(sf::RenderWindow& window, sf::Event& event);
@@ -124,18 +124,18 @@ public:
     void drawMarketGraph(sf::RenderWindow& window, const Market& market);
     void updateMarketPanel(const Market& market);
 
-    // **Tooltip Handling**
+    // Tooltip Handling
     void handleHover(sf::RenderWindow& window);
     bool isMouseOver(sf::RenderWindow& window) const;
     void setTooltipContent(const std::string& content);
     void updateTooltipPosition(const sf::RenderWindow& window);
 
-    // **NPC UI Management**
+    // NPC UI Management
     void updateNPCEntityList(const std::vector<NPCEntity>& npcs);
     void handleNPCEntityPanel(sf::RenderWindow& window, sf::Event& event, const std::vector<NPCEntity>& npcs);
     void updateSliderValue(float newValue, Game& game);
 
-    // **UI Responsiveness**
+    // UI Responsiveness
     void adjustLayout(sf::RenderWindow& window);
     void updateAll(const std::vector<NPCEntity>& npcs, const Market& market, const TimeManager& timeManager);
     void hideAllPanels();

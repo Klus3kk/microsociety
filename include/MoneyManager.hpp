@@ -7,7 +7,7 @@
 
 class MoneyManager {
 public:
-    // Calculate the total money held by all NPCs
+    // calculate the total money held by all NPCs
     static int calculateTotalMoney(const std::vector<NPCEntity>& npcs) {
         return std::accumulate(npcs.begin(), npcs.end(), 0,
                                [](int total, const NPCEntity& npc) {
@@ -15,11 +15,11 @@ public:
                                });
     }
 
-    // Track money spent and earned
+    // track money spent and earned
     static void recordMoneySpent(int amount) { totalMoneySpent += amount; }
     static void recordMoneyEarned(int amount) { totalMoneyEarned += amount; }
 
-    // Get total money spent and earned
+    // get total money spent and earned
     static int getTotalMoneySpent() { return totalMoneySpent; }
     static int getTotalMoneyEarned() { return totalMoneyEarned; }
 

@@ -11,11 +11,10 @@
 #include <fstream>
 #include <mutex>
 
-// Forward declarations to reduce dependencies
 class Game;
 class NPCEntity;
 
-// Enum defining log severity levels
+// log severity levels
 enum class LogLevel {
     Info,       // General information
     Warning,    // Potential issues
@@ -23,7 +22,7 @@ enum class LogLevel {
     Critical    // Severe errors requiring immediate action
 };
 
-// Debug system for in-game console
+// debug system for in-game console
 class DebugConsole {
 private:
     std::vector<std::pair<std::string, std::string>> logs; // Stores logs with categories
@@ -32,7 +31,7 @@ private:
     sf::Text text;  // SFML text object to display log messages
     std::mutex debugMutex; // Ensures thread safety for logging
 
-    const int maxLogs = 15; // Maximum number of logs stored at a time
+    const int maxLogs = 10; // Maximum number of logs stored at a time
     const sf::Color backgroundColor = sf::Color(0, 0, 0, 200); // Semi-transparent UI background
     bool enabled = false; // Flag to toggle debug console visibility
 
@@ -44,7 +43,6 @@ private:
     std::string getLogFilename() const; // Generates a timestamped filename for log storage
 
 public:
-    // Constructor initializes the debug console UI
     DebugConsole(float windowWidth, float windowHeight);
 
     // Toggle Debug Console visibility
@@ -73,7 +71,6 @@ public:
     void clearLogs();
 };
 
-// Singleton pattern for accessing the DebugConsole globally
 DebugConsole& getDebugConsole();
 
 // Debug helper functions for various in-game events

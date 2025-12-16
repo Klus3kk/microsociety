@@ -1,7 +1,7 @@
 #ifndef STATE_HPP
 #define STATE_HPP
 
-#include <functional> // Required for std::hash
+#include <functional> 
 
 // State structure representing the environment for Q-learning
 struct State {

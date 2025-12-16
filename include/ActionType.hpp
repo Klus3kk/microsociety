@@ -1,6 +1,7 @@
 #ifndef ACTION_TYPE_HPP
 #define ACTION_TYPE_HPP
 
+// Enumeration for different action types
 enum class ActionType {
     None,
     Move,
@@ -14,6 +15,12 @@ enum class ActionType {
     BuyItem,
     SellItem,
     Rest,
+    Explore,
+    ProduceWater,
+    ProduceFood,
+    BreedWithNPC,
+    ConsumeGoods,
+    InvestMoney
 };
 
 #endif 

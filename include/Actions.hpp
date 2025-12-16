@@ -1,99 +1,103 @@
 #ifndef ACTIONS_HPP
 #define ACTIONS_HPP
 
+#include <memory> 
+#include <string>
+
 #include "Entity.hpp"  
 #include "Tile.hpp"
 #include "debug.hpp"
-#include <string>
-#include <memory> 
 #include "ActionType.hpp"
 
-// Forward declarations only - complete type definitions will be in .cpp file
 class NPCEntity;
 class House;
 class Market;
 
-// Base class for all actions, implementing polymorphism and abstraction
 class Action {
 public:
-    virtual ~Action() = default;
+    virtual ~Action() = default; // for cleanup of actions 
 
-    // FIXED: Declares an abstract method using Entity base class
+    // perform the action on the given entity and tile
     virtual void perform(Entity& entity, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) = 0;
 
-    // Return the name of the action
+    // getters for action name, reward, and penalty
     virtual std::string getActionName() const = 0;
-
-    // Return the reward for performing this action
     virtual float getReward() const { return 0.0f; }
-
-    // Return the penalty for performing this action, if applicable
     virtual float getPenalty() const { return 0.0f; }
 };
 
-// Action for chopping down trees
+// action for chopping trees
 class TreeAction : public Action { 
 public:
-    // Polymorphism 
+    // override perform method
     void perform(Entity& entity, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
+
+    // override getters 
     std::string getActionName() const override { return "Chop Tree"; }
     float getReward() const override { return 10.0f; }
 };
 
-// Action for mining rocks
+// action for mining rocks
 class StoneAction : public Action {
 public:
     void perform(Entity& entity, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
+    
     std::string getActionName() const override { return "Mine Rock"; }
     float getReward() const override { return 8.0f; }
 };
 
-// Action for gathering bushes
+// action for gathering bushes
 class BushAction : public Action {
 public:
     void perform(Entity& entity, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
+
     std::string getActionName() const override { return "Gather Bush"; }
     float getReward() const override { return 5.0f; }
 };
 
-// Action for moving across the map
+// action for moving across the map
 class MoveAction : public Action {
 public:
     void perform(Entity& entity, Tile&, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
+
     std::string getActionName() const override { return "Move"; }
     float getPenalty() const override { return -1.0f; }
 };
 
-// Action for regenerating energy
+// action for regenerating energy
 class RegenerateEnergyAction : public Action {
 public:
     void perform(Entity& entity, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
+
     std::string getActionName() const override { return "Regenerate Energy"; }
     float getReward() const override { return 5.0f; }
 };
 
-// Action for upgrading a house
+// action for upgrading a house
 class UpgradeHouseAction : public Action {
 public:
     void perform(Entity& entity, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
+
     std::string getActionName() const override { return "Upgrade House"; }
     float getReward() const override { return 20.0f; }
 };
 
-// Action for storing items in a house
+// action for storing items in a house
 class StoreItemAction : public Action {
 private:
     std::string item;
     int quantity;
 
 public:
-    StoreItemAction(const std::string& item, int quantity);
+    StoreItemAction(const std::string& item, int quantity); 
+
     void perform(Entity& entity, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
+    
     std::string getActionName() const override;
     float getReward() const override { return 5.0f; }
 };
 
-// Action for buying items from the market
+// action for buying items from the market
 class BuyItemAction : public Action {
 private:
     std::string item;
@@ -101,12 +105,14 @@ private:
 
 public:
     BuyItemAction(const std::string& item, int quantity); 
+
     void perform(Entity& entity, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
+
     std::string getActionName() const override;
     float getReward() const override { return 10.0f; }
 };
 
-// Action for selling items at the market
+// action for selling items at the market
 class SellItemAction : public Action {
 private:
     std::string item;
@@ -114,42 +120,111 @@ private:
 
 public:
     SellItemAction(const std::string& item, int quantity);
+
     void perform(Entity& entity, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
+
     std::string getActionName() const override;
     float getReward() const override { return 12.0f; }
 };
 
-// Action for resting
+// action for resting
 class RestAction : public Action {
 public:
     void perform(Entity& entity, Tile&, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
+
     std::string getActionName() const override { return "Rest"; }
     float getPenalty() const override { return -5.0f; }
 };
 
-// Action for exploring new areas
+// action for exploring new areas
 class ExploreAction : public Action {
 public:
     void perform(Entity& entity, Tile&, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
+
     std::string getActionName() const override { return "Explore"; }
     float getReward() const override { return 5.0f; }
 };
 
-// Idle
+// action for idling
 class IdleAction : public Action {
 public:
     void perform(Entity& entity, Tile&, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
+
     std::string getActionName() const override { return "Idle"; }
     float getPenalty() const override { return -20.0f; }
 };
 
-// PrioritizeAction
+// action for prioritizing
 class PrioritizeAction : public Action {
 public:
     void perform(Entity& entity, Tile&, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
+
     std::string getActionName() const override { return "Prioritize"; }
     float getReward() const override { return 10.0f; }
     float getPenalty() const override { return -10.0f; }
 };
+
+// action for producing goods
+class ProduceAction : public Action {
+public:
+    void perform(Entity& entity, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
+    std::string getActionName() const override { return "Produce Goods"; }
+    float getReward() const override { return 15.0f; }
+};
+
+// action for producing water
+class ProduceWaterActions: public ProduceAction {
+public:
+    std::string getActionName() const override { return "Produce Water"; }
+    float getReward() const override { return 12.0f; }
+};
+
+// action for producing food
+class ProduceFoodActions: public ProduceAction {
+public:
+    std::string getActionName() const override { return "Produce Food"; }
+    float getReward() const override { return 18.0f; }
+};
+
+// action for breead with NPC
+class BreedAction : public Action {
+public:
+    std::string getActionName() const override { return "Breed with NPC"; }
+    float getReward() const override { return 20.0f; }
+};
+
+// action for consuming goods
+class ConsumeAction : public Action {
+public:
+    void perform(Entity& entity, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
+    std::string getActionName() const override { return "Consume Goods"; }
+    float getReward() const override { return 10.0f; }
+};
+
+// action for upgrading 
+class UpgradeAction : public Action {
+public:
+    void perform(Entity& entity, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
+    std::string getActionName() const override { return "Upgrade Entity"; }
+    float getReward() const override { return 25.0f; }
+};
+
+// action for investing money
+class InvestAction : public Action {
+public:
+    void perform(Entity& entity, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
+    std::string getActionName() const override { return "Invest Money"; }
+    float getReward() const override { return 30.0f; }
+};
+
+
+class TalkAction : public Action {
+public:
+    void perform(Entity& entity, Tile& tile, const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) override;
+    std::string getActionName() const override { return "Talk to NPC"; }
+    float getReward() const override { return 15.0f; }
+};
+
+
 
 #endif

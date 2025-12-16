@@ -207,12 +207,9 @@ def main():
     if not args.analyze_only:
         if processor.save_merged_data(args.output):
             print(f"\nData processing complete!")
-            print("Next step: Run training with:")
-            print(f"  python models/prototype/train_npc.py --data latest_training_data.json --epochs 100")
         else:
             print("Failed to save merged data")
             return 1
-    
     return 0
 
 if __name__ == "__main__":

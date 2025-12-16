@@ -100,4 +100,15 @@ public:
     }
 };
 
-#endif // TILE_HPP
+
+// Derived class representing a water tile
+class WaterTile : public Tile {
+public:
+    explicit WaterTile(const sf::Texture& texture) {
+        setTexture(texture);
+    }
+};
+
+
+
+#endif 

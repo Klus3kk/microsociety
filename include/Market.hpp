@@ -1,19 +1,20 @@
 #ifndef MARKET_HPP
 #define MARKET_HPP
 
+#include <numeric>
 #include <unordered_map>
 #include <string>
 #include <vector>
 #include <SFML/Graphics.hpp>
+#include <cmath>
+
 #include "Entity.hpp"  
 #include "Object.hpp"
 #include "debug.hpp"
-#include <cmath>
-#include <numeric>
 
 class NPCEntity;
 
-// Market class: Represents a dynamic in-game trading system
+// Represents a dynamic in-game trading system
 class Market : public Object {
 private:
     std::unordered_map<std::string, float> prices;          // Stores the current market price for each item
@@ -32,11 +33,10 @@ private:
     float buyMargin = 1.1f;                                // Buying price multiplier (higher than sell price)
 
 public:
-    // Constructors
     Market();
     Market(const sf::Texture& tex);
 
-    // Set and Get Prices
+    // setters and getters
     void setPrice(const std::string& item, float price); // Sets a specific item's price
     float getPrice(const std::string& item) const;       // Retrieves the current price of an item
     float calculateBuyPrice(const std::string& item) const;  // Determines price when buying
@@ -76,6 +76,7 @@ public:
     void resetTransactions(); // Resets all transaction history
     void randomizePrices();   // Introduces random fluctuations in prices
     void debugTransactionState() const; // Logs current market state for debugging
+    
     // UI and Rendering
     void renderPriceGraph(sf::RenderWindow& window, const std::string& item, sf::Vector2f position, sf::Vector2f size) const; // Renders price trends
     void displayPrices() const; // Prints prices to console (for debugging)

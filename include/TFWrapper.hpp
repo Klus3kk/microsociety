@@ -4,14 +4,15 @@
 #include <string>
 #include <vector>
 #include <memory>
+
 #include "ActionType.hpp"
 #include "State.hpp"
 
-// Only include TensorFlow headers if we're actually using TensorFlow
+// Only include TensorFlow headers if actually using TensorFlow
 #ifdef USE_TENSORFLOW
 #include <tensorflow/c/c_api.h>
-// Don't forward declare - use the actual types from TensorFlow
 #else
+
 // Forward declare only when TensorFlow is not available
 struct TF_Graph;
 struct TF_Session;

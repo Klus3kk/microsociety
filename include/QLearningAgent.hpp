@@ -3,11 +3,13 @@
 
 #include "State.hpp"
 #include "Tile.hpp"
+
 #include <vector>
 #include <random>
 #include <unordered_map>
 #include <memory>
 #include <ActionType.hpp>
+
 class QLearningAgent {
 private:
     float learningRate;    // Learning rate (alpha)
@@ -33,4 +35,4 @@ public:
                                   const sf::Vector2f& position, ObjectType objectType);
 };
 
-#endif // QLEARNING_AGENT_HPP
+#endif 

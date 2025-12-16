@@ -20,22 +20,22 @@ private:
 
 public:
     MovablePanel(float width, float height, const std::string& title);
-    ~MovablePanel(); // Destructor to clean up child buttons
+    ~MovablePanel(); // destructor to clean up child buttons
 
-    // Event handling for dragging
+    // event handling for dragging
     void handleEvent(const sf::RenderWindow& window, sf::Event& event);
 
     void setPosition(float x, float y);
     void setSize(float width, float height);
     void setTitle(const std::string& title);
 
-    void addChild(UIButton* button); // Add a child button
-    void clearChildren();            // Clear all child buttons
+    void addChild(UIButton* button); // add a child button
+    void clearChildren();            // clear all child buttons
 
-    // Rendering
+    // rendering
     void render(sf::RenderWindow& window);
 
-    // Accessors
+    // accessor
     sf::FloatRect getBounds() const;
 };
 

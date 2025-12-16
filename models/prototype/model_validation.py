@@ -312,17 +312,8 @@ def main():
     
     # Run validation
     accuracy = validator.validate_model()
-    
-    if accuracy > 0.3:
-        print(f"\nModel validation successful! Accuracy: {accuracy:.1%}")
-        print("The model should work well in your C++ game.")
-    elif accuracy > 0.15:
-        print(f"\nModel has moderate performance: {accuracy:.1%}")
-        print("Consider retraining with more balanced data.")
-    else:
-        print(f"\nModel performance is low: {accuracy:.1%}")
-        print("The model may need more training data or better hyperparameters.")
-    
+
+    print(f"\n Accuracy: {accuracy:.1%}")
     return 0
 
 if __name__ == "__main__":

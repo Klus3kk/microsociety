@@ -49,7 +49,7 @@ class DataCollector
 {
 private:
     bool isCollecting = false;
-    size_t maxExperiencesPerFile = 10000;
+    size_t maxExperiencesPerFile = 5000;
     size_t currentFileIndex = 0;
 
     std::vector<ExperienceData> experiences;

@@ -17,7 +17,7 @@ private:
 public:
     TimeManager() = default;
 
-    // FIXED: Accept simulation speed multiplier
+    // Accept simulation speed multiplier
     void update(float deltaTime, float simulationSpeed = 1.0f) {
         // Apply both time scale and simulation speed
         elapsedTime += deltaTime * TIME_SCALE * simulationSpeed;

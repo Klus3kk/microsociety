@@ -17,14 +17,14 @@ private:
     int healthBonus;
     int strengthBonus;
     int speedBonus;
-    std::unordered_map<std::string, int> storage; // Storage for items
+    std::unordered_map<std::string, int> storage; // storage for items
 
-    void logUpgradeDetails() const; // Helper for upgrade debug logs
+    void logUpgradeDetails() const; // upgrade debug logs
 
 public:
     explicit House(const sf::Texture& tex, int initialLevel = 1);
 
-    // Getters
+    // getters
     const std::unordered_map<std::string, int>& getStorage() const;
     int getWoodRequirement() const;
     int getStoneRequirement() const;
@@ -35,16 +35,15 @@ public:
     float getEnergyRegenRate() const { return energyRegenRate; }
     float getUpgradeCost() const; 
     
-    // Actions accept Entity base class (used by NPCs)
     void regenerateEnergy(Entity& entity);  // Energy regeneration for any entity
     bool storeItem(const std::string& item, int quantity); // Store resources
     bool takeFromStorage(const std::string& item, int quantity, Entity& entity); // Take resources
     bool upgrade(float& entityMoney, Entity& entity); // Upgrade house level
 
-    // Stats and Logs
     void displayStorage() const; // Display storage details
     void displayStats() const;   // Display house stats
-    void resetDailyLimits();
+    void resetDailyLimits();     // Reset any daily limits (if applicable)
+    
     // AI Integration
     bool isStorageFull() const;  // Check if storage is full
     bool isUpgradeAvailable(float entityMoney) const; // Check if entity can afford an upgrade

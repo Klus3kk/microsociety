@@ -1,27 +1,26 @@
 #ifndef NPC_HPP
 #define NPC_HPP
 
+#include <unordered_map>
+#include <string>
+#include <numeric>
+#include <sstream>
+#include <algorithm>
+#include <memory>
+
 #include "Entity.hpp"
 #include "debug.hpp"
 #include "Tile.hpp"
-#include <unordered_map>
-#include <string>
-#include <sstream>
-#include <algorithm>
-#include <numeric>
-#include <memory>
 #include "ActionType.hpp"
 #include "QLearningAgent.hpp"
 #include "Configuration.hpp"
 #include "TFWrapper.hpp"
-
-// FIXED: Include complete type definitions instead of forward declarations
 #include "House.hpp"
 
-// Forward declarations for classes that don't need complete definitions in header
 class Action; 
 class Market;
 
+// ???? why is it here 
 enum class NPCState {
     Idle,
     Walking,
@@ -29,6 +28,7 @@ enum class NPCState {
     EvaluatingState
 };
 
+// NPC entity class with Q-learning capabilities
 class NPCEntity : public Entity {
 private:
     House* house;
@@ -90,12 +90,11 @@ public:
     
     int getGatheredResources() const { return totalItemsGathered; }
 
-    // CLEANED UP: Removed redundant getMoney methods - now uses Entity::getMoney() and Entity::setMoney()
+    // Removed redundant getMoney methods - now uses Entity::getMoney() and Entity::setMoney()
     void setTarget(Tile* newTarget);
-    void setHouse(House* assignedHouse); // Setter for house
+    void setHouse(House* assignedHouse); 
     House* getHouse();
-
-    bool isAtTarget() const;
+    bool isAtTarget() const; // Check if NPC has reached its target
 
     // Inventory Management
     bool addToInventory(const std::string& item, int quantity);
@@ -145,6 +144,7 @@ public:
     void enableQLearning(bool enable); // Toggle Q-learning behavior
     State extractState(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap) const; // State representation
     void updateQLearningState(const std::vector<std::vector<std::unique_ptr<Tile>>>& tileMap);
+    
     // State management
     void setState(NPCState newState) { currentState = newState; }
     NPCState getState() const { return currentState; }

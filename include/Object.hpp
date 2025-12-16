@@ -10,7 +10,9 @@ enum class ObjectType {
     Rock,   // Represents a rock
     Bush,   // Represents a bush
     House,  // Represents a house
-    Market  // Represents a market
+    Market,  // Represents a market
+    Water,   // Represents water
+    Food    // Represents food
 };
 
 // Base class for all objects placed on tiles
@@ -105,5 +107,21 @@ public:
         return ObjectType::Bush; // Return bush type
     }
 };
+
+class Water : public Object {
+public:
+    Water(const sf::Texture& tex) {
+        setTexture(tex); // Assign texture to the water
+    }   
+    void draw(sf::RenderWindow& window) override {
+        window.draw(sprite); // Render water on the screen
+    }
+    ObjectType getType() const override {
+        return ObjectType::Water; // Return water type
+    }
+};
+
+
+
 
 #endif 
