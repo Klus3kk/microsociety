@@ -1,8 +1,7 @@
 # MicroSociety
 
+
 ![CI](https://github.com/Klus3kk/microsociety/actions/workflows/ci.yml/badge.svg)
-![License](https://img.shields.io/badge/License-MIT-blue)
-![Language](https://img.shields.io/badge/C++-blue)
 
 ## Description
 
