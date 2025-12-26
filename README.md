@@ -1,6 +1,5 @@
 # MicroSociety
 
-
 ![CI](https://github.com/Klus3kk/microsociety/actions/workflows/ci.yml/badge.svg)
 
 ## Description
